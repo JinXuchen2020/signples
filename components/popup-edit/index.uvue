@@ -1,0 +1,130 @@
+<template>
+  <view v-if="visible" class="popup">
+    <view class="popup-box">
+      <view class="c">
+        <view class="popup-head">
+          <view class="popup-title">
+            <text style="font-weight: bold;font-size: 18px;">{{ title }}</text>
+          </view>
+          <view v-if="showIcon" class="icon-box">
+            <image class="icon" :src="iconSrc" mode="widthFix"></image>
+          </view>
+        </view>
+        <view class="popup-body">
+          <slot></slot>
+        </view>
+        <view class="popup-foot">
+          <view class="item" @click="handleCancel">
+            <text>{{ cancelText }}</text>
+          </view>
+          <view class="item end" @click="handleConfirm">
+            <text class="enter">{{ confirmText }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+// 定义组件属性
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false
+  },
+  title: {
+    type: String,
+    default: ''
+  },
+  showIcon: {
+    type: Boolean,
+    default: false
+  },
+  iconSrc: {
+    type: String,
+    default: '/static/svg/suggest.png'
+  },
+  cancelText: {
+    type: String,
+    default: '取消'
+  },
+  confirmText: {
+    type: String,
+    default: '确定'
+  }
+})
+
+// 定义事件
+const emit = defineEmits(['update:visible', 'cancel', 'confirm'])
+
+// 处理取消
+const handleCancel = () => {
+  emit('update:visible', false)
+  emit('cancel')
+}
+
+// 处理确认
+const handleConfirm = () => {
+  emit('confirm')
+}
+</script>
+
+<style lang="scss" scoped>
+.popup{
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+		background-color: $uni-bg-color-mask;
+		z-index: 99999;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		.popup-box{
+			padding: 32rpx;
+			width: 100%;
+			.c{
+				background-color: $uni-bg-color;
+				border-radius: $uni-border-radius-big;
+				width: 100%;
+				.popup-head{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					padding: 32rpx;
+					background-color: rgba(0,0,0,0.02);
+					border-radius: 16rpx 16rpx 0 0;
+				}
+				.popup-body{
+					padding: 32rpx 48rpx;
+					min-height: 200rpx;
+				}
+				.popup-foot{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-around;
+					border-top: 1px solid #eeeeee;
+					.item{
+						width: 50%;
+						padding: 42rpx 32rpx;
+						border-right: 1px solid #eeeeee;
+						flex-direction: row;
+						align-items: center;
+						justify-content: center;
+						
+						.enter{
+							color: $uni-color-primary;
+						}
+					}
+					.item.end{
+						border-right: 0px solid #eeeeee;
+					}
+				}
+			}
+		}
+	}
+</style>

@@ -1,0 +1,818 @@
+<template>
+	<view class="app">
+		<view class="canvas-component">
+			<canvas 
+				canvas-id="ucanvas" 
+				id="ucanvas" 
+				class="canvas" 
+				:style="'width:'+canvasWidth+'px;height:'+canvasHeight+'px;'" />
+		</view>
+		<view class="top-button">
+			<view class="item" @click="handleSave()">
+				<view class="icon-box icon-box-big no-margin">
+					<image class="icon" src="/static/svg/save.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item" @click="handlePush()">
+				<view class="icon-box icon-box-big no-margin">
+					<image class="icon" src="/static/svg/push.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item" @click="handleReview()">
+				<view class="icon-box icon-box-big no-margin">
+					<image class="icon" src="/static/svg/reviewb.png" mode="widthFix"></image>
+				</view>
+			</view>
+		</view>
+		<view class="options">
+			<view class="options-tab">
+				<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
+				<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+			</view>
+			<scroll-view class="option-body" style="height: 260px;">
+				<view class="option-a" :class="{active: activeTab == 0}">
+					请先选择组件
+				</view>
+				<view class="option-b" :class="{active: activeTab == 1}">
+					<view class="page-option-form">
+						<view class="item">
+							<view class="item-key">
+								<text class="t">名称</text>
+							</view>
+							<view class="item-value">
+								<input type="text" value="页面1" class="uni-input" />
+							</view>
+						</view>
+						<view class="item">
+							<view class="item-key">
+								<text class="t">类型</text>
+							</view>
+							<view class="item-value">
+								<radio><text>常规</text></radio>
+								<view style="width: 24rpx;"></view>
+								<radio><text>广告</text></radio>
+							</view>
+						</view>
+						<view class="item">
+							<view class="item-key">
+								<text class="t">有效期</text>
+							</view>
+							<view class="item-value">
+								<checkbox></checkbox>
+							</view>
+						</view>
+						<view class="item">
+							<view class="item-key">
+								<text class="t">播放次数</text>
+							</view>
+							<view class="item-value">
+								<input type="text" value="1" class="uni-input" />
+							</view>
+						</view>
+						<view class="item">
+							<view class="item-key">
+								<text class="t">时间计划表</text>
+							</view>
+							<view class="item-value">
+								<view class="sub-list" style="width: 100%;">
+									<view class="sub-item">
+										<view class="sub-key">
+											<text>每周</text>
+										</view>
+										<view class="sub-value">
+											<checkbox>一</checkbox>
+											<checkbox>二</checkbox>
+											<checkbox>三</checkbox>
+											<checkbox>四</checkbox>
+											<checkbox>五</checkbox>
+											<checkbox>六</checkbox>
+											<checkbox>日</checkbox>
+										</view>
+									</view>
+									<view class="sub-item">
+										<view class="sub-key">
+											<text>时间</text>
+										</view>
+										<view class="sub-value">
+											<input type="text" value="0:00" class="uni-input" />
+											<input type="text" value="23:59" class="uni-input" />
+										</view>
+									</view>
+								</view>
+							</view>
+						</view>
+					</view>
+				</view>
+			</scroll-view>
+		</view>
+		<view class="tools">
+			<view class="pages">
+				<swiper id="swiper-view" class="swiper">
+					<swiper-item class="swiper-item" item-id="1">
+						<view v-for="(item, index) in pages" :key="index" class="item" :class="{active: activePages == index}">
+							<text class="t">{{item}}</text>
+						</view>
+						<view class="item" style="background-color: #cccccc;" @click="addPage()">
+							<text class="t">+</text>
+						</view>
+					</swiper-item>
+				</swiper>
+			</view>
+			<view class="component">
+				<view class="item" @click="handleCheckComponent(0)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-6.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">视频</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(1)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-0.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">图片</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(2)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-1.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">文字</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(3)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-7.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">网页</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(4)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-8.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">文档</text>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+<script lang="uts" setup>
+	import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
+    import * as ucan from "@/uni_modules/u-canvas";
+    import {
+        UCanvas,
+        Composition,
+        Text,
+        Rectangle,
+        Polyline,
+        Ring,
+        Pie,
+        Circle,
+        Polygon,
+        Picture,
+        ImagePixel,
+        Point,
+    } from "@/uni_modules/u-canvas";
+	
+	import { routeGoto } from '@/common/router.uts'
+	
+	import i18n from '@/locale'
+	
+	const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
+	let programDir = '' //项目目录
+	
+	const fs = uni.getFileSystemManager();
+    const uCanvas = new UCanvas({ canvasId: "ucanvas" });
+	
+	const canvasWidth = ref('0');
+	const canvasHeight = ref('0');
+	const programName = ref('');
+	const mediaConfig = ref({
+		"Left": 0.0,
+		"Top": 0.0,
+		"Ratio": 1.0,
+		"Program": {
+			"name": "节目名称20250523021648",
+			"mediaType": "PROGRAM",
+			"resolution": "256*192",
+			"size": 25929792.0,
+			"monitorCount": 1,
+			"lastUpdatedTime": "2025-05-23 14:16:00",
+			"createdSource": "admin",
+			"status": 0,
+			"playCountPerHour": null,
+			"isHasValidity": false,
+			"validStartDate": null,
+			"validEndDate": null,
+			"userAccount": "user001",
+			"id": 9
+		},
+		"Pages": [{
+			"Id": 1,
+			"Name": "页面1",
+			"Type": null,
+			"Order": 1,
+			"ThumbnailFilePath": "节目名称20250523021648\\页面1\\thumbnail.png",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": 0,
+			"AdPlayMode": null,
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+			"Components": [{
+				"Type": "Video",
+				"PlayMode": "fullscreen",
+				"IsClip": false,
+				"Id": 1,
+				"Name": "视频1",
+				"ZIndex": 1,
+				"Left": 0.0,
+				"Top": 0.0,
+				"Width": 256.0,
+				"Height": 192.0,
+				"Source": "节目名称20250523021648\\页面1\\视频1\\test2.mp4",
+				"Timeline": 20.0,
+				"PlayCount": 1,
+				"PlayDuration": "00:00:20"
+			}]
+		}, {
+			"Id": 2,
+			"Name": "页面2",
+			"Type": "normal",
+			"Order": 2,
+			"ThumbnailFilePath": "节目名称20250523021648\\页面2\\thumbnail.png",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": 10,
+			"AdPlayMode": "perday",
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+			"Components": [{
+				"Type": "Image",
+				"EffectDuration": 1000,
+				"ComponentEffect": "Empty",
+				"Id": 1,
+				"Name": "图片1",
+				"ZIndex": 1,
+				"Left": 0.0,
+				"Top": 0.0,
+				"Width": 256.0,
+				"Height": 192.0,
+				"Source": "节目名称20250523021648\\页面2\\图片1\\图片1.jpg",
+				"Timeline": 5.0,
+				"PlayCount": 1,
+				"PlayDuration": "00:00:05"
+			}]
+		}, {
+			"Id": 3,
+			"Name": "页面3",
+			"Type": "normal",
+			"Order": 3,
+			"ThumbnailFilePath": "节目名称20250523021648\\页面3\\thumbnail.png",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": 10,
+			"AdPlayMode": "perday",
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+			"Components": [{
+				"Type": "Text",
+				"Background": "#FF000000",
+				"TextColor": "#FFFFFFFF",
+				"PlayMode": "pageTurning",
+				"Direction": "rollingLeft",
+				"EffectDuration": 1000,
+				"ComponentEffect": "Empty",
+				"RollingSpeed": 2,
+				"TextSize": 16.0,
+				"IsLoopEnabled": true,
+				"LetterSpacing": 2.0,
+				"LineSpacing": 2.0,
+				"RtfFilePath": "节目名称20250523021648\\页面3\\文本1\\文本1.xaml",
+				"VerticalContentAlignment": "Center",
+				"Id": 1,
+				"Name": "文本1",
+				"ZIndex": 1,
+				"Left": 0.0,
+				"Top": 0.0,
+				"Width": 256.0,
+				"Height": 192.0,
+				"Source": "你好，世界sfsf\r\n",
+				"Timeline": 5.0,
+				"PlayCount": 1,
+				"PlayDuration": "00:00:05"
+			}]
+		}, {
+			"Id": 4,
+			"Name": "页面4",
+			"Type": "normal",
+			"Order": 4,
+			"ThumbnailFilePath": "节目名称20250523021648\\页面4\\thumbnail.png",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": 10,
+			"AdPlayMode": "perday",
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+			"Components": [{
+				"Type": "Video",
+				"PlayMode": "fullscreen",
+				"IsClip": false,
+				"Id": 1,
+				"Name": "视频1",
+				"ZIndex": 1,
+				"Left": 0.0,
+				"Top": 0.0,
+				"Width": 256.0,
+				"Height": 192.0,
+				"Source": "节目名称20250523021648/页面4/视频1/视频3.mp4",
+				"Timeline": 4.0,
+				"PlayCount": 1,
+				"PlayDuration": "00:00:04"
+			}]
+		}]
+	});
+	
+	const pages = ref([
+		'页面1'
+	]);
+	const activePages = ref(0);
+	
+	const activeTab = ref(1);
+	
+	const handleActiveTab = (val: number)=>{
+		activeTab.value = val
+	}
+	
+	async function addPage(){
+		const pagesCount = pages.value.length;
+		pages.value.push('页面' + (pagesCount+1))
+		console.log('pagesCount', pagesCount);
+	}
+	
+	async function addImg(img: string){
+		const image = await uCanvas.createImage(img);
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Picture({ image: image, x: 0, y: 0, w: 256, h: 192, })
+		        ],
+		    })
+		);
+		uCanvas.render();
+	}
+	async function handleCheckComponent (index: Number){
+		if(index > 1 ){
+			uni.showToast({
+				icon: 'none',
+				title: '开发中，请等待',
+				duration: 3000,
+				success: () => { 
+				}
+			})
+		}else{
+			// if(index == 0){
+				uni.chooseMedia({
+				  count: 1,
+				  sourceType: ['album'],
+				  mediaType: ['image', 'video'],
+				 
+				  success: (res) => {
+					const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
+					console.log('tempFiles', tempFiles)
+					
+					
+					for (let i = 0; i < tempFiles.length; i++) {
+					  const tempFile : ChooseMediaTempFile = tempFiles[i]
+					  const imagePath = tempFile.fileType == "image" ? tempFile.tempFilePath : tempFile.thumbTempFilePath as string;
+					  // const file : FileSource = { imagePath: imagePath!, filePath: tempFile.tempFilePath, fileType: tempFile.fileType };
+					  addImg(imagePath)
+					}
+				  },
+				  fail: (err) => {
+					console.log("err: ", JSON.stringify(err));
+					uni.showToast({
+					  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
+					  position:"bottom"
+					})
+				  }
+				})
+			// }
+			
+			// if(index == 1){
+				
+			// }
+			// const image = await uCanvas.createImage("/static/logo.png");
+			// // const image = await uCanvas.createImage("https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png");
+			// uCanvas.addGraphic(
+			//     new Composition({
+			//         x: 0,
+			//         y: 0,
+			//         children: [
+			//             new Picture({ image: image, x: 0, y: 0, w: 100, h: 100, })
+			//         ],
+			//     })
+			// );
+			
+			// uCanvas.render();
+		}
+	}
+	
+	async function createConfigJsonFile(content: string): Promise<string> {
+	  const filePath = `${programDir}/MediaConfig.json`;
+	  fs.writeFileSync(filePath, content,"utf-8");
+	  return filePath;
+	}
+	
+    async function init() : Promise<void> {
+        await uCanvas.ensureInitialize();
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 10,
+        //         y: 10,
+        //         children: [
+        //             new Rectangle({ x: 0, y: 0, w: 100, h: 100, radii: 10 }),
+        //             new Text({ x: 0, y: 120, text: "Rectangle" }),
+        //         ],
+        //     })
+        // );
+
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 140,
+        //         y: 10,
+        //         children: [
+        //             new Polyline({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100), new Point(100, 100)], }),
+        //             new Text({ x: 0, y: 120, text: "Polyline" }),
+        //         ],
+        //     })
+        // );
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 270,
+        //         y: 10,
+        //         children: [
+        //             new Polygon({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100)], }),
+        //             new Text({ x: 0, y: 120, text: "Polygon" }),
+        //         ],
+        //     })
+        // );
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 10,
+        //         y: 160,
+        //         children: [
+        //             new Pie({
+        //                 cx: 50,
+        //                 cy: 50,
+        //                 radius: 50,
+        //                 startAngle: 0,
+        //                 endAngle: Math.PI + Math.PI / 3,
+        //             }),
+        //             new Text({ x: 0, y: 120, text: "Pie" }),
+        //         ],
+        //     })
+        // );
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 140,
+        //         y: 160,
+        //         children: [
+        //             new Circle({ cx: 50, cy: 50, radius: 50, }),
+        //             new Text({ x: 0, y: 120, text: "Circle" }),
+        //         ],
+        //     })
+        // );
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 270,
+        //         y: 160,
+        //         children: [
+        //             new Ring({
+        //                 cx: 50,
+        //                 cy: 50,
+        //                 innerRadius: 30,
+        //                 outerRadius: 50,
+        //                 startAngle: 0,
+        //                 endAngle: Math.PI + Math.PI / 1.5,
+        //             }),
+        //             new Text({ x: 0, y: 120, text: "Ring" }),
+        //         ],
+        //     })
+        // );
+        // const data = new Uint8ClampedArray([
+        //     parseInt("10000000", 2),
+        //     parseInt("01000000", 2),
+        //     parseInt("00100000", 2),
+        //     parseInt("00010000", 2),
+        //     parseInt("00001000", 2),
+        //     parseInt("00000100", 2),
+        //     parseInt("00000010", 2),
+        //     parseInt("00000001", 2),
+        // ]);
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 10,
+        //         y: 300,
+        //         children: [
+        //             new ImagePixel({
+        //                 imageData: uCanvas.makeImageData({ data, bytesPerScanline: 8, array: [12, 12] }),
+        //                 x: 0,
+        //                 y: 0,
+        //             }),
+        //             new Text({ x: 0, y: 120, text: "ImagePixel" }),
+        //         ],
+        //     })
+        // );
+
+        // const image = await uCanvas.createImage("/static/logo.png");
+        // // const image = await uCanvas.createImage("https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png");
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 0,
+        //         y: 0,
+        //         children: [
+        //             new Picture({ image: image, x: 0, y: 0, w: 100, h: 100, }),
+        //             new Text({ x: 0, y: 120, text: "Image" }),
+        //         ],
+        //     })
+        // );
+        // uCanvas.addGraphic(
+        //     new Composition({
+        //         x: 0,
+        //         y: 50,
+        //         children: [
+        //             new Text({ x: 0, y: 0, text: "Hello world" }),
+        //         ],
+        //     })
+        // );
+        uCanvas.render();
+    }
+	
+	async function handleSave() :Promise<void> {
+		//保存
+		const path = createConfigJsonFile(JSON.stringify(mediaConfig));
+		console.log('save ok=', path)
+		
+		//压缩目录
+		addZip(tempDir, programDir + '.zip', (pathfile:string)=>{
+		    //压缩成功后返回路径
+		    console.log(pathfile)
+		})
+		
+		const s = uni.getFileSystemManager().readdirSync(programDir);
+		
+		console.log('读取项目目录', s)
+		uni.showModal({
+			title: "节目已保存",
+			content: '当前节目已保存，是否发布到设备？',
+			cancelText:'继续编辑',
+			confirmText: '发布节目'
+		})
+	}
+	
+	async function handlePush() :Promise<void> {
+		uni.showToast({
+			icon: 'none',
+			title: '请稍候，功能未开放',
+			duration: 3000,
+			success: () => { 
+			}
+		})
+	}
+	
+	async function handleReview() :Promise<void> {
+		
+		routeGoto('/pages/programs/review')
+	}
+	
+	onLoad((e: OnLoadOptions): void => {
+		canvasWidth.value = e['width'] as string;
+		canvasHeight.value = e['height'] as string;
+		programName.value = e['name'] as string;
+		const defl = uni.getStorageSync('language') as string
+		
+		let defaultLang =  'kr'
+		if(defl != ''){
+			defaultLang = defl
+		}
+		uni.setNavigationBarTitle({
+			title: i18n.global.t('pages.programPreview', null, defaultLang)
+		})
+	});
+    onReady(() => {
+        init();
+		//创建临时目录
+		programDir = tempDir + '/' + programName.value
+		try {
+		  fs.accessSync(programDir); // 检查目录是否存在
+		} catch (e) {
+		  fs.mkdirSync(programDir, true); // recursive: true 允许创建多级目录
+		}
+		console.log('临时目录', tempDir)
+		
+		const s = uni.getFileSystemManager().readdirSync(tempDir);
+		
+		console.log('读取项目目录', s)
+		
+    });
+</script>
+
+<style lang="scss">
+    .canvas-component {
+        width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 60px 20px 20px 20px;
+		
+		.canvas {
+		    width: 100%;
+		    height: 100%;
+			background: #f0f0f0;
+		}
+    }
+	.tools{
+		position: fixed;
+		width: 100%;
+		left: 0;
+		bottom: 0;
+		z-index: 999;
+		background-color: $uni-bg-color;
+		padding: 24rpx;
+		.pages{
+			padding: 24rpx  0;
+			.swiper-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+				.item{
+					width: 21%;
+					height: 96rpx;
+					background-color: #000000;
+					flex-direction: row;
+					align-items: center;
+					justify-content: center;
+					border-radius: $uni-border-radius-lg;
+					margin: 0 2%;
+					.t{
+						color: $uni-text-color-inverse;
+						font-size: $uni-font-size-sm;
+					}
+				}
+				.item.active{
+					background-color: $uni-bg-color-blue;
+				}
+			}
+		}
+		.component{
+			padding: 24rpx 0;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			.item{
+				.icon-box{
+					margin: 0 auto;
+				}
+				.t{
+					font-size: $uni-font-size-sm;
+				}
+			}
+		}
+	}
+    .top-button{
+		padding: 24rpx 0;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		position: fixed;
+		right: 0;
+		top: 0;
+		.item{
+			.icon-box{
+				margin: 0 12rpx;
+				.icon{
+					background: #ffffff;
+					border-radius: 128rpx;
+					padding: 8rpx;
+					border: 1px solid #eeeeee;
+				}
+			}
+			.t{
+				font-size: $uni-font-size-sm;
+			}
+		}
+	}
+	.options{
+		padding: 24rpx;
+		
+		.options-tab{
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			padding-bottom: 24rpx;
+			
+			.item{
+				padding: 0 24rpx;
+				.t{
+					font-size: 14px;
+				}
+			}
+			.item.active{
+				.t{
+					color: $uni-color-primary
+				}
+			}
+		}
+		.option-body {
+			.option-a,
+			.option-b {
+				display: none;
+			}
+			.option-a.active,
+			.option-b.active {
+				display: flex;
+			}
+			
+			.page-option-form{
+				background: #ffffff;
+				border-radius: 24rpx;
+				box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
+				padding: 12rpx 0;
+				
+				.item{
+					padding: 18rpx 24rpx;
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					
+					.item-key{
+						width: 30%;
+						.t{
+							font-size: 14px;
+							color: #999999;
+						}
+					}
+					.item-value{
+						width: 70%;
+						display: flex;
+						flex-direction: row;
+						.sub-list{
+							width: 100%;
+							
+							.sub-item{
+								width: 100%;
+								
+								.sub-value{
+									flex-direction: row;
+									align-items: center;
+									justify-content: space-between;
+								}
+							}
+						}
+						.uni-input{
+							border: 1px solid #ccc;
+							border-radius: 12rpx;
+						}
+					}
+				}
+			}
+		}
+	}
+</style>

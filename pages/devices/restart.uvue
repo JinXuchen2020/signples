@@ -1,0 +1,538 @@
+<template>
+	<scroll-view class="app">
+		<view class="space-box"></view>
+		<view class="device-info">
+			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
+				<view class="c" style="padding-bottom: 24rpx;justify-content: flex-start;">
+					<view v-if="deviceInfo['connectStatus'] == 1" class="icon-box icon-box-big wi2">
+						<image class="icon" src="/static/icon/2-w.png" mode="widthFix"></image>
+					</view>
+					<view v-else class="icon-box icon-box-big wi">
+						<image class="icon" src="/static/icon/2.png" mode="widthFix"></image>
+					</view>
+					<view>
+						<view>
+							<text class="wifi-t1">{{deviceInfo['name']}}</text>
+						</view>
+						<view class="text-box">
+							<text class="key">SN:</text>
+							<text class="value">{{deviceInfo['snCode']}}</text>
+						</view>
+					</view>
+				</view>
+				<view class="c" style="background-color: #f9f9f9;border-radius: 12rpx;padding: 24rpx;">
+					<view class="text-box-v">
+						<text class="key">{{$t('index.Resolution')}}</text><text class="value">{{deviceInfo['width']}}*{{deviceInfo['height']}}</text>
+					</view>
+					<view class="text-box-v">
+						<text class="key">{{$t('index.Status')}}</text> 
+						<text class="value" :class="{active: deviceInfo['status'] == '1'}">{{deviceInfo['status'] == '0' ? $t('index.Inactive') : $t('index.Activate')}}</text>
+					</view>
+					<view class="text-box-v">
+						<text class="key">{{$t('index.ConnectionStatus')}}</text> 
+						<text class="value" :class="{active: deviceInfo['connectStatus'] == 1}">{{deviceInfo['connectStatus'] == 0 ? $t('index.NotConnected') : $t('index.Connected')}}</text>
+					</view>
+				</view>
+				<view class="c" style="padding-top: 24rpx;">
+					<view  class="text-box">
+						<text class="key">{{$t('index.DeviceValidityPeriod')}}:</text>
+						<text class="value">{{deviceInfo['validEnd']}}</text>
+						<text class="value vend" v-if="deviceInfo['isvalidEnd']">({{$t('index.Expired')}})</text>
+					</view>
+					<view class="wifi-btns">
+						
+					</view>
+				</view>
+			</view>
+		</view>
+		<view class="device-option-title">
+			<text class="t">{{$t('index.DeviceControl')}}</text>
+			<text class="t2">&#8594;</text>
+			<text class="t">{{$t('device.Restart')}}</text>
+		</view>
+		
+
+	</scroll-view>
+</template>
+
+<script lang="uts">
+	import { APIS } from '@/api/config.uts'
+	import { routeGoto } from '@/common/router.uts'
+	
+	export default {
+		data() {
+			return {
+				userInfo: {} as UTSJSONObject,
+				token: '' as String,
+				deviceInfo: {} as UTSJSONObject,
+				deviceId: "",
+				value_input: 0
+			}
+		},
+		onLoad(e: OnLoadOptions): void {
+		  console.log('edit device', e);
+		    this.deviceId = e['device_id'] as string;
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.restart')
+			});
+		},
+		onShow() {
+			let that = this
+			//获取当前有没有用户登录
+			uni.getStorage({
+			  key: 'token',
+			  success: function(res) {
+				  console.log('token res', res)
+				  const token = res.data ?? '';
+				  if(token !== ''){
+					  that.token = token as String;
+					  console.log('this.token =', that.token)
+					  // this.getDeviceListPage();
+					  that.getDeviceInfo();
+					  uni.getStorage({
+					    key: 'userInfo',
+					    success: function(r) {
+							console.log(r)
+							const userInfo = r.data ?? {};
+					  		this.userInfo = userInfo as UTSJSONObject;
+					    },
+					    fail: function(err) {
+					      console.log('读取失败userInfo或不存在', err);
+					    }
+					  });
+				  }
+			  },
+			  fail: function(err) {
+			    console.log('读取失败token或不存在，请先登录', err);
+				this.deviceInfo =  {} as UTSJSONObject;
+				uni.showModal({
+					title: "尚未登录，请您先登录?",
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							uni.switchTab({
+								url: '/pages/user/index'
+							});
+						}
+					}
+				})
+			  }
+			});
+		},
+		methods: {
+			handleRouteGoto(url: string){
+				routeGoto(url)
+			},
+			async getDeviceInfo() {
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					uni.request({
+						url: APIS.deviceInfo as string +  this.deviceId,
+						method: "GET",
+						header: {
+							'Authorization': "Bearer " + this.token
+						},
+						data:{},
+						success: (res) => {
+							console.log('获取设备详情res', res)
+							if(res.statusCode == 200){
+								const result = res.data as UTSJSONObject
+								if(result.hasOwnProperty('data')){
+									this.deviceInfo = result['data'] as UTSJSONObject;
+									if(this.deviceInfo['volume'] == null){
+										this.value_input = 0;
+									}else{
+										this.value_input = this.deviceInfo['volume'] as number;
+									}
+									
+									const currentDate = new Date().getTime()
+									const day = this.deviceInfo['validEnd'] as String;
+									const daynum = new Date(day).getTime() as number;
+									if(currentDate > daynum){
+										this.deviceInfo['isvalidEnd'] = true;
+									}else{
+										this.deviceInfo['isvalidEnd'] = false;
+									}
+								}
+							}
+							uni.hideLoading();
+						},
+						fail: () => {
+							
+						}
+					});
+				} catch (err){
+					console.log(err)
+				}
+			},
+			async handleDelete(device: UTSJSONObject){
+				let that = this
+				uni.showModal({
+					title: "确定要删除该设备吗?",
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							
+							try {
+								uni.showLoading({
+									title: ''
+								});
+								uni.request({
+									url: APIS.deleteDevice as string + '/' + device.id,
+									method: "DELETE",
+									header: {
+										'Authorization': "Bearer " + this.token
+									},
+									data:{
+										
+									},
+									success: (res) => {
+										console.log('delete res', res)
+										uni.hideLoading();
+										uni.navigateBack();
+									},
+									fail: () => {
+										
+									}
+								});
+							} catch (err){
+								console.log(err)
+							}
+							
+							
+						}
+					}
+				})
+			},
+			volumeChanging(event: UniSliderChangeEvent){
+				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
+				this.value_input = event.detail.value
+			},
+			volumeChanged(event: UniSliderChangeEvent){
+				this.value_input = event.detail.value
+				//修改设备音量
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					uni.request({
+						url: APIS.updateDevice as string,
+						method: "PUT",
+						header: {
+							'Authorization': "Bearer " + this.token
+						},
+						data:{
+							id: this.deviceId,
+							volume: this.value_input
+						},
+						success: (res) => {
+							console.log('updateDevice res', res)
+							const result = res.data as UTSJSONObject
+							uni.showToast({
+								icon: 'none',
+								title: result['msg'] as string,
+								duration: 2000,
+								success: () => {
+									
+								}
+							})
+							uni.hideLoading();
+						},
+						fail: () => {
+							
+						}
+					});
+				} catch (err){
+					console.log(err)
+				}
+			},
+			handleUpgrade(device: UTSJSONObject){
+				let that = this
+				if(device['connectStatus'] != 1){
+					uni.showToast({
+						icon: 'none',
+						title: '设备未连接，不可操作',
+						duration: 2000,
+						success: () => {
+							
+						}
+					})
+				}else{
+					console.log('Can do this.')
+					uni.showModal({
+						title: "确定要激活/升级该设备吗?",
+						success: (res: UniShowModalResult) => {
+							if(res.confirm){
+								
+								try {
+									uni.showLoading({
+										title: ''
+									});
+									uni.request({
+										url: APIS.updateDevice as string,
+										method: "PUT",
+										header: {
+											'Authorization': "Bearer " + this.token
+										},
+										data:{
+											id: this.deviceId,
+											status: 1
+										},
+										success: (res) => {
+											console.log('updateDevice res', res)
+											const result = res.data as UTSJSONObject
+											uni.showToast({
+												icon: 'none',
+												title: result['msg'] as string,
+												duration: 2000,
+												success: () => {
+													
+												}
+											})
+											uni.hideLoading();
+										},
+										fail: () => {
+											
+										}
+									});
+									
+								} catch (err){
+									console.log(err)
+								}
+								
+								
+							}
+						}
+					})
+				}
+			},
+			handleStop(device: UTSJSONObject){
+				let that = this
+				if(device['connectStatus'] != 1){
+					uni.showToast({
+						icon: 'none',
+						title: '设备未连接，不可操作',
+						duration: 2000,
+						success: () => {
+							
+						}
+					})
+				}else{
+					console.log('Can do this.')
+					uni.showModal({
+						title: "确定要停用该设备吗?",
+						success: (res: UniShowModalResult) => {
+							if(res.confirm){
+								
+								try {
+									uni.showLoading({
+										title: ''
+									});
+									uni.request({
+										url: APIS.updateDevice as string,
+										method: "PUT",
+										header: {
+											'Authorization': "Bearer " + this.token
+										},
+										data:{
+											id: this.deviceId,
+											enabled: 0
+										},
+										success: (res) => {
+											console.log('updateDevice res', res)
+											const result = res.data as UTSJSONObject
+											uni.showToast({
+												icon: 'none',
+												title: result['msg'] as string,
+												duration: 2000,
+												success: () => {
+													
+												}
+											})
+											uni.hideLoading();
+										},
+										fail: () => {
+											
+										}
+									});
+									
+								} catch (err){
+									console.log(err)
+								}
+								
+								
+							}
+						}
+					})
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.device-info {
+		padding: 0 36rpx;
+		.item{
+			background-color: $uni-bg-color;
+			border-radius: $uni-border-radius-lg;
+			padding: 16rpx 24rpx;
+			margin: 0 0 36rpx 0;
+			.c{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				padding: 8rpx 0;
+				.text-box{
+					flex-direction: row;
+					align-items: center;
+					justify-content: flex-start;
+				}
+				.text-box,
+				.text-box-v{
+					.wifi-t1{
+						font-size: 32rpx;
+					}
+					.key{
+						font-size: 24rpx;
+						color: $uni-text-color-placeholder;
+						margin-right: 16rpx;
+					}
+					.value{
+						font-size: 24rpx;
+						color: $uni-text-color;
+					}
+					.value.active{
+						color: $uni-color-primary;
+					}
+					.value.vend{
+						color: $uni-color-warning;
+					}
+				}
+				.text-box-v{
+					.key{
+						text-align: center;
+						margin-right: 0;
+					}
+					.value{
+						text-align: center;
+						font-weight: bold;
+						padding-top: 12rpx
+					}
+				}
+				.wi{
+					background-color: beige;
+					padding: 12rpx;
+					border-radius: 12rpx;
+				}
+				.wi2{
+					background-color: $uni-color-primary;
+					padding: 12rpx;
+					border-radius: 12rpx;
+				}
+				
+				.wifi-btns{
+					.btn{
+						// border-radius: 120rpx;
+						border: none;
+						color: $uni-text-color-inverse;
+						font-size: 28rpx;
+						background-color: $uni-bg-color-blue;
+					}
+					.btn.del{
+						color: $uni-color-error;
+						background-color: $uni-text-color-inverse;
+						border: 1px solid #f9f9f9;
+					}
+				}
+			}
+		}
+	}
+	.device-option-title{
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		padding: 24rpx 36rpx;
+		.t{
+			font-size: $uni-font-size-sm;
+			color: $uni-color-title;
+		}
+		.t2{
+			font-size: $uni-font-size-sm;
+			color: $uni-color-grey2;
+			margin: 0 18rpx;
+		}
+	}
+	.list-box{
+		padding: 0 32rpx;
+		.uc-menus{
+			border-radius: $uni-border-radius-lg;
+			background-color: $uni-bg-color;
+			padding: 0rpx 32rpx;
+			border-radius: $uni-border-radius-lg;
+			
+			.uc-menus-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				border-bottom: 1px solid #eeeeee;
+				padding: 32rpx 0rpx;
+				.uc-menus-item-title{
+					flex-direction: row;
+					align-items: center;
+					justify-content: flex-start;
+				}
+				.icon-box{
+					margin-right: 0 !important;
+				}
+				.input-box{
+					.t{
+						font-size: 24rpx;
+					}
+				}
+			}
+			.uc-menus-item.end{
+				border: none;
+			}
+			.uc-menus-item-2{
+				width: 100%;
+				padding: 0rpx 0rpx 32rpx 0;
+				border-bottom: 1px solid #eeeeee;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+			}
+		}
+	}
+	.btns-box{
+		width: 100%;
+		padding: 24rpx 36rpx;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		background-color: $uni-bg-color;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		
+		.upgrade{
+			width: 31.4%;
+			color: $uni-text-color-inverse;
+			background-color: $uni-color-primary;
+			border: 1px solid $uni-color-primary;
+		}
+		.stop{
+			width: 31.4%;
+			color: $uni-text-color-inverse;
+			background-color: $uni-color-error;
+			border: 1px solid $uni-color-error;
+		}
+		.default{
+			width: 31.4%;
+			color: $uni-text-color-placeholder;
+			background-color: $uni-bg-color;
+			border: 1px solid $uni-text-color-placeholder;
+		}
+	}
+	
+</style>

@@ -1,0 +1,366 @@
+<template>
+	<view class="app has-tabbar">
+		<view class="global_status_bar"></view>
+		<view class="body">
+			<!-- 页面正文 -->
+			<view v-if="userInfo.hasOwnProperty('account')" class="user-info">
+				<view class="avatar-box">
+					<image 
+						class="image"
+						src="/static/svg/customer-center-v.png" 
+						mode="widthFix"></image>
+				</view>
+				<view class="avatar-name">
+					<text class="t">{{userInfo['account']}}</text>
+				</view>
+				<view class="user-info-role">
+					<text class="t" v-if="userInfo['role'] == 'admin'">{{$t('user.Admin')}}</text>
+					<text class="t" v-if="userInfo['role'] == 'agent'">{{$t('user.Agent')}}</text>
+					<text class="t" v-if="userInfo['role'] == 'user'">{{$t('user.RegularUser')}}</text>
+				</view>
+			</view>
+			<view v-else class="user-info">
+				<view class="avatar-box" @click="popupLogin = true">
+					<image 
+						class="image"
+						src="/static/svg/customer-center.png" 
+						mode="widthFix"></image>
+				</view>
+				<view class="avatar-name">
+					<text class="t2" @click="popupLogin = true">{{$t('user.Login')}}</text>
+				</view>
+			</view>
+			<view class="space-box"></view>
+			<view>
+				<list-view class="uc-menus">
+					<list-item class="uc-menus-item">
+						<view class="uc-menus-item-title">
+							<view class="icon-box">
+								<image class="icon" src="/static/svg/help.png" mode="widthFix"></image>
+							</view>
+							<text>{{$t('user.Help')}}</text>
+						</view>
+						<view class="icon-box">
+							<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+						</view>
+					</list-item>
+					<list-item class="uc-menus-item end" @click="language"  >
+						<view class="uc-menus-item-title">
+							<view class="icon-box">
+								<image class="icon" src="/static/svg/global.png" mode="widthFix"></image>
+							</view>
+							<text>{{$t('user.Language')}}</text>
+						</view>
+						<view class="icon-box">
+							<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+						</view>
+					</list-item>
+				</list-view>
+			</view>
+			<view v-if="userInfo.hasOwnProperty('account')" class="logout">
+				<view class="logout-btn" @click="handleLogout()">
+					<text>{{$t('user.LogOut')}}</text>
+				</view>
+			</view>
+			<!-- 页面正文结束-->
+			<!-- popup -->
+			<popup-default
+				v-model:visible="popupLogin"
+				:title="$t('user.UserLogin')"
+				show-icon
+				icon-src=""
+				@confirm="handleLogin"
+				>
+				<view class="form">
+					<view class="item">
+						<view class="icon-box no-margin">
+							<image class="icon" src="/static/svg/account.png" mode="widthFix"></image>
+						</view>
+						<view class="input-box">
+							<input class="uni-input" v-model="account" focus type="text" :placeholder="$t('user.PleaseEnterAccount')" />
+						</view>
+					</view>
+					<view class="item">
+						<view class="icon-box no-margin">
+							<image class="icon" src="/static/svg/password.png" mode="widthFix"></image>
+						</view>
+						<view class="input-box">
+							<input class="uni-input" v-model="password" password type="password" :placeholder="$t('user.PleaseEnterPassword')" />
+						</view>
+					</view>
+				</view>
+			</popup-default>
+			<!-- popup -->
+		</view>
+	</view>
+</template>
+
+<script lang="uts">
+	import { APIS } from '@/api/config.uts'
+	export default {
+		data() {
+			return {
+				popupLogin: false,
+				opacity: 0,
+				account: 'business_admin',
+				password: '123456',
+				userInfo: {} as UTSJSONObject
+			}
+		},
+		onLoad() {
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.user')
+			});
+		},
+		onShow() {
+			let that = this
+			uni.getStorage({
+			  key: 'token',
+			  success: function(res) {
+				  console.log('userindex token=', res)
+				  const token = res.data ?? '';
+				  if(token !== ''){
+					  uni.getStorage({
+					    key: 'userInfo',
+					    success: function(r) {
+							console.log('userindex userInfo', r)
+							const userInfo = r.data ?? {};
+					  		that.userInfo = userInfo as UTSJSONObject;
+					    },
+					    fail: function(err) {
+					      console.log('读取失败userInfo或不存在', err);
+					    }
+					  });
+				  }
+			  },
+			  fail: function(err) {
+			    console.log('读取失败token或不存在', err);
+			  }
+			});
+		},
+		methods: {
+			//跳转翻译
+			language(){
+				uni.navigateTo({
+					url:"/pages/user/language"
+				})	
+			},
+			
+			getActiveUserAndDeviceFromStorage(){
+				const activeUser = uni.getStorageSync('active-user');
+				const activeDevice = uni.getStorageSync('active-device');
+				console.log('active = ', activeUser, activeDevice)
+			},
+			async handleLogin(){
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					uni.request({
+						url: APIS.login as string,
+						method: "POST",
+						data:{
+							account: this.account,
+							password: this.password
+						},
+						success: (res) => {
+							uni.hideLoading();
+							if(res.statusCode == 200){
+								const result = res.data as UTSJSONObject;
+								if(result['code'] == 200){
+									const d = result['data'] as UTSJSONObject;
+									if(d.hasOwnProperty('userId')){
+										const userId = parseInt(d['userId'] as string);
+										const token = d['token'] as String; 
+										uni.setStorageSync('token', token);
+										this.getAccountInfo(userId, token);
+									}
+								}else{
+									uni.showToast({
+										icon: 'none',
+										title: result['msg'] as String,
+										duration: 2000,
+										success: () => {
+											this.popupLogin = false;
+										}
+									})
+								}
+							}else{
+								this.popupLogin = false;
+								uni.showToast({
+									icon: 'none',
+									title: '登录失败',
+									duration: 2000,
+									success: () => {
+										
+									}
+								})
+							}
+							
+						},
+						fail: () => {
+							
+						}
+					});
+				} catch (err){
+					console.log(err)
+				}
+			},
+			async getAccountInfo(id: Number, token: String){
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					uni.request({
+						url: APIS.userInfo as string + id,
+						method: "GET",
+						header: {
+							'Authorization': "Bearer " + token
+						},
+						data:{},
+						success: (res) => {
+							if(res.statusCode == 200){
+								const result = res.data as UTSJSONObject
+								if(result.hasOwnProperty('data')){
+									this.userInfo = result['data'] as UTSJSONObject;
+									uni.setStorageSync('userInfo', this.userInfo as UTSJSONObject)
+									this.popupLogin = false;
+								}
+							}
+							uni.hideLoading();
+						},
+						fail: () => {
+							
+						}
+					});
+				} catch (err){
+					console.log(err)
+				}
+			},
+			handleRouteGoto(route: string){
+				uni.navigateTo({
+					url: route
+				});
+			},
+			handleLogout(){
+				let that = this
+				uni.showModal({
+					title: "确定要退出登录吗?",
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							uni.removeStorage({
+								key: 'token',
+								success: function(res) {
+									uni.showToast({
+										icon: 'none',
+										title: '已退出登录',
+										duration: 2000,
+										success: () => {
+											uni.removeStorage({
+												key: 'device-info',
+												success: function(res) {
+													setTimeout(()=>{
+														that.userInfo = {} as UTSJSONObject
+													}, 2000)
+												}
+											})
+										}
+									})
+								}
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.user-info{
+		// height: 180px;
+		background-image: linear-gradient(to right,#def1f8,#ffffff);
+		border-radius: $uni-border-radius-lg;
+		padding: 48rpx 0;
+		.avatar-box{
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			.image {
+				width: 96px;
+			}
+		}
+		.avatar-name{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			padding: 24rpx 0;
+			.t{
+				font-size: 40rpx;
+				font-weight: bold;
+			}
+			.t2{
+				font-size: 32rpx;
+				font-weight: bold;
+			}
+		}
+		.user-info-role{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			.t{
+				font-size: 28rpx;
+				font-weight: bold;
+				color: $uni-text-color-grey;
+			}
+		}
+	}
+	.uc-menus{
+		height: 100px;
+		border-radius: $uni-border-radius-lg;
+		background-color: $uni-bg-color;
+		padding: 12rpx 24rpx;
+		
+		.uc-menus-item{
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid #eeeeee;
+			padding: 24rpx 0rpx;
+			.uc-menus-item-title{
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+			}
+		}
+		.uc-menus-item.end{
+			border-bottom: 0px solid #eeeeee;
+		}
+	}
+	.logout{
+		padding: 48rpx 0;
+		.logout-btn{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			border: 1px solid #def1f8;
+			border-radius: $uni-border-radius-lg;
+			padding: 24rpx 0;
+			background-color: #def1f8;
+		}
+	}
+	.form{
+		.item{
+			border: 1px solid #eeeeee;
+			border-radius: $uni-border-radius-lg;
+			margin: 24rpx 0;
+			padding: 12rpx;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			.input-box{
+				width: 92%;
+			}
+		}
+	}
+</style>

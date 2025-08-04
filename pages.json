@@ -1,0 +1,198 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "%pages.home%",
+				"backgroundColorContent": "#ffffff",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/user/index",
+			"style": {
+				"navigationBarTitleText": "%pages.user%",
+				"backgroundColorContent": "#ffffff",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/index/devices",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.deviceManagement%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/programs/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.programManagement%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/setting/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.screenManagement%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/player/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.realtimeControl%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/user/software",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.firmwareManagement%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/programs/edit",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.programEdit%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/programs/review",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.programPreview%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/create",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.addDevice%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/edit",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.deviceManagement%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/editbrightness",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.brightnessAdjustment%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/edittime",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.timeConfiguration%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/restart",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.restart%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/devices/poweroffon",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.powerControl%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/index/users",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.userManagement%"
+			}
+		},
+		{
+			"path" : "pages/programs/editor",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.programEditor%",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path" : "pages/user/language",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.languageSwitch%",
+				"enablePullDownRefresh": false
+			}
+		}
+	],
+	"globalStyle": {
+		"pageOrientation": "portrait",
+		"navigationBarTitleText": "Hello uniapp x",
+		"navigationBarTextStyle": "@navigationBarTextStyle",
+		"navigationBarBackgroundColor": "@navigationBarBackgroundColor",
+		"backgroundColorContent": "@backgroundColorContent",
+		"backgroundColor": "@backgroundColor",
+		"backgroundTextStyle": "@backgroundTextStyle"
+	},
+	"tabBar": {
+		"color": "@tabBarColor",
+		"selectedColor": "@tabBarSelectedColor",
+		"borderStyle": "@tabBarBorderStyle",
+		"backgroundColor": "@tabBarBackgroundColor",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"iconPath": "/static/tabbar/home.png",
+				"selectedIconPath": "/static/tabbar/home-active.png",
+				"text": "%tabbar.home%"
+			},
+			{
+				"pagePath": "pages/user/index",
+				"iconPath": "static/tabbar/user.png",
+				"selectedIconPath": "/static/tabbar/user-active.png",
+				"text": "%tabbar.uc%"
+			}
+		]
+	},
+	"uniIdRouter": {},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^popup-(.*)$": "@/components/popup-$1/index.uvue"
+		}
+	}
+}

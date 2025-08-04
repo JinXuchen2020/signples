@@ -1,0 +1,493 @@
+<template>
+	<scroll-view class="app">
+		<view class="list-box">
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item" v-for="item in programList">
+					<view class="uc-menus-item-title">
+						<text>{{item['name']}}</text>
+						<view class="programs-meta">
+							<text class="t">常规节目</text>
+							<!-- <text class="t">共1页</text>
+							<text class="t">1920*1080</text> -->
+						</view>
+					</view>
+					<view class="btns">
+						<view class="icon-box no-margin" @click="handleEdit(item)">
+							<image class="icon" src="/static/svg/suggest.png" mode="widthFix"></image>
+						</view>
+						<view class="icon-box no-margin" @click="handlePush(item)">
+							<image class="icon" src="/static/svg/push.png" mode="widthFix"></image>
+						</view>
+						<view class="icon-box no-margin" @click="handleDel(item)">
+							<image class="icon" src="/static/svg/del.png" mode="widthFix"></image>
+						</view>
+					</view>
+				</list-item>
+			</list-view>
+		</view>
+		<view class="create-btn">
+			<view class="btn-box">
+				<button class="btn" @click="createPopup = true">
+					  + 新增节目
+				</button>
+			</view>
+		</view>
+		<!-- popup -->
+		<popup-default
+			v-model:visible="createPopup"
+			title="创建新节目"
+			:show-icon="false"
+			icon-src="/static/svg/suggest.png"
+			@confirm="handleCreate"
+			>
+			<view class="program-meta">
+				<view class="item">
+					<view class="item-title"><text class="t">节目名称</text></view>
+					<view class="item-body">
+						<view class="program-size">
+							<view class="input-box" style="width: 100%">
+								<input id="name" class="uni-input" v-model="newProgram['name']" />
+							</view>
+						</view>
+					</view>
+				</view>
+				<view class="item">
+					<view class="item-title"><text class="t">节目分辨率(宽x高)</text></view>
+					<view class="item-body">
+						<view class="program-size">
+							<view class="input-box">
+								<input id="width" class="uni-input" v-model="newProgram['width']"  />
+							</view>
+							<view class="input-box">
+								<input id="height" class="uni-input" v-model="newProgram['height']"  />
+							</view>
+						</view>
+					</view>
+				</view>
+				
+			</view>
+		</popup-default>
+		
+		<popup-default
+			v-model:visible="pushPopup"
+			title="上传发布节目"
+			:show-icon="false"
+			icon-src="/static/svg/suggest.png"
+			@confirm="handlePushProgram"
+			>
+			<view class="program-meta">
+				<view class="uni-flex" style="padding: 6px 0;">
+					<text>节目名称: </text>
+					<text>{{prePushProgram.name}}</text>
+				</view>
+				<view class="uni-flex" style="padding: 6px 0;">
+					<text>请先选择设备</text>
+				</view>
+				<checkbox-group class="" @change="devicesChange">
+					<checkbox 
+						style="margin: 6px 0;"
+						v-for="(item, index) in deviceList" 
+						:key="index" 
+						:value="item.snCode">
+							<text :class="{iscs: item['connectStatus'] == 1}">{{item.name}}</text>
+					</checkbox>
+				</checkbox-group>
+			</view>
+		</popup-default>
+		<!-- popup -->
+	</scroll-view>
+</template>
+
+<script lang="uts">
+	function getCurrentTimeYYMMDDHHmmss() {
+		  const now = new Date();
+		  const year = now.getFullYear().toString();       // YYYY
+		  const month = (now.getMonth() + 1).toString().padStart(2, '0'); // MM
+		  const day = (now.getDate()).toString().padStart(2, '0');        // DD
+		  const hours = (now.getHours()).toString().padStart(2, '0');     // HH
+		  const minutes = (now.getMinutes()).toString().padStart(2, '0'); // mm
+		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
+		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
+	}
+	import { APIS } from '@/api/config.uts'
+	import { routeGoto } from '@/common/router.uts'
+	import { request } from '@/utils/http/index'
+	
+	export default {
+		data() {
+			return {
+				userInfo: {} as UTSJSONObject,
+				token: '' as String,
+				createPopup: false,
+				pushPopup: false,
+				checkLayoutIndex: 0,
+				newProgram: {
+					name: '节目名称' + getCurrentTimeYYMMDDHHmmss(),
+					width: 256,
+					height: 192
+				} as UTSJSONObject,
+				programList: [] as Array<UTSJSONObject>,
+				prePushProgram: {} as UTSJSONObject,
+				deviceList: [] as Array<UTSJSONObject>,
+				preDevice: [] as Array<String>,
+			}
+		},
+		onLoad(){
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.programManagement')
+			});
+		},
+		onReady() {
+				
+		},
+		onShow(){
+			let that = this
+			//获取当前有没有用户登录
+			uni.getStorage({
+			  key: 'token',
+			  success: function(res) {
+				  console.log(res)
+				  const token = res.data ?? '';
+				  this.token = token as String
+				  if(token !== ''){
+					  uni.getStorage({
+					    key: 'userInfo',
+					    success: function(r) {
+							console.log(r)
+							const userInfo = r.data ?? {};
+					  		this.userInfo = userInfo as UTSJSONObject;
+					    },
+					    fail: function(err) {
+					      console.log('读取失败userInfo或不存在', err);
+					    }
+					  });
+				  }
+			  },
+			  fail: function(err) {
+			    console.log('读取失败token或不存在', err);
+				
+			  }
+			});
+			
+			
+			this.init()
+			this.getDevices()
+		},
+		methods: {
+			init(){
+				let that = this
+				this.programList = [] as Array<UTSJSONObject>;
+				const fs = uni.getFileSystemManager();
+				const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
+				try {
+				  const items = fs.readdirSync(tempDir);
+	
+				  items?.forEach(item => {
+				    const itemPath = `${tempDir}/${item}`;
+				    fs.stat({
+						path: itemPath,
+						recursive: false,
+						success: res => {
+							// console.log(itemPath)
+							// console.log(res.stats[0].stats.mIsFile)
+							if(!res.stats[0].stats.mIsFile){
+								
+								
+								that.programList.push({
+									path: itemPath,
+									name: item
+								})
+								
+								// fs.readFile({
+								//   filePath: itemPath + '/MediaConfig.json', 
+								//   encoding: 'utf-8', // 指定编码格式
+								//   success: (resRead: ReadFileSuccessResult) => {
+								//     try {
+								// 		let t = resRead.data as string;
+								// 		const newt = JSON.parse(t.split("\\").join("/"));
+								// 		const npro = newt['Program'] as string
+								// 		that.programList.push({
+								// 			path: itemPath,
+								// 			name: newt['Left'],
+								// 			media: JSON.parse(npro)
+								// 		})
+										
+								//     } catch (error) {
+								//       console.error('JSON 解析失败:', error);
+								//     }
+								//   },
+								//   fail: (err) => {
+								//     console.error('读取文件失败:', err);
+								//   },
+								// });
+								
+							}
+						}
+					});
+				  });
+				  console.log('文件夹列表:', items);
+				} catch (err) {
+				  console.error('读取目录失败:', err);
+				}
+			},
+			handleRouteGoto(route: string): void{
+				let token = uni.getStorageSync("token")
+				//判断是否登录
+				if(token == ''){
+					uni.showModal({
+						title: "尚未登录，请您先登录?",
+						success: (res: UniShowModalResult) => {
+							if(res.confirm){
+								uni.switchTab({
+									url: '/pages/user/index'
+								});
+							}
+						}
+					})
+					return;
+				}else{
+					uni.navigateTo({
+						url: route
+					});
+				}
+			},
+			async getDevices(){
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					const activeUser = uni.getStorageSync('active-user') as UTSJSONObject;
+					const person: UTSJSONObject = {}
+					const param = '?userAccount=' + activeUser.account;
+					const result = await request('GET', APIS.deviceListPage as string + param, person)
+					console.log('result', result)
+					const d = result as Array<UTSJSONObject>;
+					this.deviceList = d
+					uni.hideLoading();
+				} catch (error) {
+				  console.error('获取设备列表失败', error)
+				}
+			},
+			handleCreate(){
+				this.createPopup = false;
+				routeGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
+			},
+			handleEdit(item: UTSJSONObject){
+				routeGoto('/pages/programs/editor?name=' + item['name']);
+			},
+			handlePush(item: UTSJSONObject){
+				this.pushPopup = true;
+				this.prePushProgram = item;
+			},
+			devicesChange(e: UniCheckboxGroupChangeEvent){
+				console.log('e.detail.value', e.detail.value)
+				this.preDevice = e.detail.value as Array<String>;
+			},
+			handlePushProgram(){
+				//先上传选中节目的zip
+				const file = `${uni.env.USER_DATA_PATH}/temp/program/` + this.prePushProgram.name + '.zip';
+				uni.uploadFile({
+				  url: APIS.uploadZip,
+				  filePath: file,
+				  name: 'file',
+				  header: {
+				  	'Authorization': "Bearer " + this.token
+				  },
+				  success: (res) => {
+					console.log('uploadZip success, res is:', res)
+					//发布
+					this.sendCMD()
+					uni.showToast({
+					  title: '上传成功',
+					  icon: 'success',
+					  duration: 1000
+					})
+				  },
+				  fail: (err) => {
+					console.log('uploadImage fail', err);
+					uni.showModal({
+					  content: err.errMsg,
+					  showCancel: false
+					});
+				  },
+				  complete: (res) => {
+					uni.hideLoading();
+				  }
+				});
+			},
+			sendCMD(){
+				console.log('开始发布')
+				this.preDevice.forEach((item, index) => {
+					console.log('开始发布item', item)
+					try {
+						uni.showLoading({
+							title: ''
+						});
+						const cmd = JSON.stringify({
+							"name": this.prePushProgram.name,
+							"mediaType": "PROGRAM",
+							"resolution": "256*192",
+							"size": 22088256,
+							"monitorCount": 2,
+							"lastUpdatedTime": "2025-07-17 22:46:00",
+							"createdSource": "admin",
+							"status": 1,
+							"playCountPerHour": null,
+							"isHasValidity": false,
+							"validStartDate": null,
+							"validEndDate": null,
+							"userAccount": this.userInfo.account,
+							"id": 1
+						});
+						uni.request({
+							url: APIS.sendCMD as string,
+							method: "POST",
+							header: {
+								'Authorization': "Bearer " + this.token
+							},
+							data:{
+								cmd: "CMD|SendProgram|" + cmd,
+								deviceSnCode: item
+							},
+							success: (ress) => {
+								console.log('sendCMD program res', ress)
+								uni.showToast({
+								  title: '发布成功',
+								  icon: 'success',
+								  duration: 1000
+								})
+							},
+							fail: (err) => {
+								console.log('sendCMD program err', err)
+								uni.showToast({
+								  title: '发布失败',
+								  icon: 'success',
+								  duration: 2000
+								})
+							}
+						});
+					} catch (err){
+						console.log(err)
+					}
+				})
+				this.pushPopup = false;
+				this.prePushProgram = {} as UTSJSONObject;
+			},
+			handleDel(item: UTSJSONObject){
+				console.log(item)
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.list-box{
+		padding: 0 32rpx;
+		.uc-menus{
+			border-radius: $uni-border-radius-lg;
+			background-color: $uni-bg-color;
+			padding: 0rpx 32rpx;
+			border-radius: $uni-border-radius-lg;
+			
+			.uc-menus-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				padding: 32rpx 0rpx;
+				.uc-menus-item-title{
+					width: 70%;
+					.programs-meta{
+						flex-direction: row;
+						align-items: center;
+						justify-content: flex-start;
+						padding-top: 12rpx;
+						.t{
+							font-size: $uni-font-size-sm;
+							color: $uni-text-color-grey;
+							margin-right: 24rpx;
+						}
+					}
+					
+				}
+				.btns{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					width: 30%;
+				}
+				
+			}
+			.uc-menus-item.end{
+				border: none;
+			}
+		}
+	}
+	.create-btn{
+		width: 100%;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		position: fixed;
+		bottom: 64rpx;
+		left: 0;
+		z-index: 999;
+		
+		.btn-box{
+			.btn{
+				border-radius: 120rpx;
+				border: none;
+				color: $uni-text-color-inverse;
+				font-size: $uni-font-size-lg;
+				background-color: $uni-bg-color-blue;
+				font-weight: bold;
+			}
+		}
+	}
+	
+	.program-meta{
+		.item{
+			padding: 24rpx 0;
+			.item-title {
+				.t {
+					color: $uni-text-color-grey;
+				}
+			}
+			.item-body{
+				padding-top: 24rpx;
+				.program-size{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					.input-box{
+						width: 45%;
+						.uni-input{
+							background-color: $uni-bg-color-grey;
+							border-radius: $uni-border-radius-lg;
+							font-size: $uni-font-size-lg;
+							padding: 24rpx 32rpx;
+						}
+					}
+					
+				}
+				.program-layout{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					.layout{
+						flex-direction: row;
+						align-items: center;
+						justify-content: center;
+						padding: 8rpx;
+					}
+					.layout.checked{
+						background-color: $uni-bg-color-light-blue;
+						border-radius: $uni-border-radius-lg;
+					}
+				}
+			}
+		}
+	}
+	.iscs{
+		color: #00b61f;
+	}
+</style>

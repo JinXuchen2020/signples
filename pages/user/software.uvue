@@ -1,0 +1,22 @@
+<template>
+	<view class="app">
+		<image src="/static/image/5.jpg" mode="widthFix" style="width: 100%;"></image>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				
+			}
+		},
+		methods: {
+			
+		}
+	}
+</script>
+
+<style>
+
+</style>

@@ -1,0 +1,181 @@
+@font-face {
+  font-family: "editor"; 
+  src: url('../../static/editor.ttf?t=1747118251132') format('truetype');
+}
+
+.yu-editor-icon {
+  font-family: "editor" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-up:before {
+  content: "\e60d";
+}
+
+.icon-top:before {
+  content: "\e60e";
+}
+
+.icon-down:before {
+  content: "\e610";
+}
+
+.icon-bottom:before {
+  content: "\e611";
+}
+
+.icon-text-justify:before {
+  content: "\e712";
+}
+
+.icon-text-center:before {
+  content: "\e713";
+}
+
+.icon-text-right:before {
+  content: "\e711";
+}
+
+.icon-text-left:before {
+  content: "\e710";
+}
+
+.icon-text-add:before {
+  content: "\e60a";
+}
+
+.icon-text:before {
+  content: "\e60b";
+}
+
+.icon-pic-add:before {
+  content: "\e60c";
+}
+
+.icon-layer:before {
+  content: "\e603";
+}
+
+.icon-layer-down:before {
+  content: "\e606";
+}
+
+.icon-layer-bottom:before {
+  content: "\e607";
+}
+
+.icon-layer-top:before {
+  content: "\e605";
+}
+
+.icon-layer-up:before {
+  content: "\e604";
+}
+
+.icon-save:before {
+  content: "\e602";
+}
+
+.icon-text-bold:before {
+  content: "\e601";
+}
+
+.icon-bg-color:before {
+  content: "\e600";
+}
+
+.icon-edit:before {
+  content: "\e609";
+}
+
+.icon-tailoring:before {
+  content: "\e608";
+}
+
+.icon-background:before {
+  content: "\e60f";
+}
+
+.icon-text-underline:before {
+  content: "\e62c";
+}
+
+.icon-font-size:before {
+  content: "\e61b";
+}
+
+.icon-text-italic:before {
+  content: "\e629";
+}
+
+.icon-text-style:before {
+  content: "\e627";
+}
+
+.icon-rect-selected:before {
+  content: "\e617";
+}
+
+.icon-align-left:before {
+  content: "\e642";
+}
+
+.icon-align-vertically:before {
+  content: "\e641";
+}
+
+.icon-flip-vertically:before {
+  content: "\e63e";
+}
+
+.icon-align-bottom:before {
+  content: "\e640";
+}
+
+.icon-align-top:before {
+  content: "\e63d";
+}
+
+.icon-align-horizontally:before {
+  content: "\e63b";
+}
+
+.icon-flip-horizontally:before {
+  content: "\e63c";
+}
+
+.icon-align-right:before {
+  content: "\e638";
+}
+
+.icon-texture:before {
+  content: "\e656";
+}
+
+.icon-pic:before {
+  content: "\e67f";
+}
+
+.icon-fingerprint:before {
+  content: "\e67e";
+}
+
+.icon-platte:before {
+  content: "\e674";
+}
+
+.icon-minus:before {
+  content: "\e6bd";
+}
+
+.icon-plus:before {
+  content: "\e6b7";
+}
+
+.icon-view-open:before {
+  content: "\e6e6";
+}
+

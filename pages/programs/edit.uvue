@@ -1,0 +1,313 @@
+<template>
+	<view class="app">
+		<view class="box">
+			<view 
+				class="canvas" 
+				id="ucanvas"
+				canvas-id="ucanvas"
+				:style="'width:' + canvasOption['width'] +'px; height: '+ canvasOption['height'] +'px;'">
+				<!-- canvas组件包 -->
+			</view>
+		</view>
+		<view class="tools">
+			<view class="pages">
+				<swiper id="swiper-view" :display-multiple-items="4" class="swiper">
+					<swiper-item class="swiper-item" item-id="1">
+						<view class="item active">
+							<text class="t">页面1</text>
+						</view>
+						<view class="item" style="background-color: #cccccc;">
+							<text class="t">+</text>
+						</view>
+					</swiper-item>
+				</swiper>
+			</view>
+			<view class="component">
+				<view class="item" @click="handleCheckComponent(0)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-6.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">视频</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(1)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-0.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">图片</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(2)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-1.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">文字</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(3)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-7.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">网页</text>
+					</view>
+				</view>
+				<view class="item" @click="handleCheckComponent(4)">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/component-8.png" mode="widthFix"></image>
+					</view>
+					<view class="text">
+						<text class="t">文档</text>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script lang="uts">
+	import * as ucan from "@/uni_modules/u-canvas";
+	import {
+		UCanvas,
+		Composition,
+		Text,
+		Rectangle,
+		Polyline,
+		Ring,
+		Pie,
+		Circle,
+		Polygon,
+		Picture,
+		ImagePixel,
+		Point,
+	} from "@/uni_modules/u-canvas";
+	
+	const uCanvas = new UCanvas({ canvasId: "ucanvas" });
+	
+	export default {
+		data() {
+			return {
+				canvasOption: {
+					width: 0,
+					height: 0
+				} as UTSJSONObject
+			}
+		},
+		onLoad(e: OnLoadOptions): void {
+		  console.log('new program=', e);
+		  this.canvasOption['width'] = e['width']
+		  this.canvasOption['height'] = e['height']
+		  uni.setNavigationBarTitle({
+				title: this.$t('pages.programEdit')
+		  });
+		},
+		onReady() {
+			this.init();
+		},
+		methods: {
+			handleCheckComponent(index: Number){
+				console.log(index);
+				uni.showToast({
+					icon: 'none',
+					title: '开发中，请等待',
+					duration: 3000,
+					success: () => { 
+					}
+				})
+			},
+			async init(): Promise<void> {
+			        await uCanvas.ensureInitialize();
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 10,
+			                y: 10,
+			                children: [
+			                    new Rectangle({ x: 0, y: 0, w: 100, h: 100, radii: 10 }),
+			                    new Text({ x: 0, y: 120, text: "Rectangle" }),
+			                ],
+			            })
+			        );
+			
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 140,
+			                y: 10,
+			                children: [
+			                    new Polyline({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100), new Point(100, 100)], }),
+			                    new Text({ x: 0, y: 120, text: "Polyline" }),
+			                ],
+			            })
+			        );
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 270,
+			                y: 10,
+			                children: [
+			                    new Polygon({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100)], }),
+			                    new Text({ x: 0, y: 120, text: "Polygon" }),
+			                ],
+			            })
+			        );
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 10,
+			                y: 160,
+			                children: [
+			                    new Pie({
+			                        cx: 50,
+			                        cy: 50,
+			                        radius: 50,
+			                        startAngle: 0,
+			                        endAngle: Math.PI + Math.PI / 3,
+			                    }),
+			                    new Text({ x: 0, y: 120, text: "Pie" }),
+			                ],
+			            })
+			        );
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 140,
+			                y: 160,
+			                children: [
+			                    new Circle({ cx: 50, cy: 50, radius: 50, }),
+			                    new Text({ x: 0, y: 120, text: "Circle" }),
+			                ],
+			            })
+			        );
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 270,
+			                y: 160,
+			                children: [
+			                    new Ring({
+			                        cx: 50,
+			                        cy: 50,
+			                        innerRadius: 30,
+			                        outerRadius: 50,
+			                        startAngle: 0,
+			                        endAngle: Math.PI + Math.PI / 1.5,
+			                    }),
+			                    new Text({ x: 0, y: 120, text: "Ring" }),
+			                ],
+			            })
+			        );
+			        const data = new Uint8ClampedArray([
+			            parseInt("10000000", 2),
+			            parseInt("01000000", 2),
+			            parseInt("00100000", 2),
+			            parseInt("00010000", 2),
+			            parseInt("00001000", 2),
+			            parseInt("00000100", 2),
+			            parseInt("00000010", 2),
+			            parseInt("00000001", 2),
+			        ]);
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 10,
+			                y: 300,
+			                children: [
+			                    new ImagePixel({
+			                        imageData: uCanvas.makeImageData({ data, bytesPerScanline: 8, array: [12, 12] }),
+			                        x: 0,
+			                        y: 0,
+			                    }),
+			                    new Text({ x: 0, y: 120, text: "ImagePixel" }),
+			                ],
+			            })
+			        );
+			
+			        const image = await uCanvas.createImage("/static/logo.png");
+			        // const image = await uCanvas.createImage("https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png");
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 140,
+			                y: 300,
+			                children: [
+			                    new Picture({ image: image, x: 0, y: 0, w: 100, h: 100, }),
+			                    new Text({ x: 0, y: 120, text: "Image" }),
+			                ],
+			            })
+			        );
+			        uCanvas.addGraphic(
+			            new Composition({
+			                x: 10,
+			                y: 500,
+			                children: [
+			                    new Text({ x: 0, y: 0, text: "ABCDEFGHIJKLMNOPQRSTUVWXYZ" }),
+			                    new Text({ x: 0, y: 24, text: "abcdefghijklmnopqrstuvwxyz" }),
+			                ],
+			            })
+			        );
+			        uCanvas.render();
+			    }
+		}
+	}
+</script>
+
+<style lang="scss">
+	.box{
+		flex-direction: row;
+		align-items: flex-start;
+		justify-content: center;
+		width: 100%;
+		height: 70%;
+		padding-top: 20px;
+		
+		.canvas{
+			background-color: #000000;
+			width: 70%;
+			height: 840rpx;
+		}
+	}
+	.tools{
+		position: fixed;
+		width: 100%;
+		left: 0;
+		bottom: 0;
+		z-index: 999;
+		background-color: $uni-bg-color;
+		padding: 24rpx;
+		.pages{
+			padding: 24rpx  0;
+			.swiper-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+				.item{
+					width: 21%;
+					height: 96rpx;
+					background-color: #000000;
+					flex-direction: row;
+					align-items: center;
+					justify-content: center;
+					border-radius: $uni-border-radius-lg;
+					margin: 0 2%;
+					.t{
+						color: $uni-text-color-inverse;
+						font-size: $uni-font-size-sm;
+					}
+				}
+				.item.active{
+					background-color: $uni-bg-color-blue;
+				}
+			}
+		}
+		.component{
+			padding: 24rpx 0;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			.item{
+				.icon-box{
+					margin: 0 auto;
+				}
+				.t{
+					font-size: $uni-font-size-sm;
+				}
+			}
+		}
+	}
+</style>

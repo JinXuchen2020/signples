@@ -1,0 +1,80 @@
+{
+    "id": "image-editing",
+    "displayName": "canvas，图片编辑器生成编辑后的图片，涂鸦，文字，线条，素材，上传，下载",
+    "version": "1.0.3",
+    "description": "一个简单的图片编辑器组件，支持添加图片、文字、绘画等功能,使用canvas实现，代码暂时清空，有需要，可留言，私信",
+    "keywords": [
+        "图片",
+        "编辑器",
+        "绘画",
+        "文字",
+        "添加图层"
+    ],
+    "repository": "",
+    "engines": {
+    },
+    "dcloudext": {
+        "sale": {
+            "regular": {
+                "price": "0.00"
+            },
+            "sourcecode": {
+                "price": "0.00"
+            }
+        },
+        "contact": {
+            "qq": ""
+        },
+        "declaration": {
+            "ads": "无",
+            "data": "无",
+            "permissions": "无"
+        },
+        "npmurl": "",
+        "type": "component-vue"
+    },
+    "uni_modules": {
+        "dependencies": [],
+        "encrypt": [],
+        "platforms": {
+            "cloud": {
+                "tcb": "y",
+                "aliyun": "y",
+                "alipay": "n"
+            },
+            "client": {
+                "App": {
+                    "app-vue": "n",
+                    "app-nvue": "n",
+                    "app-harmony": "u",
+                    "app-uvue": "n"
+                },
+                "H5-mobile": {
+                    "Safari": "n",
+                    "Android Browser": "n",
+                    "微信浏览器(Android)": "n",
+                    "QQ浏览器(Android)": "n"
+                },
+                "H5-pc": {
+                    "Chrome": "n",
+                    "IE": "n",
+                    "Edge": "n",
+                    "Firefox": "n",
+                    "Safari": "n"
+                },
+                "小程序": {
+                    "微信": "y",
+                    "阿里": "n",
+                    "百度": "n",
+                    "字节跳动": "n",
+                    "QQ": "n",
+                    "钉钉": "n"
+                },
+                "快应用": {
+                    "华为": "n",
+                    "联盟": "n"
+                }
+            }
+        }
+    }
+}

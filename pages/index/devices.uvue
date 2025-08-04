@@ -1,0 +1,472 @@
+<template>
+	<scroll-view class="app">
+		<view class="space-box"></view>
+		<view class="add shadow" @click="handleCreate()">
+			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
+		</view>
+		<view class="active-user">
+			<text class="t">-- {{userAccount}}  {{ $t('index.BelongingDevice') }} --</text>
+		</view>
+		<view class="space-box"></view>
+		<view class="wifi-list">
+			<view v-if="deviceList.length > 0" class="item shadow" v-for="(item, index) in deviceList" :key="index">
+				<view class="c" style="padding-bottom: 24rpx;justify-content: flex-start;">
+					<view v-if="item['connectStatus'] == 1" class="icon-box icon-box-big wi2">
+						<image class="icon" src="/static/icon/2-w.png" mode="widthFix"></image>
+					</view>
+					<view v-else class="icon-box icon-box-big wi">
+						<image class="icon" src="/static/icon/2.png" mode="widthFix"></image>
+					</view>
+					<view>
+						<view>
+							<text class="wifi-t1">{{item['name']}}</text>
+						</view>
+						<view class="text-box">
+							<text class="key">SN:</text>
+							<text class="value">{{item['snCode']}}</text>
+						</view>
+					</view>
+				</view>
+				<view class="c" style="background-color: #f9f9f9;border-radius: 12rpx;padding: 24rpx;">
+					<view class="text-box-v" @click="handleEditDevice(item)">
+						<text class="key">{{ $t('index.Resolution') }}</text><text class="value">{{item['width']}}*{{item['height']}}</text>
+					</view>
+					<view class="text-box-v">
+						<text class="key">{{ $t('index.Status') }}</text> 
+						<text class="value" :class="{active: item['status'] == '1'}">{{item['status'] == '0' ? $t('index.Inactive') : $t('index.Activate')}}</text>
+					</view>
+					<view class="text-box-v">
+						<text class="key">{{ $t('index.ConnectionStatus') }}</text> 
+						<text class="value" :class="{active: item['connectStatus'] == 1}">{{item['connectStatus'] == 0 ? $t('index.NotConnected') : $t('index.Connected')}}</text>
+					</view>
+				</view>
+				<view class="c" style="padding-top: 24rpx;">
+					<view  class="text-box">
+						<text class="key">{{$t('index.DeviceValidityPeriod') }}:</text>
+						<text class="value">{{item['validEnd']}}</text>
+						<text class="value vend" v-if="item['isvalidEnd']">({{$t('index.Expired') }})</text>
+					</view>
+					<view class="wifi-btns">
+						<button v-if="item['connectStatus'] == 1" class="btn" size="mini" @click="handleEditDevice(item)">
+							{{$t('index.Manage') }}
+						</button>
+						<button v-else class="btn del" size="mini" @click="handleDelete(item)">
+							{{$t('index.Delete') }}
+						</button>
+					</view>
+				</view>
+			</view>
+			<view class="no-more" v-else>
+				<text class="t">{{$t('index.NoMore') }}</text>
+			</view>
+		</view>
+	</scroll-view>
+</template>
+
+<script lang="uts">
+	import { APIS } from '@/api/config.uts'
+	import { routeGoto } from '@/common/router.uts'
+	
+	import { request } from '@/utils/http/index'
+	export default {
+		data() {
+			return {
+				isWifi: false,
+				activeWifi: {
+					
+				},
+				wifiList: null,
+				rotation: 0,
+				isRotating: true,
+				userInfo: {} as UTSJSONObject,
+				deviceList: [] as Array<UTSJSONObject>,
+				token: '' as string,
+				userAccount: '' as string,
+				userId: '' as string
+				
+			}
+		},
+		onLoad(e: OnLoadOptions): void {
+		  // console.log(' device', e);
+		    this.userId = e['user_id'] as string;
+		    this.userAccount = e['user_account'] as string;
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.deviceManagement')
+			});
+		},
+		onShow() {
+			let that = this
+			//获取当前有没有用户登录
+			uni.getStorage({
+			  key: 'token',
+			  success: function(res) {
+				  // console.log('token res', res)
+				  const token = res.data ?? '';
+				  if(token !== ''){
+					  that.token = token as string;
+					  // console.log('this.token =', that.token)
+					  // this.getDeviceListPage();
+					  that.getDeviceList();
+					  uni.getStorage({
+					    key: 'userInfo',
+					    success: function(r) {
+							console.log(r)
+							const userInfo = r.data ?? {};
+					  		this.userInfo = userInfo as UTSJSONObject;
+					    },
+					    fail: function(err) {
+					      console.log('读取失败userInfo或不存在', err);
+					    }
+					  });
+				  }
+			  },
+			  fail: function(err) {
+			    console.log('读取失败token或不存在，请先登录', err);
+				this.deviceList =  [] as Array<UTSJSONObject>;
+				uni.showModal({
+					title: "尚未登录，请您先登录?",
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							uni.removeStorage({
+								key: 'token',
+								success: function(res) {
+								}
+							});
+							uni.switchTab({
+								url: '/pages/user/index'
+							});
+						}
+					}
+				})
+			  }
+			});
+		},
+		methods: {
+			handleRouteGoto(route: string): void{
+				let token = uni.getStorageSync("token")
+				//判断是否登录
+				if(token == ''){
+					uni.showModal({
+						title: "尚未登录，请您先登录??",
+						success: (res: UniShowModalResult) => {
+							if(res.confirm){
+								uni.switchTab({
+									url: '/pages/user/index'
+								});
+							}
+						}
+					})
+					return;
+				}else{
+					uni.navigateTo({
+						url: route
+					});
+				}
+			},
+			async getDeviceList() {
+			  try {
+				uni.showLoading({
+				  	title: ''
+				});
+				const person: UTSJSONObject = {}
+				const param = '?userAccount=' + this.userAccount;
+			    const result = await request('GET', APIS.deviceListPage as string + param, person)
+				console.log('result', result)
+				const currentDate = new Date().getTime()
+				const d = result as Array<UTSJSONObject>;
+				const copyD: UTSJSONObject[] = [];
+					  d.forEach((item: UTSJSONObject) => {
+						  const nitem = item as UTSJSONObject;
+						  const day = item['validEnd'] as String;
+						  const daynum = new Date(day).getTime();
+						  if(currentDate > daynum){
+							  nitem['isvalidEnd'] = true;
+						  }else{
+							  nitem['isvalidEnd'] = false;
+						  }
+						copyD.push(nitem);
+					  });
+				// console.log('copyD', copyD)
+				this.deviceList = copyD
+				uni.hideLoading();
+			  } catch (error) {
+			    console.error('获取设备列表失败', error)
+			  }
+			},
+			async getDeviceListPage(){
+				// try {
+				// 	uni.showLoading({
+				// 		title: ''
+				// 	});
+				// 	uni.request({
+				// 		url: APIS.deviceListPage as string,
+				// 		method: "GET",
+				// 		header: {
+				// 			'Authorization': "Bearer " + this.token
+				// 		},
+				// 		data:{
+							
+				// 		},
+				// 		success: (res) => {
+				// 			console.log('list=', res)
+				// 			uni.hideLoading();
+				// 			if(res.statusCode == 200){
+				// 				const result = res.data as UTSJSONObject;
+				// 				const currentDate = new Date().getTime();
+				// 				if(result['code'] == 200){
+				// 					const d = result['data'] as Array<UTSJSONObject>;
+				// 					const copyD: UTSJSONObject[] = [];
+				// 					      d.forEach((item: UTSJSONObject) => {
+				// 							  const nitem = item as UTSJSONObject;
+				// 							  const day = item['validEnd'] as String;
+				// 							  const daynum = new Date(day).getTime();
+				// 							  if(currentDate > daynum){
+				// 								  nitem['isvalidEnd'] = true;
+				// 							  }else{
+				// 								  nitem['isvalidEnd'] = false;
+				// 							  }
+				// 					        copyD.push(nitem);
+				// 					      });
+				// 					console.log('copyD', copyD)
+				// 					this.deviceList = copyD
+				// 				}else if(result['code'] == 401){
+				// 					uni.removeStorage({
+				// 						key: 'token',
+				// 						success: function(res) {
+				// 							uni.showModal({
+				// 								title: "尚未登录，请您先登录?",
+				// 								success: (res: UniShowModalResult) => {
+				// 									if(res.confirm){
+				// 										uni.switchTab({
+				// 											url: '/pages/user/index'
+				// 										});
+				// 									}
+				// 								}
+				// 							})
+				// 						}
+				// 					})
+									
+				// 				}else{
+				// 					uni.showToast({
+				// 						icon: 'none',
+				// 						title: result['msg'] as string,
+				// 						duration: 2000,
+				// 						success: () => {
+				// 						}
+				// 					})
+				// 				}
+				// 			}else{
+				// 				uni.showToast({
+				// 					icon: 'none',
+				// 					title: '获取设备列表失败',
+				// 					duration: 2000,
+				// 					success: () => {
+										
+				// 					}
+				// 				})
+				// 			}
+							
+				// 		},
+				// 		fail: () => {
+							
+				// 		}
+				// 	});
+				// } catch (err){
+				// 	console.log(err)
+				// }
+			},
+			async handleDelete(device: UTSJSONObject){
+				let that = this
+				uni.showModal({
+					title: "确定要删除该设备吗?",
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							
+							try {
+								uni.showLoading({
+									title: ''
+								});
+								uni.request({
+									url: APIS.deleteDevice as string + '/' + device.id,
+									method: "DELETE",
+									header: {
+										'Authorization': "Bearer " + this.token
+									},
+									data:{
+										
+									},
+									success: (res) => {
+										console.log('delete res', res)
+										uni.hideLoading();
+										that.getDeviceList();
+									},
+									fail: () => {
+										
+									}
+								});
+							} catch (err){
+								console.log(err)
+							}
+							
+							
+						}
+					}
+				})
+			},
+			handleCreate(){
+				routeGoto('/pages/devices/create');
+			},
+			handleEditDevice(device: UTSJSONObject){
+				//写入到缓存，并跳转回首页，从首页的设备控制里跳转到页面
+				uni.setStorageSync('active-device', device);
+				routeGoto('/pages/devices/edit?device_id=' + device.id);
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.active-user{
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		
+		.t{
+			font-weight: bold;
+			font-size: 28rpx;
+		}
+	}
+	.wifi-info {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 24rpx 36rpx;
+		border-bottom: 1px solid #eeeeee;
+		
+		.wifi-meta {
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-start;
+			.wifi-name{
+				color: $uni-text-color;
+				font-size: 28rpx;
+			}
+		}
+		.scan {
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-start;
+			.t {
+				color: $uni-text-color;
+				font-size: 28rpx;
+			}
+		}
+	}
+	
+	.find-new-wifi {
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		padding: 24rpx 36rpx;
+		.t {
+			color: $uni-text-color;
+			font-size: 28rpx;
+		}
+	}
+	
+	.wifi-list {
+		padding: 0 36rpx;
+		.item{
+			background-color: $uni-bg-color;
+			border-radius: $uni-border-radius-lg;
+			padding: 16rpx 24rpx;
+			margin: 0 0 36rpx 0;
+			.c{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				padding: 8rpx 0;
+				.text-box{
+					flex-direction: row;
+					align-items: center;
+					justify-content: flex-start;
+				}
+				.text-box,
+				.text-box-v{
+					.wifi-t1{
+						font-size: 32rpx;
+					}
+					.key{
+						font-size: 24rpx;
+						color: $uni-text-color-placeholder;
+						margin-right: 16rpx;
+					}
+					.value{
+						font-size: 24rpx;
+						color: $uni-text-color;
+					}
+					.value.active{
+						color: $uni-color-primary;
+					}
+					.value.vend{
+						color: $uni-color-warning;
+					}
+				}
+				.text-box-v{
+					.key{
+						text-align: center;
+						margin-right: 0;
+					}
+					.value{
+						text-align: center;
+						font-weight: bold;
+						padding-top: 12rpx
+					}
+				}
+				.wi{
+					background-color: beige;
+					padding: 12rpx;
+					border-radius: 12rpx;
+				}
+				.wi2{
+					background-color: $uni-color-primary;
+					padding: 12rpx;
+					border-radius: 12rpx;
+				}
+				
+				.wifi-btns{
+					.btn{
+						// border-radius: 120rpx;
+						border: none;
+						color: $uni-text-color-inverse;
+						font-size: 28rpx;
+						background-color: $uni-bg-color-blue;
+					}
+					.btn.del{
+						color: $uni-color-error;
+						background-color: $uni-text-color-inverse;
+						border: 1px solid #f9f9f9;
+					}
+				}
+			}
+		}
+	}
+	.add{
+		position: fixed;
+		z-index: 99999;
+		width: 96rpx;
+		height: 96rpx;
+		right: 25rpx;
+		bottom: 256rpx;
+		flex-direction: row;
+		align-items: center;
+		justify-content:center;
+		background-color: $uni-color-success;
+		border-radius: $uni-border-radius-circle;
+		.image{
+			width: 48rpx;
+			height: 48rpx;
+		}
+	}
+	
+</style>

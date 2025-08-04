@@ -1,0 +1,229 @@
+<template>
+	<view class="app">
+		<view class="canvas-component">
+			<canvas 
+				canvas-id="ucanvas" 
+				id="ucanvas" 
+				class="canvas" 
+				:style="'width:256px;height:192px;'" />
+		</view>
+		
+	</view>
+</template>
+<script lang="uts" setup>
+    import * as ucan from "@/uni_modules/u-canvas";
+    import {
+        UCanvas,
+        Composition,
+        Text,
+        Rectangle,
+        Polyline,
+        Ring,
+        Pie,
+        Circle,
+        Polygon,
+        Picture,
+        ImagePixel,
+        Point,
+    } from "@/uni_modules/u-canvas";
+	
+	import { routeGoto } from '@/common/router.uts'
+	import i18n from '@/locale'
+	
+    const uCanvas = new UCanvas({ canvasId: "ucanvas" });
+	
+	const canvasWidth = ref('256');
+	const canvasHeight = ref('192');
+	
+	
+    async function init() : Promise<void> {
+        await uCanvas.ensureInitialize();
+       
+        uCanvas.render();
+    }
+	
+	
+	onLoad((e: OnLoadOptions): void => {
+		const defl = uni.getStorageSync('language') as string
+		
+		let defaultLang =  'kr'
+		if(defl != ''){
+			defaultLang = defl
+		}
+		uni.setNavigationBarTitle({
+			title: i18n.global.t('pages.programPreview', null, defaultLang)
+		})
+	});
+    onReady(() => {
+        
+		
+    });
+</script>
+
+<style lang="scss">
+    .canvas-component {
+        width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 60px 20px 20px 20px;
+		height: 200px;
+		border: 2px solid #000;
+		
+		.canvas {
+		    width: 100%;
+		    height: 100%;
+			background: #000000;
+		}
+    }
+	.tools{
+		position: fixed;
+		width: 100%;
+		left: 0;
+		bottom: 0;
+		z-index: 999;
+		background-color: $uni-bg-color;
+		padding: 24rpx;
+		.pages{
+			padding: 24rpx  0;
+			.swiper-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+				.item{
+					width: 21%;
+					height: 96rpx;
+					background-color: #000000;
+					flex-direction: row;
+					align-items: center;
+					justify-content: center;
+					border-radius: $uni-border-radius-lg;
+					margin: 0 2%;
+					.t{
+						color: $uni-text-color-inverse;
+						font-size: $uni-font-size-sm;
+					}
+				}
+				.item.active{
+					background-color: $uni-bg-color-blue;
+				}
+			}
+		}
+		.component{
+			padding: 24rpx 0;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			.item{
+				.icon-box{
+					margin: 0 auto;
+				}
+				.t{
+					font-size: $uni-font-size-sm;
+				}
+			}
+		}
+	}
+    .top-button{
+		padding: 24rpx 0;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		position: fixed;
+		right: 0;
+		top: 0;
+		.item{
+			.icon-box{
+				margin: 0 12rpx;
+				.icon{
+					background: #ffffff;
+					border-radius: 128rpx;
+					padding: 8rpx;
+					border: 1px solid #eeeeee;
+				}
+			}
+			.t{
+				font-size: $uni-font-size-sm;
+			}
+		}
+	}
+	.options{
+		padding: 24rpx;
+		
+		.options-tab{
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			padding-bottom: 24rpx;
+			
+			.item{
+				padding: 0 24rpx;
+				.t{
+					font-size: 14px;
+				}
+			}
+			.item.active{
+				.t{
+					color: $uni-color-primary
+				}
+			}
+		}
+		.option-body {
+			.option-a,
+			.option-b {
+				display: none;
+			}
+			.option-a.active,
+			.option-b.active {
+				display: flex;
+			}
+			
+			.page-option-form{
+				background: #ffffff;
+				border-radius: 24rpx;
+				box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
+				padding: 12rpx 0;
+				
+				.item{
+					padding: 18rpx 24rpx;
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					
+					.item-key{
+						width: 30%;
+						.t{
+							font-size: 14px;
+							color: #999999;
+						}
+					}
+					.item-value{
+						width: 70%;
+						display: flex;
+						flex-direction: row;
+						.sub-list{
+							width: 100%;
+							
+							.sub-item{
+								width: 100%;
+								
+								.sub-value{
+									flex-direction: row;
+									align-items: center;
+									justify-content: space-between;
+								}
+							}
+						}
+						.uni-input{
+							border: 1px solid #ccc;
+							border-radius: 12rpx;
+						}
+					}
+				}
+			}
+		}
+	}
+</style>

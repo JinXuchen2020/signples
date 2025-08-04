@@ -1,0 +1,122 @@
+<template>
+	<view class="app">
+		<view class="ad-images">
+			<image class="image" src="/static/image/ad.png" mode="widthFix"></image>
+		</view>
+		<view class="device-info">
+			<view class="device-name">
+				<text>Virtual-NS2K1</text>
+			</view>
+			<view class="btns-box">
+				<text class="btn"  @click="handleRouteGoto('/pages/index/devices', false)">切换设备</text>
+			</view>
+		</view>
+		<view class="programs">
+			<view class="item">
+				<view class="ad-images-s">
+					<image class="image" src="/static/image/ad.png" mode="widthFix"></image>
+					<view class="text">
+						<text class="t">播放中</text>
+					</view>
+				</view>
+				<view class="ad-name">
+					<text>20250623002</text>
+				</view>
+			</view>
+			<view class="item">
+				<view class="ad-images-s">
+					<image class="image" src="/static/image/ad.png" mode="widthFix"></image>
+					<view class="text">
+						<text class="t">等待播放</text>
+					</view>
+				</view>
+				<view class="ad-name">
+					<text>20250623003</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script lang="uts">
+	export default {
+		data() {
+			return {
+				
+			}
+		},
+		methods: {
+			handleRouteGoto(route: string, isConnect: boolean){
+				if(isConnect == true){ //需要连接设备
+					uni.navigateTo({
+						url: route
+					});
+				}else{ //需要连接设备
+					uni.navigateTo({
+						url: route
+					});
+				}
+			},
+		}
+	}
+</script>
+
+<style lang="scss">
+	.device-info{
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 24rpx 36rpx;
+		border-bottom: 1px solid #eeeeee;
+		.ad-images{
+			.image{
+				width: 100%;
+			}
+		}
+		.btns-box{
+			.btn{
+				border-radius: 96rpx;
+				border: 1rpx solid $uni-color-primary;
+				color: $uni-color-primary;
+				padding: 12rpx 24rpx;
+				font-size: $uni-font-size-base;
+			}
+		}
+	}
+	.programs{
+		.item{
+			padding: 24rpx 36rpx;
+			flex-direction: row;
+			align-items: flex-start;
+			justify-content: flex-start;
+			.ad-images-s{
+				width: 40%;
+				position: relative;
+				.image{
+					width: 100%;
+					border-radius: $uni-border-radius-lg;
+				}
+				.text{
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 100%;
+					height: 100%;
+					z-index: 99;
+					flex-direction: row;
+					align-items: center;
+					justify-content: center;
+					background-color: $uni-bg-color-mask;
+					border-radius: $uni-border-radius-lg;
+					.t{
+						color: $uni-text-color-inverse;
+						font-size: $uni-font-size-base;
+					}
+				}
+			}
+			.ad-name{
+				padding-left: 24rpx;
+			}
+		}
+	}
+</style>

@@ -1,0 +1,8 @@
+{
+  "deploymentTarget": "9",
+  "dependencies-pods": [
+  	{
+  		"name": "CocoaAsyncSocket",
+  		"version": "7.6.5"
+  	}]
+}

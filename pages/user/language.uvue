@@ -1,0 +1,82 @@
+<template>
+	<view>
+		<view class="uc-menus">
+			<view v-for="(item, index) in langs" :key="index">
+				<view class="uc-menus-item" @click="choiceLang(item.name)">
+					<view class="uc-menus-item-title">
+						<text>{{item.lang}}</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script  lang="uts">
+	import { useI18n } from '@/uni_modules/lime-i18n'
+	import { changeLanguage } from '@/locale'
+	
+	type LangItem = {
+	    lang: string,
+	    name: string
+	}
+	
+	export default {
+		data() {
+			return {
+				langs: [
+					{
+						lang: '简体中文',
+						name: 'zh-CN'
+					},
+					{
+						lang: 'English',
+						name: 'en'
+					},
+					{
+						lang: 'にほんご',
+						name: 'jp'
+					},
+					{
+						lang: '한국어',
+						name: 'kr'
+					}
+				] as Array<LangItem>
+			}
+		},
+		methods: {
+			choiceLang(lang: string) {
+				changeLanguage(lang)
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.uc-menus {
+		border-radius: $uni-border-radius-lg;
+		background-color: $uni-bg-color;
+		padding: 12rpx 24rpx;
+
+		.uc-menus-item {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid #eeeeee;
+			padding: 24rpx 0rpx;
+
+			.uc-menus-item-title {
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+			}
+		}
+
+		.uc-menus-item.end {
+			border-bottom: 0px solid #eeeeee;
+		}
+	}
+</style>

@@ -1,0 +1,186 @@
+<template>
+	<scroll-view class="app">
+		<view class="space-box"></view>
+		<view class="list-box">
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>亮度</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title">
+						<text>音量</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>时间</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title">
+						<text>网络设置</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>同步播放</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>单机播放</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>屏幕旋转</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title">
+						<text>软拼接</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>重启</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>开关机</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title">
+						<text>还原</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>绑定上云</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>设备密码</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>监控信息</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title">
+						<text>设备信息</text>
+					</view>
+					<view class="icon-box">
+						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
+		</view>
+	</scroll-view>
+</template>
+
+<script lang="uts">
+	export default {
+		data() {
+			return {
+				
+			}
+		},
+		methods: {
+			
+		}
+	}
+</script>
+
+<style lang="scss">
+	.list-box{
+		padding: 0 32rpx;
+		.uc-menus{
+			border-radius: $uni-border-radius-lg;
+			background-color: $uni-bg-color;
+			padding: 0rpx 32rpx;
+			border-radius: $uni-border-radius-lg;
+			
+			.uc-menus-item{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				border-bottom: 1px solid #eeeeee;
+				padding: 32rpx 0rpx;
+				.uc-menus-item-title{
+					flex-direction: row;
+					align-items: center;
+					justify-content: flex-start;
+				}
+				.icon-box{
+					margin-right: 0 !important;
+				}
+			}
+			.uc-menus-item.end{
+				border: none;
+			}
+		}
+	}
+	
+</style>

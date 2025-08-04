@@ -1,0 +1,29 @@
+const BASE_URL = 'http://1.255.226.145:12106';
+
+export type ApiEndpoints = {
+  login: string;
+  userInfo: string;
+  usersAll: string;
+  deviceListPage: string;
+  deviceInfo: string;
+  deleteDevice: string;
+  updateDevice: string;
+  createDevice: string;
+  uploadZip: string;
+  sendCMD: string;
+};
+
+export const APIS: ApiEndpoints = {
+  login: BASE_URL + '/simpleLogin',
+  userInfo: BASE_URL + '/user/',
+  usersAll: BASE_URL + '/user/all',
+  deviceListPage: BASE_URL + '/monitor/all',
+  deviceInfo: BASE_URL + '/monitor/',
+  deleteDevice: BASE_URL + '/monitor',
+  updateDevice: BASE_URL + '/monitor',
+  createDevice: BASE_URL + '/monitor',
+  uploadZip: BASE_URL + '/programme/upload',
+  sendCMD: BASE_URL + '/monitor/sendCmd',
+};
+
+export default APIS;
