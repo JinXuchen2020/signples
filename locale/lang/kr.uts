@@ -26,7 +26,7 @@ export default {
     BelongingUser: "소속 사용자",
 	Reselect:"다시 선택",
 	Choice:"기기를 선택하시면 쉽게 제어할 수 있습니다",
-	SelectDevice:"기기 선택"
+	SelectDevice:"기기 선택",
 	QuickProgram:"빠른 프로그램",
 	Steps:"단 3단계만 거치면 프로그램 언제나 출시 가능",
 	AddMedia:"미디어 추가",
@@ -90,7 +90,7 @@ export default {
   },
   user:{
   	Admin:"관리자",
-  	Agent:"대리점"
+  	Agent:"대리점",
   	RegularUser:"일반 사용자",
   	Login:"먼저 여기를 클릭하여 로그인해주세요",
   	Help:"도움말",

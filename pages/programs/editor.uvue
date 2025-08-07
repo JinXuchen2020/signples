@@ -8,17 +8,17 @@
 				:style="'width:'+canvasWidth+'px;height:'+canvasHeight+'px;'" />
 		</view>
 		<view class="top-button">
-			<view class="item" @click="handleSave()">
+			<view class="item">
 				<view class="icon-box icon-box-big no-margin">
 					<image class="icon" src="/static/svg/save.png" mode="widthFix"></image>
 				</view>
 			</view>
-			<view class="item" @click="handlePush()">
+			<view class="item">
 				<view class="icon-box icon-box-big no-margin">
 					<image class="icon" src="/static/svg/push.png" mode="widthFix"></image>
 				</view>
 			</view>
-			<view class="item" @click="handleReview()">
+			<view class="item">
 				<view class="icon-box icon-box-big no-margin">
 					<image class="icon" src="/static/svg/reviewb.png" mode="widthFix"></image>
 				</view>
@@ -29,9 +29,9 @@
 				<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
 				<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
 			</view>
-			<scroll-view class="option-body" style="height: 260px;">
+			<scroll-view class="option-body" style="height: 360px; overflow-y: auto;">
 				<view class="option-a" :class="{active: activeTab == 0}">
-					请先选择组件
+					<VideoForm :item="activeComponent" @refresh="updateComponent" />
 				</view>
 				<view class="option-b" :class="{active: activeTab == 1}">
 					<view class="page-option-form">
@@ -40,7 +40,7 @@
 								<text class="t">名称</text>
 							</view>
 							<view class="item-value">
-								<input type="text" value="页面1" class="uni-input" />
+								<input type="text" :value="activePage?.name" class="uni-input" />
 							</view>
 						</view>
 						<view class="item">
@@ -48,9 +48,13 @@
 								<text class="t">类型</text>
 							</view>
 							<view class="item-value">
-								<radio><text>常规</text></radio>
-								<view style="width: 24rpx;"></view>
-								<radio><text>广告</text></radio>
+								<radio-group name="type" @change="handleTypeChange">
+									<view class="radio-group" >
+										<radio value="normal" :checked="activePage?.type == 'normal'" >常规</radio>
+										<view style="width: 24rpx;"></view>
+										<radio value="ad" :checked="activePage?.type == 'ad'">广告</radio>
+									</view>
+								</radio-group>
 							</view>
 						</view>
 						<view class="item">
@@ -58,7 +62,23 @@
 								<text class="t">有效期</text>
 							</view>
 							<view class="item-value">
-								<checkbox></checkbox>
+								<checkbox :checked="activePage?.isHasValidity == true" @click="handleIsHasValidityChange"></checkbox>
+							</view>
+						</view>
+						<view class="item" v-show="activePage?.isHasValidity == true">
+							<view class="item-key">
+								<text class="t">开始日期</text>
+							</view>
+							<view class="item-value">
+								<input type="date" :value="activePage?.validStartDate" class="uni-input" />
+							</view>
+						</view>
+						<view class="item" v-if="activePage?.isHasValidity == true">
+							<view class="item-key">
+								<text class="t">结束日期</text>
+							</view>
+							<view class="item-value">
+								<input type="date" :value="activePage?.validEndDate" class="uni-input" />
 							</view>
 						</view>
 						<view class="item">
@@ -66,7 +86,7 @@
 								<text class="t">播放次数</text>
 							</view>
 							<view class="item-value">
-								<input type="text" value="1" class="uni-input" />
+								<input type="text" :value="activePage?.playCount" class="uni-input" />
 							</view>
 						</view>
 						<view class="item">
@@ -75,27 +95,19 @@
 							</view>
 							<view class="item-value">
 								<view class="sub-list" style="width: 100%;">
-									<view class="sub-item">
-										<view class="sub-key">
-											<text>每周</text>
+									<view class="sub-item" v-for="(item, index) in activePage?.schedulers" :key="item.id">
+										<view class="sub-value">
+											<checkbox-group class="radio-group" @change="handleScheduleDayChange">
+												<checkbox v-for="(scheduleDay, index) in item.scheduleDays" :key="scheduleDay.day"
+													:value="scheduleDay.day" :checked="scheduleDay.selected">
+													{{ scheduleDay.label }}
+												</checkbox>
+											</checkbox-group>
 										</view>
 										<view class="sub-value">
-											<checkbox>一</checkbox>
-											<checkbox>二</checkbox>
-											<checkbox>三</checkbox>
-											<checkbox>四</checkbox>
-											<checkbox>五</checkbox>
-											<checkbox>六</checkbox>
-											<checkbox>日</checkbox>
-										</view>
-									</view>
-									<view class="sub-item">
-										<view class="sub-key">
-											<text>时间</text>
-										</view>
-										<view class="sub-value">
-											<input type="text" value="0:00" class="uni-input" />
-											<input type="text" value="23:59" class="uni-input" />
+											<input type="date" :value="item.startTime" class="uni-input" />
+											<text>至</text>
+											<input type="text" :value="item.endTime" class="uni-input" />
 										</view>
 									</view>
 								</view>
@@ -108,18 +120,37 @@
 		<view class="tools">
 			<view class="pages">
 				<swiper id="swiper-view" class="swiper">
-					<swiper-item class="swiper-item" item-id="1">
-						<view v-for="(item, index) in pages" :key="index" class="item" :class="{active: activePages == index}">
-							<text class="t">{{item}}</text>
-						</view>
-						<view class="item" style="background-color: #cccccc;" @click="addPage()">
-							<text class="t">+</text>
-						</view>
+					<swiper-item v-if="activeTab == 1" class="swiper-item" item-id="1">
+						<!-- <view v-if="activeTab == 1" class="pageContainer" >							 -->
+							<view v-for="(item, index) in mediaConfig.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
+								<text class="t">{{item.name}}</text>
+							</view>
+							<view class="item" style="background-color: #cccccc;" @click="addPage()">
+								<text class="t">+</text>
+							</view>							
+						<!-- </view>
+						<view v-else>
+							<view v-for="(item, index) in activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
+								<text class="t">{{item.name}}</text>
+							</view>
+						</view> -->
+					</swiper-item>
+					<swiper-item v-else class="swiper-item" item-id="2">
+						<!-- <view v-if="activeTab == 1" class="pageContainer" >							 -->
+							<view v-for="(item, index) in  activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
+								<text class="t">{{item.name}}</text>
+							</view>							
+						<!-- </view>
+						<view v-else>
+							<view v-for="(item, index) in activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
+								<text class="t">{{item.name}}</text>
+							</view>
+						</view> -->
 					</swiper-item>
 				</swiper>
 			</view>
 			<view class="component">
-				<view class="item" @click="handleCheckComponent(0)">
+				<view class="item" @click="createComponent(1)">
 					<view class="icon-box no-margin">
 						<image class="icon" src="/static/svg/component-6.png" mode="widthFix"></image>
 					</view>
@@ -127,7 +158,7 @@
 						<text class="t">视频</text>
 					</view>
 				</view>
-				<view class="item" @click="handleCheckComponent(1)">
+				<view class="item" @click="createComponent(2)">
 					<view class="icon-box no-margin">
 						<image class="icon" src="/static/svg/component-0.png" mode="widthFix"></image>
 					</view>
@@ -135,7 +166,7 @@
 						<text class="t">图片</text>
 					</view>
 				</view>
-				<view class="item" @click="handleCheckComponent(2)">
+				<view class="item" @click="createComponent(3)">
 					<view class="icon-box no-margin">
 						<image class="icon" src="/static/svg/component-1.png" mode="widthFix"></image>
 					</view>
@@ -143,7 +174,7 @@
 						<text class="t">文字</text>
 					</view>
 				</view>
-				<view class="item" @click="handleCheckComponent(3)">
+				<view class="item" @click="createComponent(4)">
 					<view class="icon-box no-margin">
 						<image class="icon" src="/static/svg/component-7.png" mode="widthFix"></image>
 					</view>
@@ -151,7 +182,7 @@
 						<text class="t">网页</text>
 					</view>
 				</view>
-				<view class="item" @click="handleCheckComponent(4)">
+				<view class="item" @click="createComponent(5)">
 					<view class="icon-box no-margin">
 						<image class="icon" src="/static/svg/component-8.png" mode="widthFix"></image>
 					</view>
@@ -164,7 +195,7 @@
 	</view>
 </template>
 <script lang="uts" setup>
-	import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
+	// import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
     import * as ucan from "@/uni_modules/u-canvas";
     import {
         UCanvas,
@@ -181,43 +212,49 @@
         Point,
     } from "@/uni_modules/u-canvas";
 	
+	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
+	
 	import { routeGoto } from '@/common/router.uts'
+	import { FileManager} from './FileManager.uts'
+	
+	import VideoForm from './videoForm.uvue'
 	
 	import i18n from '@/locale'
 	
-	const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
+	// const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
 	let programDir = '' //项目目录
 	
-	const fs = uni.getFileSystemManager();
+	// const fileManager = new FileManager();
+	
     const uCanvas = new UCanvas({ canvasId: "ucanvas" });
 	
-	const canvasWidth = ref('0');
-	const canvasHeight = ref('0');
+	const canvasWidth = ref('256');
+	const canvasHeight = ref('192');
 	const programName = ref('');
-	const mediaConfig = ref({
+	const mediaConfig = ref(new MediaConfig({
 		"Left": 0.0,
 		"Top": 0.0,
 		"Ratio": 1.0,
 		"Program": {
-			"name": "节目名称20250523021648",
-			"mediaType": "PROGRAM",
-			"resolution": "256*192",
-			"size": 25929792.0,
-			"monitorCount": 1,
-			"lastUpdatedTime": "2025-05-23 14:16:00",
-			"createdSource": "admin",
-			"status": 0,
-			"playCountPerHour": null,
-			"isHasValidity": false,
-			"validStartDate": null,
-			"validEndDate": null,
-			"userAccount": "user001",
-			"id": 9
+			"Name": "节目名称20250523021648",
+			"MediaType": "PROGRAM",
+			"Resolution": "256*192",
+			"Size": 25929792.0,
+			"MonitorCount": 1,
+			"LastUpdatedTime": "2025-05-23 14:16:00",
+			"CreatedSource": "admin",
+			"Status": 0,
+			"PlayCountPerHour": null,
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"UserAccount": "user001",
+			"Id": 9
 		},
 		"Pages": [{
 			"Id": 1,
 			"Name": "页面1",
-			"Type": null,
+			"Type": "normal",
 			"Order": 1,
 			"ThumbnailFilePath": "节目名称20250523021648\\页面1\\thumbnail.png",
 			"IsHasValidity": false,
@@ -362,12 +399,11 @@
 				"PlayDuration": "00:00:04"
 			}]
 		}]
-	});
+	}));
 	
-	const pages = ref([
-		'页面1'
-	]);
-	const activePages = ref(0);
+	const activePage : Ref<MediaPage | null> = ref(null);
+	
+	const activeComponent : Ref<BaseComponent | null> = ref(null);
 	
 	const activeTab = ref(1);
 	
@@ -375,234 +411,153 @@
 		activeTab.value = val
 	}
 	
-	async function addPage(){
-		const pagesCount = pages.value.length;
-		pages.value.push('页面' + (pagesCount+1))
-		console.log('pagesCount', pagesCount);
-	}
-	
-	async function addImg(img: string){
-		const image = await uCanvas.createImage(img);
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Picture({ image: image, x: 0, y: 0, w: 256, h: 192, })
-		        ],
-		    })
-		);
-		uCanvas.render();
-	}
-	async function handleCheckComponent (index: Number){
-		if(index > 1 ){
-			uni.showToast({
-				icon: 'none',
-				title: '开发中，请等待',
-				duration: 3000,
-				success: () => { 
-				}
-			})
-		}else{
-			// if(index == 0){
-				uni.chooseMedia({
-				  count: 1,
-				  sourceType: ['album'],
-				  mediaType: ['image', 'video'],
-				 
-				  success: (res) => {
-					const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
-					console.log('tempFiles', tempFiles)
-					
-					
-					for (let i = 0; i < tempFiles.length; i++) {
-					  const tempFile : ChooseMediaTempFile = tempFiles[i]
-					  const imagePath = tempFile.fileType == "image" ? tempFile.tempFilePath : tempFile.thumbTempFilePath as string;
-					  // const file : FileSource = { imagePath: imagePath!, filePath: tempFile.tempFilePath, fileType: tempFile.fileType };
-					  addImg(imagePath)
-					}
-				  },
-				  fail: (err) => {
-					console.log("err: ", JSON.stringify(err));
-					uni.showToast({
-					  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
-					  position:"bottom"
-					})
-				  }
-				})
-			// }
-			
-			// if(index == 1){
-				
-			// }
-			// const image = await uCanvas.createImage("/static/logo.png");
-			// // const image = await uCanvas.createImage("https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png");
-			// uCanvas.addGraphic(
-			//     new Composition({
-			//         x: 0,
-			//         y: 0,
-			//         children: [
-			//             new Picture({ image: image, x: 0, y: 0, w: 100, h: 100, })
-			//         ],
-			//     })
-			// );
-			
-			// uCanvas.render();
+	const handleIsHasValidityChange = () => {
+		console.log('修改是否有效期');
+		if (activePage.value != null) {
+			activePage.value!.isHasValidity = !activePage.value!.isHasValidity;
+			console.log(activePage.value);
 		}
 	}
 	
-	async function createConfigJsonFile(content: string): Promise<string> {
-	  const filePath = `${programDir}/MediaConfig.json`;
-	  fs.writeFileSync(filePath, content,"utf-8");
-	  return filePath;
+	const handleTypeChange = (event: UniRadioGroupChangeEvent) => {
+		if (activePage.value != null) {
+			activePage.value.type = event.detail.value;
+			console.log(activePage.value);
+		}
+	};
+	
+	const handleScheduleDayChange = (event: UniCheckboxGroupChangeEvent) => {
+		if (activePage.value != null) {
+			console.log(event);
+			const selectedValues = event.detail.value as string [];
+			const scheduler = activePage.value.schedulers[0].toModel();
+			const newScheduler = new Scheduler({
+				...scheduler,
+				ScheduleDays: selectedValues.map(c=> parseInt(c))
+			});
+			
+			activePage.value.schedulers.splice(0, 1, newScheduler);
+			console.log(activePage.value);
+		}
+	}
+	
+	const addPage = () => {
+		const pagesCount = mediaConfig.value.pages.length + 1;	
+		
+		const newPage = {
+			"Id": pagesCount ,
+			"Name": "页面" + pagesCount,
+			"Type": "normal",
+			"Order": pagesCount,
+			"ThumbnailFilePath": "",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": null,
+			"AdPlayMode": null,
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+		}
+		
+		const page = new MediaPage(newPage);
+		mediaConfig.value.pages.push(page)
+		activePage.value = page;
+		activeComponent.value = null;
+		
+		console.log(activePage.value);
+	}
+	
+	const selectPage = (item: MediaPage) =>{
+		activePage.value = item;
+		activeComponent.value = null;
+	}
+	
+	async function selectComponent(item: BaseComponent){
+		activeComponent.value = item;
+	}
+	
+	async function createComponent(index: number) {
+		if (activePage.value == null) return;
+		const maxId = activePage.value!.components.length == 0 ? 0 : Math.max(...activePage.value!.components.map(c => c.id)) + 0;
+		let component : BaseComponent | null = null;
+		switch(index) {
+			case 1:
+				component = VideoComponent.createInstance(maxId + 1);
+				break;
+			case 2:
+				component = ImageComponent.createInstance(maxId + 1);
+				break;
+			case 3:
+				component = TextComponent.createInstance(maxId + 1);
+				break;
+			case 4:
+				component = WebComponent.createInstance(maxId + 1);
+				break;
+			case 5:
+				component = WordComponent.createInstance(maxId + 1);
+				break;
+		}
+		console.log(component);
+		if(component !=  null) {
+			activePage.value?.components.push(component);
+			activeComponent.value = component;
+		}
+		
+		console.log(activePage.value);
+	}
+	
+	async function updateComponent(data: UTSJSONObject) {
+		console.log(data);
+		if (activePage.value == null) return;
+		let component : BaseComponent | null = null;
+		const type = data['Type'] as string;
+		switch (type) {
+			case "Video":
+				component = new VideoComponent(data);
+				break;
+			case "Text":
+				component = new TextComponent(data);
+				break;
+			case "Image":
+				component = new ImageComponent(data);
+				break;
+			case "Web":
+				component = new WebComponent(data);
+				break;
+			case "Word":
+				component = new WordComponent(data);
+				break;
+		}
+		
+		if (component != null) {
+			let index = activePage.value!.components.findIndex(c => c.name == data["Name"]);
+			activePage.value!.components.splice(index, 1, component!);
+			activeComponent.value = component!;
+			console.log(activeComponent.value);
+			console.log(activePage.value);
+			await activePage.value!.draw(uCanvas);
+		}
+	}
+	
+	async function drawPage() :Promise<void> {
+		await activePage.value?.draw(uCanvas);
 	}
 	
     async function init() : Promise<void> {
+		const currentConfig = mediaConfig.value; //await fileManager.getProgramConfig(programName.value, canvasWidth.value, canvasHeight.value);
+		canvasWidth.value = currentConfig.program.resolution.split("*")[0];
+		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
+		mediaConfig.value = currentConfig;
+		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
         await uCanvas.ensureInitialize();
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 10,
-        //         y: 10,
-        //         children: [
-        //             new Rectangle({ x: 0, y: 0, w: 100, h: 100, radii: 10 }),
-        //             new Text({ x: 0, y: 120, text: "Rectangle" }),
-        //         ],
-        //     })
-        // );
-
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 140,
-        //         y: 10,
-        //         children: [
-        //             new Polyline({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100), new Point(100, 100)], }),
-        //             new Text({ x: 0, y: 120, text: "Polyline" }),
-        //         ],
-        //     })
-        // );
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 270,
-        //         y: 10,
-        //         children: [
-        //             new Polygon({ points: [new Point(0, 0), new Point(100, 0), new Point(0, 100)], }),
-        //             new Text({ x: 0, y: 120, text: "Polygon" }),
-        //         ],
-        //     })
-        // );
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 10,
-        //         y: 160,
-        //         children: [
-        //             new Pie({
-        //                 cx: 50,
-        //                 cy: 50,
-        //                 radius: 50,
-        //                 startAngle: 0,
-        //                 endAngle: Math.PI + Math.PI / 3,
-        //             }),
-        //             new Text({ x: 0, y: 120, text: "Pie" }),
-        //         ],
-        //     })
-        // );
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 140,
-        //         y: 160,
-        //         children: [
-        //             new Circle({ cx: 50, cy: 50, radius: 50, }),
-        //             new Text({ x: 0, y: 120, text: "Circle" }),
-        //         ],
-        //     })
-        // );
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 270,
-        //         y: 160,
-        //         children: [
-        //             new Ring({
-        //                 cx: 50,
-        //                 cy: 50,
-        //                 innerRadius: 30,
-        //                 outerRadius: 50,
-        //                 startAngle: 0,
-        //                 endAngle: Math.PI + Math.PI / 1.5,
-        //             }),
-        //             new Text({ x: 0, y: 120, text: "Ring" }),
-        //         ],
-        //     })
-        // );
-        // const data = new Uint8ClampedArray([
-        //     parseInt("10000000", 2),
-        //     parseInt("01000000", 2),
-        //     parseInt("00100000", 2),
-        //     parseInt("00010000", 2),
-        //     parseInt("00001000", 2),
-        //     parseInt("00000100", 2),
-        //     parseInt("00000010", 2),
-        //     parseInt("00000001", 2),
-        // ]);
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 10,
-        //         y: 300,
-        //         children: [
-        //             new ImagePixel({
-        //                 imageData: uCanvas.makeImageData({ data, bytesPerScanline: 8, array: [12, 12] }),
-        //                 x: 0,
-        //                 y: 0,
-        //             }),
-        //             new Text({ x: 0, y: 120, text: "ImagePixel" }),
-        //         ],
-        //     })
-        // );
-
-        // const image = await uCanvas.createImage("/static/logo.png");
-        // // const image = await uCanvas.createImage("https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png");
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 0,
-        //         y: 0,
-        //         children: [
-        //             new Picture({ image: image, x: 0, y: 0, w: 100, h: 100, }),
-        //             new Text({ x: 0, y: 120, text: "Image" }),
-        //         ],
-        //     })
-        // );
-        // uCanvas.addGraphic(
-        //     new Composition({
-        //         x: 0,
-        //         y: 50,
-        //         children: [
-        //             new Text({ x: 0, y: 0, text: "Hello world" }),
-        //         ],
-        //     })
-        // );
+		await drawPage();
         uCanvas.render();
     }
-	
-	async function handleSave() :Promise<void> {
-		//保存
-		const path = createConfigJsonFile(JSON.stringify(mediaConfig));
-		console.log('save ok=', path)
-		
-		//压缩目录
-		addZip(tempDir, programDir + '.zip', (pathfile:string)=>{
-		    //压缩成功后返回路径
-		    console.log(pathfile)
-		})
-		
-		const s = uni.getFileSystemManager().readdirSync(programDir);
-		
-		console.log('读取项目目录', s)
-		uni.showModal({
-			title: "节目已保存",
-			content: '当前节目已保存，是否发布到设备？',
-			cancelText:'继续编辑',
-			confirmText: '发布节目'
-		})
-	}
 	
 	async function handlePush() :Promise<void> {
 		uni.showToast({
@@ -614,40 +569,33 @@
 		})
 	}
 	
-	async function handleReview() :Promise<void> {
-		
+	async function handleReview() :Promise<void> {		
 		routeGoto('/pages/programs/review')
 	}
 	
-	onLoad((e: OnLoadOptions): void => {
-		canvasWidth.value = e['width'] as string;
-		canvasHeight.value = e['height'] as string;
+	onLoad((e: OnLoadOptions): void => {		
 		programName.value = e['name'] as string;
+		if (e['width'] != null){
+			canvasWidth.value = e['width'] as string;
+		}
+		
+		if (e['height'] != null){
+			canvasHeight.value = e['height'] as string;
+		}
+		
 		const defl = uni.getStorageSync('language') as string
 		
 		let defaultLang =  'kr'
 		if(defl != ''){
 			defaultLang = defl
 		}
+		
 		uni.setNavigationBarTitle({
-			title: i18n.global.t('pages.programPreview', null, defaultLang)
+			title: i18n.global.t('pages.programEditor', null, defaultLang)
 		})
 	});
     onReady(() => {
         init();
-		//创建临时目录
-		programDir = tempDir + '/' + programName.value
-		try {
-		  fs.accessSync(programDir); // 检查目录是否存在
-		} catch (e) {
-		  fs.mkdirSync(programDir, true); // recursive: true 允许创建多级目录
-		}
-		console.log('临时目录', tempDir)
-		
-		const s = uni.getFileSystemManager().readdirSync(tempDir);
-		
-		console.log('读取项目目录', s)
-		
     });
 </script>
 
@@ -665,6 +613,17 @@
 			background: #f0f0f0;
 		}
     }
+	
+	.radio-group {
+		display: flex; /* 横向排列 */
+		flex-direction: row; /* 行排列 */
+		align-items: center; /* 垂直居中 */
+		flex-wrap: wrap;
+		
+		radio {
+			margin-right: 20rpx;
+		}
+	}
 	.tools{
 		position: fixed;
 		width: 100%;
@@ -678,10 +637,12 @@
 			.swiper-item{
 				flex-direction: row;
 				align-items: center;
-				justify-content: flex-start;
+				justify-content: space-between;
+				width: 100%;
 				.item{
-					width: 21%;
+					// width: 21%;
 					height: 96rpx;
+					flex: 1;
 					background-color: #000000;
 					flex-direction: row;
 					align-items: center;
@@ -774,7 +735,6 @@
 				border-radius: 24rpx;
 				box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
 				padding: 12rpx 0;
-				
 				.item{
 					padding: 18rpx 24rpx;
 					display: flex;
@@ -783,14 +743,14 @@
 					justify-content: space-between;
 					
 					.item-key{
-						width: 30%;
+						width: 20%;
 						.t{
 							font-size: 14px;
 							color: #999999;
 						}
 					}
 					.item-value{
-						width: 70%;
+						width: 80%;
 						display: flex;
 						flex-direction: row;
 						.sub-list{

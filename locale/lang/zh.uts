@@ -26,7 +26,7 @@ export default {
 		BelongingUser: "所属用户",
 		Reselect: "重新选择",
 		Choice: "请选择设备，即可轻松控制",
-		SelectDevice: "选择设备"
+		SelectDevice: "选择设备",
 		QuickProgram: "快速节目",
 		Steps: "只需 3 步 节目随时发布",
 		AddMedia: "添加媒体",

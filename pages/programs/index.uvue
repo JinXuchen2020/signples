@@ -63,8 +63,7 @@
 							</view>
 						</view>
 					</view>
-				</view>
-				
+				</view>				
 			</view>
 		</popup-default>
 		
@@ -112,6 +111,7 @@
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index'
+	import { FileManager} from './FileManager.uts'
 	
 	export default {
 		data() {
@@ -130,6 +130,7 @@
 				prePushProgram: {} as UTSJSONObject,
 				deviceList: [] as Array<UTSJSONObject>,
 				preDevice: [] as Array<String>,
+				fileManager: {} as FileManager
 			}
 		},
 		onLoad(){
@@ -141,7 +142,6 @@
 				
 		},
 		onShow(){
-			let that = this
 			//获取当前有没有用户登录
 			uni.getStorage({
 			  key: 'token',
@@ -161,74 +161,21 @@
 					      console.log('读取失败userInfo或不存在', err);
 					    }
 					  });
-				  }
+				}
 			  },
 			  fail: function(err) {
-			    console.log('读取失败token或不存在', err);
-				
+				console.log('读取失败token或不存在', err);				
 			  }
-			});
-			
+			});			
 			
 			this.init()
 			this.getDevices()
 		},
 		methods: {
-			init(){
+			async init(){
 				let that = this
-				this.programList = [] as Array<UTSJSONObject>;
-				const fs = uni.getFileSystemManager();
-				const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
-				try {
-				  const items = fs.readdirSync(tempDir);
-	
-				  items?.forEach(item => {
-				    const itemPath = `${tempDir}/${item}`;
-				    fs.stat({
-						path: itemPath,
-						recursive: false,
-						success: res => {
-							// console.log(itemPath)
-							// console.log(res.stats[0].stats.mIsFile)
-							if(!res.stats[0].stats.mIsFile){
-								
-								
-								that.programList.push({
-									path: itemPath,
-									name: item
-								})
-								
-								// fs.readFile({
-								//   filePath: itemPath + '/MediaConfig.json', 
-								//   encoding: 'utf-8', // 指定编码格式
-								//   success: (resRead: ReadFileSuccessResult) => {
-								//     try {
-								// 		let t = resRead.data as string;
-								// 		const newt = JSON.parse(t.split("\\").join("/"));
-								// 		const npro = newt['Program'] as string
-								// 		that.programList.push({
-								// 			path: itemPath,
-								// 			name: newt['Left'],
-								// 			media: JSON.parse(npro)
-								// 		})
-										
-								//     } catch (error) {
-								//       console.error('JSON 解析失败:', error);
-								//     }
-								//   },
-								//   fail: (err) => {
-								//     console.error('读取文件失败:', err);
-								//   },
-								// });
-								
-							}
-						}
-					});
-				  });
-				  console.log('文件夹列表:', items);
-				} catch (err) {
-				  console.error('读取目录失败:', err);
-				}
+				that.fileManager = new FileManager();
+				that.programList = await that.fileManager.getProgramList();
 			},
 			handleRouteGoto(route: string): void{
 				let token = uni.getStorageSync("token")
@@ -256,7 +203,7 @@
 					uni.showLoading({
 						title: ''
 					});
-					const activeUser = uni.getStorageSync('active-user') as UTSJSONObject;
+					const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
 					const person: UTSJSONObject = {}
 					const param = '?userAccount=' + activeUser.account;
 					const result = await request('GET', APIS.deviceListPage as string + param, person)
@@ -266,6 +213,7 @@
 					uni.hideLoading();
 				} catch (error) {
 				  console.error('获取设备列表失败', error)
+				  uni.hideLoading();
 				}
 			},
 			handleCreate(){

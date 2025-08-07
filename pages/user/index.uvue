@@ -178,7 +178,7 @@
 								}else{
 									uni.showToast({
 										icon: 'none',
-										title: result['msg'] as String,
+										title: result['msg'] as string,
 										duration: 2000,
 										success: () => {
 											this.popupLogin = false;

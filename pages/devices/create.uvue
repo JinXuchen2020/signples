@@ -4,7 +4,7 @@
 			<view class="item">
 				<view class="label"><text class="t">{{ $t('device.DisplayName') }}</text></view>
 				<view class="input-box">
-					<input class="uni-input shadow" name="name" v-model="name" placeholder="{{ $t('device.PleaseEnterDisplayName')}}" maxlength="-1" />
+					<input class="uni-input shadow" name="name" v-model="name" :placeholder="$t('device.PleaseEnterDisplayName')" maxlength="-1" />
 				</view>
 			</view>
 			<view class="item">

@@ -11,28 +11,30 @@ export type LangType = 'zh-CN' | 'en' | 'kr' | 'jp'
 // 从本地存储获取语言设置，
 const defl = uni.getStorageSync('language') as string
 
-let defaultLang =  'kr'
+let defaultLang =  'zh-CN'
 if(defl != ''){
 	defaultLang = defl
 }
+
+const tabBars = new UTSJSONObject({
+	'en': ['HOME','USER CENTER'],
+	'zh-CN': ["首页", "我的"],
+	'kr': ['홈','내 정보'],
+	'jp': ['ホーム','マイページ'],
+});
 // 创建i18n实例
 const i18n = createI18n({
-  legacy: false, // 使用Vue 3的Composition API
-  globalInjection: true, // 全局注入$t方法
-  locale: defaultLang,
-  fallbackLocale: 'zh-CN',
-  messages: {
-    'zh-CN': zhCN,
-    'en': en,
-	"kr": kr,
-	"jp":jp
-  },
-  tabBars: {
-		'en': ['HOME','USER CENTER'],
-		'zh-CN': ['首页','我的'],
-		'kr': ['홈','내 정보'],
-		'jp': ['ホーム','マイページ'],
-	}
+	legacy: false, // 使用Vue 3的Composition API
+	globalInjection: true, // 全局注入$t方法
+	locale: defaultLang,
+	fallbackLocale: 'zh-CN',
+	messages: {
+		'zh-CN': zhCN,
+		'en': en,
+		"kr": kr,
+		"jp":jp
+	},
+	tabBars: tabBars
 })
 
 // 切换语言的方法

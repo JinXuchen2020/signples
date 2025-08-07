@@ -1,0 +1,96 @@
+import { MediaConfig } from './mediaConfig.uts'
+export class FileManager {
+	fs: FileSystemManager;
+	userInfo: UTSJSONObject;
+	tempDir: string;
+	
+	constructor(){
+		this.fs = uni.getFileSystemManager();
+		this.userInfo = uni.getStorageSync("userInfo") as UTSJSONObject;
+		this.tempDir = `${uni.env.USER_DATA_PATH}/temp/program`;
+	}
+	
+	async getProgramList() {
+		let results: UTSJSONObject[] = [];
+		const userAccount = this.userInfo['UserAccount'] as string;
+		const userProgramFolder = `${this.tempDir}/${userAccount}`
+		try {
+			const items = this.fs.readdirSync(userProgramFolder);
+			
+			items?.forEach(item => {
+				const itemPath = `${userProgramFolder}/${item}`;
+				this.fs.stat({
+					path: itemPath,
+					recursive: false,
+					success: res => {
+						if(!res.stats[0].stats.mIsFile) {
+							const data = {
+								name: item,
+								path: itemPath
+							}
+							
+							results.push(data)
+						}
+					}
+				});
+			});
+			console.log('文件夹列表:', items);
+		} catch (err) {
+			console.error('读取目录失败:', err);
+		}
+		
+		return results;
+	}
+	
+	async IsExist(filePath: string) {
+		try {
+			this.fs.accessSync(filePath);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
+	
+	async createFolder(folderPath: string) {
+		if(!await this.IsExist(folderPath)){
+			this.fs.mkdirSync(folderPath, true);
+		}	
+	}
+	
+	async getProgramConfig(programName: string, width: string, height: string) {
+		const userAccount = this.userInfo['account'] as string;
+		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
+		const configFilePath = `${programFolder}/MediaConfig.json`;
+		let configFileContent : UTSJSONObject = {}; 
+		if (await this.IsExist(configFilePath)) {
+			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
+			configFileContent = JSON.parse(content) as UTSJSONObject;
+		} else {
+			await this.createFolder(programFolder);
+			configFileContent = {
+				"Left": 0.0,
+				"Top": 0.0,
+				"Ratio": 1.0,
+				"Program": {
+					"Name": programName,
+					"MediaType": "PROGRAM",
+					"Resolution": `${width}*${height}`,
+					"Size": 0,
+					"MonitorCount": 0,
+					"LastUpdatedTime": new Date().toISOString(),
+					"CreatedSource": "admin",
+					"Status": 0,
+					"PlayCountPerHour": null,
+					"IsHasValidity": false,
+					"ValidStartDate": null,
+					"ValidEndDate": null,
+					"UserAccount": userAccount,
+					"Id": 1
+				}
+			}
+			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
+		}		
+		
+		return new MediaConfig(configFileContent);
+	}
+}

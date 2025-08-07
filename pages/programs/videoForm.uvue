@@ -1,0 +1,328 @@
+<template>
+	<view class="component-form">
+		<view class="item">
+			<view class="item-key">
+				<text class="t">区域(px)</text>
+			</view>
+			<view class="position">
+				<view class="location">
+					X<input type="number" :value="formData?.left" class="uni-input" @change="onLeftChange" />						
+					Y<input type="number" :value="formData?.top" class="uni-input" @change="onTopChange" />						
+				</view>						
+				<view class="location">
+					W<input type="number" :value="formData?.width" class="uni-input" @change="onWidthChange" />
+					H<input type="number" :value="formData?.height" class="uni-input" @change="onHeightChange" />
+				</view>
+			</view>
+		</view>
+		<view v-if="formData?.isShowInfo == true">
+			<view class="item">
+				<view class="item-key">
+					<text class="t">名称</text>
+				</view>
+				<view class="item-value">
+					<input type="text" :value="formData?.name" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">层级</text>
+				</view>
+				<view class="item-value">
+					<input type="number" :value="formData?.zIndex" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">播放次数</text>
+				</view>
+				<view class="item-value">
+					<input type="number" :value="formData?.playCount" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">播放时长(s)</text>
+				</view>
+				<view class="item-value">
+					<input type="text" :value="formData?.playDuration" class="uni-input" />
+				</view>
+			</view>			
+		</view>
+		<view class="item" v-else>
+			<view class="item-key">
+				<text class="t">选择文件</text>
+			</view>
+			<view class="options">
+				<view class="options-tab">
+					<view :class="activeTab == 0 ? 'item active' : 'item'" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
+					<view :class="activeTab == 1 ? 'item active' : 'item'" @click="handleActiveTab(1)"><text class="t">媒体库</text></view>
+				</view>
+				<view class="option-body">
+					<view class="option-a" :class="{active: activeTab == 0}">
+						<view class="local" @click="handleUpload()">
+							<text class="t">+</text>
+						</view>
+					</view>
+					<view class="option-b" :class="{active: activeTab == 1}">
+						<view class="local" @click="handleUpload()">
+							<text class="t">+</text>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>	
+</template>
+
+<script lang="uts" >
+	import  { VideoComponent } from './mediaConfig.uts'
+	export default {
+		props: {
+			item: {
+				type: VideoComponent,
+				default: () => {}
+			}
+		},
+		emits: ['refresh'],
+		data() {
+			return {
+				formData: null as VideoComponent | null,
+				activeTab: 0,
+				activeTabClass: 'item active',
+				inactiveTabeClass: 'item',
+			}
+		},
+		watch: {
+			item(newValue?: VideoComponent) {
+				this.formData = newValue;
+				console.log(this.formData);
+			}
+		},
+		onReady() {
+			this.formData = this.item;
+			console.log(this.formData);
+		},
+		methods: {			
+			handleActiveTab(val: number) {
+				this.activeTab = val
+				console.log(this.activeTab)
+			},
+			onLeftChange(e: UniInputChangeEvent) {
+				this.handleUpdate(parseInt(e.detail.value), "left")
+			},
+			onTopChange(e: UniInputChangeEvent) {
+				this.handleUpdate(parseInt(e.detail.value), "top")
+			},
+			onWidthChange(e: UniInputChangeEvent) {
+				this.handleUpdate(parseInt(e.detail.value), "width")
+			},
+			onHeightChange(e: UniInputChangeEvent) {
+				this.handleUpdate(parseInt(e.detail.value), "height")
+			},
+			handleUpdate(val: number, type: string) {
+				if(this.formData == null) return;
+				
+				switch(type) {
+					case 'left':
+						this.formData!.left = val;
+						if (this.formData!.width + val > 256) {
+							this.formData!.width = 256 - val;
+						}
+						break;
+					case 'top':
+						this.formData!.top = val;
+						if (this.formData!.height + val > 192) {
+							this.formData!.height = 192 - val;
+						}
+						break;
+					case 'width':
+						let widthVal = val;
+						if (this.formData!.left + val > 256) {
+							widthVal = 256 - this.formData!.left;
+						}
+						this.formData!.width = widthVal;
+						break;
+					case 'height':
+						let heightVal = val;
+						if (this.formData!.top + val > 256) {
+							heightVal = 192 - this.formData!.top;
+						}
+						this.formData!.height = heightVal;
+						break;					
+				}
+				
+				const data = this.formData!.toModel();
+				console.log(data)
+				this.$emit("refresh", data);
+				
+			},
+			handleUpload() {
+				if(this.formData == null) return;
+				uni.chooseMedia({
+					count: 1,
+					sourceType: ['album'],
+					mediaType: ['video'],
+					success: (res) => {
+						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
+						console.log('tempFiles', tempFiles)
+
+						for (let i = 0; i < tempFiles.length; i++) {
+						  const tempFile : ChooseMediaTempFile = tempFiles[i]
+						  this.formData!.source = tempFile.tempFilePath;
+						  this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
+						  this.formData!.timeLine = tempFile.duration as number;
+						  this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
+						  this.formData!.isShowInfo = true;						  
+						  this.formData!.width = 256;
+						  this.formData!.height = 192;
+						  const data = this.formData!.toModel();
+						  console.log(data)
+						  this.$emit("refresh", data);
+						}
+					},
+					fail: (err) => {
+						console.log("err: ", JSON.stringify(err));
+						uni.showToast({
+						  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
+						  position:"bottom"
+						})
+					}
+				})
+			},
+			getPlayDuration: (timeLine: number)=> {
+				const seconds = Math.round(timeLine % 60);
+				const minutes = Math.round((timeLine / 60) % 60);
+				let hours = Math.round(timeLine / 60 / 60);
+				if (hours > 23){
+				    hours = 23;
+				}
+				
+				const result = `${hours}:${minutes}:${seconds}`;
+				return result;
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.component-form{
+		background: #ffffff;
+		border-radius: 24rpx;
+		box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
+		padding: 12rpx 0;
+		.item{
+			padding: 18rpx 24rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			
+			.item-key{
+				width: 20%;
+				.t{
+					font-size: 14px;
+					color: #999999;
+				}
+			}
+			
+			.options {
+				width: 80%;
+				display: flex;
+				flex-direction: column;
+				.options-tab{
+					width: 100%;
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					justify-content: center;
+					padding-bottom: 24rpx;
+					
+					.item{
+						padding: 0 24rpx;
+						cursor: pointer;
+						.t{
+							font-size: 14px;
+							color: $uni-color-grey
+						}
+					}
+					.item.active{
+						.t {
+							color: $uni-color-primary
+						}
+					}
+				}
+				.option-body {
+					.option-a,
+					.option-b {
+						display: none;
+					}
+					.option-a.active,
+					.option-b.active {
+						display: flex;						
+						.local {
+							// width: 21%;
+							height: 220rpx;
+							// flex: 1;
+							background-color: $uni-color-primary;
+							flex-direction: row;
+							align-items: center;
+							justify-content: center;
+							border-radius: $uni-border-radius-lg;
+							margin: 0 2%;
+							.t{
+								color: $uni-text-color-inverse;
+								font-size: $uni-font-size-sm;
+							}
+						}
+					}
+				}
+			}
+			.item-value{
+				width: 80%;
+				display: flex;
+				flex-direction: row;
+				.sub-list{
+					width: 100%;
+					
+					.sub-item{
+						width: 100%;
+						
+						.sub-value{
+							flex-direction: row;
+							align-items: center;
+							justify-content: space-between;
+						}
+					}
+				}
+				.uni-input{
+					border: 1px solid #ccc;
+					border-radius: 12rpx;
+					height:30rpx
+				}
+			}
+			.position {
+				width: 80%;
+				display: flex;
+				flex-direction: column;
+				.location {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					margin-bottom: 10rpx;
+				
+					.uni-input{
+						flex: 1;
+						margin-left: 10rpx;
+						border: 1px solid #ccc;
+						border-radius: 12rpx;
+						height:30rpx
+					}
+				}
+			}
+			
+			
+		}
+	}
+
+</style>

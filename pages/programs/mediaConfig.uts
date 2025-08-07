@@ -1,0 +1,473 @@
+import {
+	UCanvas,
+	Composition,
+	Text,
+	Rectangle,
+	Polyline,
+	Ring,
+	Pie,
+	Circle,
+	Polygon,
+	Picture,
+	ImagePixel,
+	Point,
+} from "@/uni_modules/u-canvas";
+export class MediaConfig {
+	left: number;
+	top: number;
+	ratio: number;
+	program: Program;
+	pages: MediaPage[];
+	
+	constructor(data: UTSJSONObject){
+		this.left = data.Left as number;
+		this.top = data.Top as number;
+		this.ratio = data.Ratio as number;
+		this.program = new Program(data['Program'] as UTSJSONObject);
+		const pages = data['Pages'] as UTSJSONObject[] | null;
+		this.pages = pages != null ? pages.map(c=> new MediaPage(c)) : [];
+	}
+}
+
+export class Program {
+	name: string;
+	mediaType: string;
+	resolution: string;
+	size: number;
+	monitorCount: number;
+	lastUpdatedTime: Date;
+	createdSource?: string;
+	status: number;
+	playCountPerHour?: number;
+	isHasValidity: boolean;
+	validStartDate?: Date;
+	validEndDate?: Date;
+	userAccount?: string;
+	id: number
+	
+	constructor(data: UTSJSONObject){
+		this.name = data['Name'] as string;
+		this.mediaType = data['MediaType'] as string;
+		this.resolution = data['Resolution'] as string;
+		this.size = data['Size'] as number;
+		this.monitorCount = data['MonitorCount'] as number;
+		this.lastUpdatedTime = new Date(data['LastUpdatedTime'] as string);
+		this.createdSource = data['CreatedSource'] as string;
+		this.status = data['Status'] as number;
+		this.playCountPerHour = data['PlayCountPerHour'] == null ? null : data['PlayCountPerHour'] as number;
+		this.isHasValidity = data['IsHasValidity'] as boolean;
+		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string);
+		this.validEndDate = data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
+		this.userAccount = data['UserAccount'] as string;
+		this.id = data['Id'] as number;
+	}
+}
+
+export class MediaPage{
+	id: number;
+	name: string;
+	type: string;
+	order: number;
+	thumbnailFilePath: string;
+	isHasValidity: boolean;
+	validStartDate?: Date;
+	validEndDate?: Date;
+	playCount: number;
+	playGap?: number;
+	adPlayMode?: string;
+	schedulers: Scheduler[];
+	components: BaseComponent[];
+	constructor(data: UTSJSONObject){
+		this.id = data.Id as number;
+		this.name = data.Name as string;
+		this.type = data.Type as string;
+		this.order = data.Order as number;
+		this.thumbnailFilePath = data.ThumbnailFilePath as string;
+		this.isHasValidity = data.IsHasValidity as boolean;
+		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string); 
+		this.validEndDate =  data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
+		this.playCount = data.PlayCount as number;
+		this.playGap = data['PlayGap'] == null ? null : data.PlayGap as number;
+		this.adPlayMode = data['AdPlayMode'] == null ? null : data.AdPlayMode as string;		const schedulers = data['Schedulers'] as UTSJSONObject[] | null;
+		this.schedulers = schedulers != null ? schedulers.map(c=> new Scheduler(c)) : [];
+		this.components = [] as BaseComponent[];		const components = data['Components'] as UTSJSONObject[] | null;
+		if(components != null && components.length > 0){
+			for(let i = 0; i < components.length; i++){
+				const comData = components[i];
+				let component : BaseComponent | null = null;
+				const type = comData['Type'] as string;
+				switch (type) {
+					case "Video":
+						component = new VideoComponent(comData);
+						break;
+					case "Text":
+						component = new TextComponent(comData);
+						break;
+					case "Image":
+						component = new ImageComponent(comData);
+						break;
+					case "Web":
+						component = new WebComponent(comData);
+						break;
+					case "Word":
+						component = new WordComponent(comData);
+						break;
+				}
+				
+				if (component != null) {
+					this.components.push(component);
+				}
+			}
+		}		
+	}
+	
+	async draw(canvas: UCanvas) {
+		canvas.cleanGraphic();
+		for (let index = 0; index < this.components.length; index++) {
+			let component = this.components[index];
+			switch (component.type) {
+				case "Video":
+					const videoComponent = component as VideoComponent;
+					await videoComponent.draw(canvas);
+					break;
+				case "Text":
+					const textComponent = component as TextComponent;
+					await textComponent.draw(canvas);
+					break;
+				case "Image":
+					const imageComponent = component as ImageComponent;
+					await imageComponent.draw(canvas);
+					break;
+				case "Web":
+					const webComponent = component as WebComponent;
+					await webComponent.draw(canvas);
+					break;
+				case "Word":
+					const wordComponent = component as WordComponent;
+					await wordComponent.draw(canvas);
+					break;
+			}			
+		}
+		
+		canvas.render();
+	}
+}
+
+export class Scheduler {
+	id: number;
+	startTime: string;
+	endTime: string;
+	scheduleDays: SchedulerDay[];
+	constructor(data: UTSJSONObject){
+		this.id = data.Id as number;
+		this.startTime = data.StartTime as string;
+		this.endTime = data.EndTime as string;
+		this.scheduleDays = allDays.map(c=> new SchedulerDay({...c, scheduleDays: data['ScheduleDays'] as number[] }));
+	}
+	
+	toModel() {
+		return {
+			Id: this.id,
+			StartTime : this.startTime,
+			EndTime: this.endTime,
+			ScheduleDays: this.scheduleDays.map(c=>c.day);			
+		} as UTSJSONObject
+	}
+}
+
+export const allDays = [
+	{
+		label: "一",
+		day: 1
+	},
+	{
+		label: "二",
+		day: 2
+	},
+	{
+		label: "三",
+		day: 3
+	},
+	{
+		label: "四",
+		day: 4
+	},
+	{
+		label: "五",
+		day: 5
+	},
+	{
+		label: "六",
+		day: 6
+	},
+	{
+		label: "日",
+		day: 7
+	}
+]
+export class SchedulerDay {
+	label: string;
+	day: number;
+	selected: boolean;
+	constructor(data: UTSJSONObject){
+		this.label = data.label as string;
+		this.day = data.day as number;
+		this.selected = (data.scheduleDays as number[]).includes(this.day);
+	}
+}
+
+export abstract class BaseComponent {
+	public id: number;
+	public name: string;
+	abstract type: string;
+	public zIndex: number;
+	public left: number;
+	public top: number;
+	public width: number;
+	public height: number;
+	public source: string;
+	public timeLine: number;
+	public playCount: number;
+	public playDuration: string;
+	constructor(data: UTSJSONObject){
+		this.id = data.Id as number;
+		this.name = data.Name as string;
+		this.zIndex = data.ZIndex as number;
+		this.left = data['Left'] == null ? 0 : data.Left as number;
+		this.top = data['Top'] == null ? 0 : data.Top as number;
+		this.width = data['Width'] == null ? 0 : data.Width as number; 
+		this.height = data['Height'] == null ? 0 : data.Height as number;
+		this.source = data['Source'] == null ? '' : data.Source as string;
+		this.timeLine = data['TimeLine'] == null ? 0 : data.TimeLine as number;
+		this.playCount = data['playCount'] == null ? 1 : data.PlayCount as number;
+		this.playDuration = data['playDuration'] == null ? "00:00:00" : data.PlayDuration as string;
+	}
+}
+export class VideoComponent extends BaseComponent {
+	override type: string = "Video";
+	playMode: string;
+	isClip: boolean;
+	thumbFilePath?: string;
+	isShowInfo: boolean;
+	constructor(data: UTSJSONObject){
+		super(data);
+		this.playMode = data['PlayMode'] as string;
+		this.isClip = data['IsClip'] == null ? false : data['IsClip'] as boolean;
+		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
+		this.isShowInfo = this.source.length > 0 ? true : false;
+	}
+	
+	async draw(uCanvas: UCanvas) {
+		if (this.thumbFilePath == null) return;
+		const image = await uCanvas.createImage(this.thumbFilePath);
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Picture({ image: image, x: this.left, y: this.top, w: this.width, h: this.height, })
+		        ],
+		    })
+		);
+	}
+	
+	toModel() {
+		return {
+			Id: this.id,
+			Name: this.name,
+			Type: this.type,
+			ZIndex: this.zIndex,
+			Left: this.left,
+			Top: this.top,
+			Width: this.width,
+			Height: this.height,
+			Source: this.source,
+			Timeline: this.timeLine,
+			PlayCount: this.playCount,
+			PlayDuration: this.playDuration,
+			PlayMode: this.playMode;
+			IsClip: this.isClip;
+			ThumbFilePath: this.thumbFilePath;
+			IsShowInfo: this.isShowInfo;
+		} as UTSJSONObject
+	}
+	
+	static createInstance(id: number){
+		const data = {
+			Id: id,
+			Name: `视频${id}`,
+			ZIndex:  id,
+			PlayMode:  "fullscreen",
+			PlayCount:  1,
+			Timeline:  0,
+			PlayDuration: "00:00:00",
+		}
+		
+		return new VideoComponent(data);
+	}
+}
+export class ImageComponent extends BaseComponent {
+	override type: string = "Image";
+	effectDuration: number;
+	componentEffect: string;
+	constructor(data: UTSJSONObject){
+		super(data);
+		this.effectDuration = data['EffectDuration'] as number;
+		this.componentEffect = data['ComponentEffect'] as string;
+	}
+	
+	async draw(uCanvas: UCanvas) {
+		const image = await uCanvas.createImage(this.source);
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Picture({ image: image, x: this.left, y: this.top, w: this.width, h: this.height, })
+		        ],
+		    })
+		);
+	}
+	
+	static createInstance(id: number){
+		const data = {
+			Id: id,
+			Name: `页面${id}`,
+			ZIndex:  id,
+			PlayMode:  "fullscreen",
+			PlayCount:  1,
+			Timeline:  0,
+			PlayDuration: "00:00:00",
+		}
+		
+		return new ImageComponent(data);
+	}
+}
+
+export class TextComponent extends BaseComponent {
+	override type: string = "Text";
+	background: string;
+	textColor: string;
+	playMode: string;
+	direction: string;
+	effectDuration: number;
+	componentEffect: string;
+	rollingSpeed: number;
+	textSize: number;
+	isLoopEnabled: boolean;
+	letterSpacing: number;
+	lineSpacing: number;
+	rtfFilePath: string;
+	verticalContentAlignment: string;
+	constructor(data: UTSJSONObject) {
+		super(data);
+		this.background = data['Background'] as string;
+		this.textColor = data['TextColor'] as string;
+		this.playMode = data['PlayMode'] as string;
+		this.direction = data['Direction'] as string;		
+		this.effectDuration = data['EffectDuration'] as number;
+		this.componentEffect = data['ComponentEffect'] as string;
+		this.rollingSpeed = data['RollingSpeed'] as number;
+		this.textSize = data['TextSize'] as number;		
+		this.isLoopEnabled = data['IsLoopEnabled'] as boolean;
+		this.letterSpacing = data['LetterSpacing'] as number;
+		this.lineSpacing = data['LineSpacing'] as number;
+		this.rtfFilePath = data['RtfFilePath'] as string;
+		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
+	}
+	
+	async draw(uCanvas: UCanvas) {
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
+		            new Text({ x: 0, y: 0, text: this.source }),
+		        ],
+		    })
+		);
+	}
+	
+	static createInstance(id: number){
+		const data = {
+			Id: id,
+			Name: `页面${id}`,
+			ZIndex:  id,
+			PlayMode:  "fullscreen",
+			PlayCount:  1,
+			Timeline:  0,
+			PlayDuration: "00:00:00",
+		}
+		
+		return new TextComponent(data);
+	}
+}
+
+export class WebComponent extends BaseComponent {
+	override type: string = "Web";
+	constructor(data: UTSJSONObject) {
+		super(data);
+	}
+	
+	async draw(uCanvas: UCanvas) {
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
+		            new Text({ x: 0, y: 0, text: this.source }),
+		        ],
+		    })
+		);
+	}
+	
+	static createInstance(id: number){
+		const data = {
+			Id: id,
+			Name: `页面${id}`,
+			ZIndex:  id,
+			PlayMode:  "fullscreen",
+			PlayCount:  1,
+			Timeline:  0,
+			PlayDuration: "00:00:00",
+		}
+		
+		return new WebComponent(data);
+	}
+}
+
+export class WordComponent extends BaseComponent {
+	override type: string = "Word";
+	constructor(data: UTSJSONObject) {
+		super(data);
+	}
+	
+	async draw(uCanvas: UCanvas) {
+		uCanvas.addGraphic(
+		    new Composition({
+		        x: 0,
+		        y: 0,
+		        children: [
+		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
+		            new Text({ x: 0, y: 0, text: this.source }),
+		        ],
+		    })
+		);
+	}
+	
+	static createInstance(id: number){
+		const data = {
+			Id: id,
+			Name: `页面${id}`,
+			ZIndex:  id,
+			PlayMode:  "fullscreen",
+			PlayCount:  1,
+			Timeline:  0,
+			PlayDuration: "00:00:00",
+		}
+		
+		return new WordComponent(data);
+	}
+}

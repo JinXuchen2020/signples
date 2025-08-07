@@ -1,0 +1,13 @@
+import { reactive } from 'vue'
+
+export type State = {
+	program: UTSJSONObject
+}
+
+export const state = reactive({
+	program: {}
+} as State)
+
+export const setProgram = (program: UTSJSONObject) => {
+	state.program = program
+}

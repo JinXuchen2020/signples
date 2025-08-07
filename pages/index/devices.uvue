@@ -177,7 +177,7 @@
 				const copyD: UTSJSONObject[] = [];
 					  d.forEach((item: UTSJSONObject) => {
 						  const nitem = item as UTSJSONObject;
-						  const day = item['validEnd'] as String;
+						  const day = item['validEnd'] as string;
 						  const daynum = new Date(day).getTime();
 						  if(currentDate > daynum){
 							  nitem['isvalidEnd'] = true;
