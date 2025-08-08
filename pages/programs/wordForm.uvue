@@ -34,6 +34,14 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
+					<text class="t">每页时长(s)</text>
+				</view>
+				<view class="item-value">
+					<input type="text" :value="formData?.pageDuration" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
 					<text class="t">播放次数</text>
 				</view>
 				<view class="item-value">
@@ -56,7 +64,7 @@
 			<view class="options">
 				<view class="options-tab">
 					<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
-					<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">媒体库</text></view>
+					<!-- <view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">媒体库</text></view> -->
 				</view>
 				<view class="option-body">
 					<view class="option-a" :class="{active: activeTab == 0}">
@@ -64,48 +72,32 @@
 							<text class="t">+</text>
 						</view>
 					</view>
-					<view class="option-b" :class="{active: activeTab == 1}">
-						<!-- <scroll-view> -->
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>							
-						<!-- </scroll-view> -->
-					</view>
 				</view>
 			</view>
-		</view>			
+		</view>
 	</view>	
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent,VideoComponent } from './mediaConfig.uts'
+	import  { BaseComponent, WordComponent } from './mediaConfig.uts'
 	export default {
 		props: {
 			item: {
 				type: BaseComponent,
 				default: null
-			},
-			medias: {
-				default: () => []
 			}
 		},
 		emits: ['refresh'],
 		data() {
 			return {
-				formData: null as VideoComponent | null,
+				formData: null as WordComponent | null,
 				activeTab: 0,
 			}
 		},
 		watch: {
 			item(newValue?: BaseComponent) {
-				if (newValue instanceof VideoComponent) {	
-					this.formData = newValue as VideoComponent;
+				if (newValue instanceof WordComponent) {	
+					this.formData = newValue as WordComponent;
 					this.activeTab = 0;
 				}
 				else {
@@ -114,8 +106,8 @@
 			}
 		},
 		onReady() {
-			if (this.item instanceof VideoComponent) {
-				this.formData = this.item as VideoComponent;
+			if (this.item instanceof WordComponent) {
+				this.formData = this.item as WordComponent;
 				this.activeTab = 0;
 			}
 			else {
@@ -171,28 +163,25 @@
 				}
 				
 				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-				
+				this.$emit("refresh", data);				
 			},
 			handleUpload() {
 				if(this.formData == null) return;
-				uni.chooseMedia({
+				uni.chooseFile({
 					count: 1,
-					sourceType: ['album'],
-					mediaType: ['video'],
+					extension: [".docx", ".doc", ".pdf", ".ppt"],
 					success: (res) => {
-						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
-
+						const tempFiles: ChooseFileTempFile[] = res.tempFiles as ChooseFileTempFile[];
+								
 						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i]
-							this.formData!.source = tempFile.tempFilePath;
-							this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
-							this.formData!.timeLine = tempFile.duration as number;
-							this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
+							const tempFile : ChooseFileTempFile = tempFiles[i]
+							this.formData!.source = tempFile.path;
+							this.formData!.thumbFilePath = this.getThumbnail(tempFile.path);
 							this.formData!.isShowInfo = true;
 							this.formData!.width = 256;
 							this.formData!.height = 192;
 							const data = this.formData!.toModel();
+							console.log(data);
 							this.$emit("refresh", data);
 						}
 					},
@@ -205,35 +194,8 @@
 					}
 				})
 			},
-			selectMedia(item: UTSJSONObject) {
-				if(this.formData == null) return;
-				if (item['type'] != 'Video') {
-					uni.showToast({
-						title: "视频组件只能选择视频媒体",
-						icon: 'none'
-					})
-					return;
-				}
-				this.formData!.source = item.src as string;
-				this.formData!.thumbFilePath = item.src as string;
-				this.formData!.timeLine = 10;
-				this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-				this.formData!.isShowInfo = true;						  
-				this.formData!.width = 256;
-				this.formData!.height = 192;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-			},
-			getPlayDuration: (timeLine: number)=> {
-				const seconds = Math.round(timeLine % 60);
-				const minutes = Math.round((timeLine / 60) % 60);
-				let hours = Math.round(timeLine / 60 / 60);
-				if (hours > 23){
-				    hours = 23;
-				}
-				
-				const result = `${hours < 10 ? '0'+ hours : hours}:${minutes < 10 ? '0'+ minutes : minutes}:${seconds < 10 ? '0'+ seconds : seconds}`;
-				return result;
+			getThumbnail: (filePath: string)=> {
+				return "/static/svg/site-word.png";
 			}
 		}
 	}

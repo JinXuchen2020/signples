@@ -4,6 +4,8 @@ export type ApiEndpoints = {
   login: string;
   userInfo: string;
   usersAll: string;
+  mediaAll: string;
+  mediaDownload: string;
   deviceListPage: string;
   deviceInfo: string;
   deleteDevice: string;
@@ -17,6 +19,8 @@ export const APIS: ApiEndpoints = {
   login: BASE_URL + '/simpleLogin',
   userInfo: BASE_URL + '/user/',
   usersAll: BASE_URL + '/user/all',
+  mediaAll: BASE_URL + '/media/all',
+  mediaDownload: BASE_URL + '/media/download',
   deviceListPage: BASE_URL + '/monitor/all',
   deviceInfo: BASE_URL + '/monitor/',
   deleteDevice: BASE_URL + '/monitor',

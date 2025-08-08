@@ -147,7 +147,7 @@
 									}
 									
 									const currentDate = new Date().getTime()
-									const day = this.deviceInfo['validEnd'] as String;
+									const day = this.deviceInfo['validEnd'] as string;
 									const daynum = new Date(day).getTime() as number;
 									if(currentDate > daynum){
 										this.deviceInfo['isvalidEnd'] = true;

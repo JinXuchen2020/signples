@@ -12,7 +12,7 @@ export class FileManager {
 	
 	async getProgramList() {
 		let results: UTSJSONObject[] = [];
-		const userAccount = this.userInfo['UserAccount'] as string;
+		const userAccount = this.userInfo['account'] as string;
 		const userProgramFolder = `${this.tempDir}/${userAccount}`
 		try {
 			const items = this.fs.readdirSync(userProgramFolder);

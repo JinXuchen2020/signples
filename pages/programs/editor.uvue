@@ -4,7 +4,10 @@
 			<canvas 
 				canvas-id="ucanvas" 
 				id="ucanvas" 
-				class="canvas" 
+				class="canvas"
+				@touchstart="handleTouchStart"
+			    @touchmove="handleTouchMove"
+				@touchend="handleTouchEnd"
 				:style="'width:'+canvasWidth+'px;height:'+canvasHeight+'px;'" />
 		</view>
 		<view class="top-button">
@@ -29,9 +32,12 @@
 				<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
 				<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
 			</view>
-			<scroll-view class="option-body" style="height: 360px; overflow-y: auto;">
+			<scroll-view class="option-body" style="height: 360px;">
 				<view class="option-a" :class="{active: activeTab == 0}">
-					<VideoForm :item="activeComponent" @refresh="updateComponent" />
+					<VideoForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
+					<ImageForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
+					<WebForm :item="activeComponent" @refresh="updateComponent" />
+					<WordForm :item="activeComponent" @refresh="updateComponent" />
 				</view>
 				<view class="option-b" :class="{active: activeTab == 1}">
 					<view class="page-option-form">
@@ -50,8 +56,7 @@
 							<view class="item-value">
 								<radio-group name="type" @change="handleTypeChange">
 									<view class="radio-group" >
-										<radio value="normal" :checked="activePage?.type == 'normal'" >常规</radio>
-										<view style="width: 24rpx;"></view>
+										<radio class="radio" value="normal" :checked="activePage?.type == 'normal'" >常规</radio>
 										<radio value="ad" :checked="activePage?.type == 'ad'">广告</radio>
 									</view>
 								</radio-group>
@@ -86,7 +91,7 @@
 								<text class="t">播放次数</text>
 							</view>
 							<view class="item-value">
-								<input type="text" :value="activePage?.playCount" class="uni-input" />
+								<input type="number" :value="activePage?.playCount" class="uni-input" />
 							</view>
 						</view>
 						<view class="item">
@@ -95,17 +100,17 @@
 							</view>
 							<view class="item-value">
 								<view class="sub-list" style="width: 100%;">
-									<view class="sub-item" v-for="(item, index) in activePage?.schedulers" :key="item.id">
+									<view class="sub-item" v-for="item in activePage?.schedulers" :key="item.id">
 										<view class="sub-value">
 											<checkbox-group class="radio-group" @change="handleScheduleDayChange">
-												<checkbox v-for="(scheduleDay, index) in item.scheduleDays" :key="scheduleDay.day"
+												<checkbox v-for="scheduleDay in item.scheduleDays" :key="scheduleDay.day"
 													:value="scheduleDay.day" :checked="scheduleDay.selected">
 													{{ scheduleDay.label }}
 												</checkbox>
 											</checkbox-group>
 										</view>
 										<view class="sub-value">
-											<input type="date" :value="item.startTime" class="uni-input" />
+											<input type="text" :value="item.startTime" class="uni-input" />
 											<text>至</text>
 											<input type="text" :value="item.endTime" class="uni-input" />
 										</view>
@@ -121,31 +126,17 @@
 			<view class="pages">
 				<swiper id="swiper-view" class="swiper">
 					<swiper-item v-if="activeTab == 1" class="swiper-item" item-id="1">
-						<!-- <view v-if="activeTab == 1" class="pageContainer" >							 -->
-							<view v-for="(item, index) in mediaConfig.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
-								<text class="t">{{item.name}}</text>
-							</view>
-							<view class="item" style="background-color: #cccccc;" @click="addPage()">
-								<text class="t">+</text>
-							</view>							
-						<!-- </view>
-						<view v-else>
-							<view v-for="(item, index) in activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
-								<text class="t">{{item.name}}</text>
-							</view>
-						</view> -->
+						<view v-for="(item, index) in mediaConfig.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
+							<text class="t">{{item.name}}</text>
+						</view>
+						<view class="item" style="background-color: #cccccc;" @click="addPage()">
+							<text class="t">+</text>
+						</view>
 					</swiper-item>
 					<swiper-item v-else class="swiper-item" item-id="2">
-						<!-- <view v-if="activeTab == 1" class="pageContainer" >							 -->
-							<view v-for="(item, index) in  activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
-								<text class="t">{{item.name}}</text>
-							</view>							
-						<!-- </view>
-						<view v-else>
-							<view v-for="(item, index) in activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
-								<text class="t">{{item.name}}</text>
-							</view>
-						</view> -->
+						<view v-for="(item, index) in  activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
+							<text class="t">{{item.name}}</text>
+						</view>
 					</swiper-item>
 				</swiper>
 			</view>
@@ -216,8 +207,13 @@
 	
 	import { routeGoto } from '@/common/router.uts'
 	import { FileManager} from './FileManager.uts'
+	import { APIS } from '@/api/config.uts'
+	import { request } from '@/utils/http/index'
 	
 	import VideoForm from './videoForm.uvue'
+	import ImageForm from './imageForm.uvue'
+	import WebForm from './webForm.uvue'
+	import WordForm from './wordForm.uvue'
 	
 	import i18n from '@/locale'
 	
@@ -230,6 +226,9 @@
 	
 	const canvasWidth = ref('256');
 	const canvasHeight = ref('192');
+	const mediaList : Ref<UTSJSONObject[]> = ref([]);
+	
+	const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
 	const programName = ref('');
 	const mediaConfig = ref(new MediaConfig({
 		"Left": 0.0,
@@ -411,18 +410,35 @@
 		activeTab.value = val
 	}
 	
+	const getCanvasRect = () => {
+		uni.createSelectorQuery()
+			.in(this)
+			.select('.canvas')
+			.boundingClientRect(rect => {
+				if (rect instanceof NodeInfo) {
+					const node = rect as NodeInfo;
+					const data = {
+						left: node.left,
+						top: node.top,
+						width: node.width,
+						height: node.height
+					}
+					
+					canvasRect.value = data;
+				}
+			})
+			.exec();
+	}
+	
 	const handleIsHasValidityChange = () => {
-		console.log('修改是否有效期');
 		if (activePage.value != null) {
 			activePage.value!.isHasValidity = !activePage.value!.isHasValidity;
-			console.log(activePage.value);
 		}
 	}
 	
 	const handleTypeChange = (event: UniRadioGroupChangeEvent) => {
 		if (activePage.value != null) {
 			activePage.value.type = event.detail.value;
-			console.log(activePage.value);
 		}
 	};
 	
@@ -437,7 +453,6 @@
 			});
 			
 			activePage.value.schedulers.splice(0, 1, newScheduler);
-			console.log(activePage.value);
 		}
 	}
 	
@@ -468,17 +483,137 @@
 		mediaConfig.value.pages.push(page)
 		activePage.value = page;
 		activeComponent.value = null;
-		
-		console.log(activePage.value);
 	}
 	
 	const selectPage = (item: MediaPage) =>{
 		activePage.value = item;
 		activeComponent.value = null;
+	}	
+	
+	async function drawPage() :Promise<void> {
+		await activePage.value?.draw(uCanvas);
+	    uCanvas.render();
+	}
+	
+	const handleTouchStart = async (e: TouchEvent) =>{
+		if(activePage.value == null) return;
+		const touch = e.touches[0];
+		const touchX = Math.round(touch.clientX - canvasRect.value["left"] as number);
+		const touchY = Math.round(touch.clientY - canvasRect.value["top"] as number);
+		// 取消所有选中状态
+		for (const component of activePage.value.components.filter(c => c.element != null)) 
+		{
+			component.element!.isSelected = false;
+		}
+
+		// 检测点击的图形
+		for (const component of activePage.value.components.filter(c => c.element != null).sort((a,b)=>b.zIndex - a.zIndex)) {
+			console.log(component);
+			const image = component.element!;
+			if (image.isHitResizeHandle(touchX, touchY)) {
+				image.isResizing = true;
+				image.isSelected = true;
+				activeComponent.value = component;
+				break;
+			} else if (image.isHit(touchX, touchY)) {
+				image.isDragging = true;
+				image.isSelected = true;
+				activeComponent.value = component;
+				break;
+			}
+		}
+
+		if (activeComponent.value != null) {
+			activeComponent.value!.element!.lastTouchX = touchX;
+			activeComponent.value!.element!.lastTouchY = touchY;
+			await drawPage(); // 立即显示边框
+		}
+	}
+	
+	const handleTouchMove = async (e: TouchEvent) => {
+		if (activeComponent.value == null || activeComponent.value!.element == null) return;
+		
+		let component = activeComponent.value;
+
+		const touch = e.touches[0];
+		const touchX = Math.round(touch.clientX - canvasRect.value["left"] as number);
+		const touchY = Math.round(touch.clientY - canvasRect.value["top"] as number);
+		const deltaX = touchX - component.element!.lastTouchX;
+		const deltaY = touchY - component.element!.lastTouchY;
+
+		if (component.element!.isDragging) {
+			// 拖拽移动
+			component.element!.x = Math.max(0, Math.min(
+				canvasRect.value["width"] as number - component.element!.width, 
+				component.element!.x + deltaX
+			));
+		    component.element!.y = Math.max(0, Math.min(
+				canvasRect.value["height"] as number - component.element!.height, 
+				component.element!.y + deltaY
+			));
+			component.left = component.element!.x;
+			component.top = component.element!.y;
+		} else if (component.element!.isResizing) {
+			// 改变大小
+			component.element!.width = Math.min(
+				Math.max(10, component.element!.width + deltaX),
+				canvasRect.value["width"] as number - component.element!.x
+			);
+			
+			component.element!.height = Math.min(
+				Math.max(10, component.element!.height + deltaY),
+				canvasRect.value["height"] as number - component.element!.y
+			);
+			
+			component.width = component.element!.width;
+			component.height = component.element!.height;
+		}
+
+		component.element!.lastTouchX = touchX;
+		component.element!.lastTouchY = touchY;
+		await drawPage();
+	}
+	
+	    // 触摸结束
+	const handleTouchEnd = () => {
+		if (activeComponent.value != null && activeComponent.value!.element != null){
+			activeComponent.value!.element!.isDragging = false;
+			activeComponent.value!.element!.isResizing = false;
+			const data = activeComponent.value!.toModel() as UTSJSONObject;
+			const type = data['Type'] as string;
+			let newComponent : BaseComponent | null = null;
+			switch (type) {
+				case "Video":
+					newComponent = new VideoComponent(data);
+					break;
+				case "Text":
+					newComponent = new TextComponent(data);
+					break;
+				case "Image":
+					newComponent = new ImageComponent(data);
+					break;
+				case "Web":
+					newComponent = new WebComponent(data);
+					break;
+				case "Word":
+					newComponent = new WordComponent(data);
+					break;
+			}		
+			
+			activeComponent.value = newComponent;
+		}
 	}
 	
 	async function selectComponent(item: BaseComponent){
 		activeComponent.value = item;
+		if (activeComponent.value!= null && activeComponent.value!.element != null) {
+			for (const component of activePage.value!.components.filter(c => c.element != null))
+			{
+				component.element!.isSelected = false;
+			}
+			activeComponent.value!.element.isSelected = true;
+			await drawPage();
+		}
 	}
 	
 	async function createComponent(index: number) {
@@ -502,17 +637,17 @@
 				component = WordComponent.createInstance(maxId + 1);
 				break;
 		}
-		console.log(component);
 		if(component !=  null) {
 			activePage.value?.components.push(component);
-			activeComponent.value = component;
+			if (!component.hasFile) {
+				selectComponent(component);
+			} else {				
+				activeComponent.value = component;
+			}
 		}
-		
-		console.log(activePage.value);
 	}
 	
-	async function updateComponent(data: UTSJSONObject) {
-		console.log(data);
+	async function updateComponent(data: UTSJSONObject) : Promise<void> {
 		if (activePage.value == null) return;
 		let component : BaseComponent | null = null;
 		const type = data['Type'] as string;
@@ -537,15 +672,8 @@
 		if (component != null) {
 			let index = activePage.value!.components.findIndex(c => c.name == data["Name"]);
 			activePage.value!.components.splice(index, 1, component!);
-			activeComponent.value = component!;
-			console.log(activeComponent.value);
-			console.log(activePage.value);
-			await activePage.value!.draw(uCanvas);
+			selectComponent(component!);
 		}
-	}
-	
-	async function drawPage() :Promise<void> {
-		await activePage.value?.draw(uCanvas);
 	}
 	
     async function init() : Promise<void> {
@@ -554,9 +682,10 @@
 		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
 		mediaConfig.value = currentConfig;
 		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
-        await uCanvas.ensureInitialize();
+		activeComponent.value = activePage.value == null || activePage.value!.components.length == 0 ? null : activePage.value?.components[0];
+        console.log(activeComponent.value);
+		await uCanvas.ensureInitialize();
 		await drawPage();
-        uCanvas.render();
     }
 	
 	async function handlePush() :Promise<void> {
@@ -571,6 +700,50 @@
 	
 	async function handleReview() :Promise<void> {		
 		routeGoto('/pages/programs/review')
+	}
+	
+	async function getMedias(){
+		try {
+			uni.showLoading({
+				title: ''
+			});
+			const person: UTSJSONObject = {}
+			const result = await request('GET', APIS.mediaAll as string, person);
+			const d = result as Array<UTSJSONObject>;
+			for (let media of d) {
+				const param = '?fileName=' + media.src;
+				const downloadResult = await new Promise<DownloadFileSuccess>((resolve: (value: DownloadFileSuccess) => void, reject: (reason?: any) => void) => {
+					uni.downloadFile({
+						url: APIS.mediaDownload as string + param,
+						success: (res) => {
+							resolve(res);
+						},
+						fail: (err) => {
+							reject(err);
+						}
+					});
+				});
+				
+				media.src = downloadResult.tempFilePath;
+				
+				// const saveResult = await new Promise<UTSJSONObject>((resolve: (value: UTSJSONObject) => void, reject: (reason?: any) => void) => {
+				// 	uni.saveFile({
+				// 		tempFilePath: downloadResult['tempFilePath'] as string,
+				// 		success: (res : any) => {
+				// 			resolve(res as UTSJSONObject);
+				// 		},
+				// 		fail: (err : any) => {
+				// 			reject(err);
+				// 		}
+				// 	});
+				// });
+			}
+			mediaList.value = d
+			uni.hideLoading();
+		} catch (error) {
+		  console.error('获取媒体库失败', error)
+		  uni.hideLoading();
+		}
 	}
 	
 	onLoad((e: OnLoadOptions): void => {		
@@ -596,6 +769,8 @@
 	});
     onReady(() => {
         init();
+		getCanvasRect();
+		getMedias();
     });
 </script>
 
@@ -620,7 +795,7 @@
 		align-items: center; /* 垂直居中 */
 		flex-wrap: wrap;
 		
-		radio {
+		.radio {
 			margin-right: 20rpx;
 		}
 	}
@@ -763,6 +938,7 @@
 									flex-direction: row;
 									align-items: center;
 									justify-content: space-between;
+									margin-bottom: 10rpx;
 								}
 							}
 						}

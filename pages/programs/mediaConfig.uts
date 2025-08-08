@@ -12,6 +12,7 @@ import {
 	ImagePixel,
 	Point,
 } from "@/uni_modules/u-canvas";
+import { DraggableImage } from "./DraggableRect.uts";
 export class MediaConfig {
 	left: number;
 	top: number;
@@ -123,8 +124,7 @@ export class MediaPage{
 	
 	async draw(canvas: UCanvas) {
 		canvas.cleanGraphic();
-		for (let index = 0; index < this.components.length; index++) {
-			let component = this.components[index];
+		for (const component of this.components.sort((a,b)=>a.zIndex - b.zIndex)){			
 			switch (component.type) {
 				case "Video":
 					const videoComponent = component as VideoComponent;
@@ -148,8 +148,6 @@ export class MediaPage{
 					break;
 			}			
 		}
-		
-		canvas.render();
 	}
 }
 
@@ -220,6 +218,7 @@ export abstract class BaseComponent {
 	public id: number;
 	public name: string;
 	abstract type: string;
+	abstract hasFile: boolean;
 	public zIndex: number;
 	public left: number;
 	public top: number;
@@ -229,6 +228,7 @@ export abstract class BaseComponent {
 	public timeLine: number;
 	public playCount: number;
 	public playDuration: string;
+	element?: DraggableImage;
 	constructor(data: UTSJSONObject){
 		this.id = data.Id as number;
 		this.name = data.Name as string;
@@ -239,12 +239,16 @@ export abstract class BaseComponent {
 		this.height = data['Height'] == null ? 0 : data.Height as number;
 		this.source = data['Source'] == null ? '' : data.Source as string;
 		this.timeLine = data['TimeLine'] == null ? 0 : data.TimeLine as number;
-		this.playCount = data['playCount'] == null ? 1 : data.PlayCount as number;
-		this.playDuration = data['playDuration'] == null ? "00:00:00" : data.PlayDuration as string;
+		this.playCount = data['PlayCount'] == null ? 1 : data.PlayCount as number;
+		this.playDuration = data['PlayDuration'] == null ? "00:00:00" : data.PlayDuration as string;
+		this.element = null;
 	}
+	
+	abstract toModel() : UTSJSONObject;
 }
 export class VideoComponent extends BaseComponent {
 	override type: string = "Video";
+	override hasFile = true;
 	playMode: string;
 	isClip: boolean;
 	thumbFilePath?: string;
@@ -255,23 +259,20 @@ export class VideoComponent extends BaseComponent {
 		this.isClip = data['IsClip'] == null ? false : data['IsClip'] as boolean;
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		this.isShowInfo = this.source.length > 0 ? true : false;
+		if (this.thumbFilePath != null) {
+			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.thumbFilePath);
+		}
+		else {
+			this.element = null;
+		}		
 	}
 	
 	async draw(uCanvas: UCanvas) {
-		if (this.thumbFilePath == null) return;
-		const image = await uCanvas.createImage(this.thumbFilePath);
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Picture({ image: image, x: this.left, y: this.top, w: this.width, h: this.height, })
-		        ],
-		    })
-		);
+		if (this.thumbFilePath == null && this.element == null) return;
+		await this.element!.draw(uCanvas);
 	}
 	
-	toModel() {
+	override toModel() {
 		return {
 			Id: this.id,
 			Name: this.name,
@@ -288,7 +289,6 @@ export class VideoComponent extends BaseComponent {
 			PlayMode: this.playMode;
 			IsClip: this.isClip;
 			ThumbFilePath: this.thumbFilePath;
-			IsShowInfo: this.isShowInfo;
 		} as UTSJSONObject
 	}
 	
@@ -308,44 +308,66 @@ export class VideoComponent extends BaseComponent {
 }
 export class ImageComponent extends BaseComponent {
 	override type: string = "Image";
+	override hasFile = true;
 	effectDuration: number;
 	componentEffect: string;
+	isShowInfo: boolean;
 	constructor(data: UTSJSONObject){
 		super(data);
 		this.effectDuration = data['EffectDuration'] as number;
 		this.componentEffect = data['ComponentEffect'] as string;
+		this.isShowInfo = this.source.length > 0 ? true : false;
+		if (this.source.length > 0) {
+			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
+		}
+		else {
+			this.element = null;
+		}
 	}
 	
 	async draw(uCanvas: UCanvas) {
-		const image = await uCanvas.createImage(this.source);
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Picture({ image: image, x: this.left, y: this.top, w: this.width, h: this.height, })
-		        ],
-		    })
-		);
+		if (this.source.length == 0 && this.element == null) return;
+		await this.element!.draw(uCanvas);
 	}
 	
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `页面${id}`,
+			Name: `图片${id}`,
 			ZIndex:  id,
-			PlayMode:  "fullscreen",
 			PlayCount:  1,
-			Timeline:  0,
-			PlayDuration: "00:00:00",
+			Timeline:  5,
+			PlayDuration: "00:00:05",
+			ComponentEffect: "Empty",
+			EffectDuration: 1000
 		}
 		
 		return new ImageComponent(data);
+	}
+	
+	override toModel() {
+		return {
+			Id: this.id,
+			Name: this.name,
+			Type: this.type,
+			ZIndex: this.zIndex,
+			Left: this.left,
+			Top: this.top,
+			Width: this.width,
+			Height: this.height,
+			Source: this.source,
+			Timeline: this.timeLine,
+			PlayCount: this.playCount,
+			PlayDuration: this.playDuration,
+			EffectDuration: this.effectDuration,
+			ComponentEffect: this.componentEffect
+		} as UTSJSONObject
 	}
 }
 
 export class TextComponent extends BaseComponent {
 	override type: string = "Text";
+	override hasFile = false;
 	background: string;
 	textColor: string;
 	playMode: string;
@@ -374,100 +396,176 @@ export class TextComponent extends BaseComponent {
 		this.lineSpacing = data['LineSpacing'] as number;
 		this.rtfFilePath = data['RtfFilePath'] as string;
 		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
+		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
 	}
 	
 	async draw(uCanvas: UCanvas) {
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
-		            new Text({ x: 0, y: 0, text: this.source }),
-		        ],
-		    })
-		);
+		if (this.element == null) return;
+		await this.element!.drawText(uCanvas);
 	}
 	
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `页面${id}`,
-			ZIndex:  id,
-			PlayMode:  "fullscreen",
-			PlayCount:  1,
-			Timeline:  0,
-			PlayDuration: "00:00:00",
+			Name : `文字${id}`,
+			ZIndex : id,
+			Type : "Text",
+			Source : "Hello word",
+			PlayCount : 1,
+			PlayDuration : "00:00:05",
+			PlayMode : "pageTurning",
+			ComponentEffect : "Empty",
+			EffectDuration : 1000,
+			Direction : "rollingLeft",
+			Timeline : 5,
+			Background : "black",
+			TextColor : "white",
+			TextSize : 16,
+			IsLoopEnabled : true,
+			LetterSpacing : 2,
+			LineSpacing : 2,
+			RollingSpeed : 2,
+			VerticalContentAlignment: "top",
 		}
 		
 		return new TextComponent(data);
+	}
+	
+	override toModel() {
+		return {
+			Id: this.id,
+			Name: this.name,
+			Type: this.type,
+			ZIndex: this.zIndex,
+			Left: this.left,
+			Top: this.top,
+			Width: this.width,
+			Height: this.height,
+			Source: this.source,
+			Timeline: this.timeLine,
+			PlayCount: this.playCount,
+			PlayDuration: this.playDuration,
+			Background: this.background,
+			TextColor: this.textColor,
+			PlayMode: this.playMode,
+			Direction: this.direction,
+			EffectDuration: this.effectDuration,
+			ComponentEffect: this.componentEffect,
+			RollingSpeed: this.rollingSpeed,
+			TextSize: this.textSize,
+			IsLoopEnabled: this.isLoopEnabled,
+			LetterSpacing: this.letterSpacing,
+			LineSpacing: this.lineSpacing,
+			RtfFilePath: this.rtfFilePath,
+			VerticalContentAlignment: this.verticalContentAlignment,
+		} as UTSJSONObject
 	}
 }
 
 export class WebComponent extends BaseComponent {
 	override type: string = "Web";
+	override hasFile = false;
+	private imageUrl = "/static/svg/site-web.png";
 	constructor(data: UTSJSONObject) {
 		super(data);
+		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.imageUrl);
 	}
 	
 	async draw(uCanvas: UCanvas) {
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
-		            new Text({ x: 0, y: 0, text: this.source }),
-		        ],
-		    })
-		);
+		if (this.element == null) return;
+		await this.element!.draw(uCanvas);
 	}
 	
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `页面${id}`,
+			Name: `网页${id}`,
 			ZIndex:  id,
-			PlayMode:  "fullscreen",
+			Width: 256,
+			Height: 192,
 			PlayCount:  1,
-			Timeline:  0,
-			PlayDuration: "00:00:00",
+			Timeline:  5,
+			PlayDuration: "00:00:05",
+			Source: "https://www.baidu.com"
 		}
 		
 		return new WebComponent(data);
+	}
+	
+	override toModel() {
+		return {
+			Id: this.id,
+			Name: this.name,
+			Type: this.type,
+			ZIndex: this.zIndex,
+			Left: this.left,
+			Top: this.top,
+			Width: this.width,
+			Height: this.height,
+			Source: this.source,
+			Timeline: this.timeLine,
+			PlayCount: this.playCount,
+			PlayDuration: this.playDuration,
+		} as UTSJSONObject
 	}
 }
 
 export class WordComponent extends BaseComponent {
 	override type: string = "Word";
+	override hasFile = true;
+	pageDuration: number;
+	isShowInfo: boolean;
+	thumbFilePath?: string;
 	constructor(data: UTSJSONObject) {
 		super(data);
+		this.pageDuration = data.PageDuration as number;
+		this.isShowInfo = this.source.length > 0 ? true : false;
+		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
+		if (this.thumbFilePath != null) {
+			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.thumbFilePath);
+		}
+		else {
+			this.element = null;
+		}
 	}
 	
 	async draw(uCanvas: UCanvas) {
-		uCanvas.addGraphic(
-		    new Composition({
-		        x: 0,
-		        y: 0,
-		        children: [
-		            new Rectangle({ x: this.left, y: this.top, w: this.width, h: this.height, }),
-		            new Text({ x: 0, y: 0, text: this.source }),
-		        ],
-		    })
-		);
+		if (this.thumbFilePath == null && this.element == null) return;
+		await this.element!.draw(uCanvas);
 	}
 	
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `页面${id}`,
+			Name: `文档${id}`,
 			ZIndex:  id,
-			PlayMode:  "fullscreen",
 			PlayCount:  1,
-			Timeline:  0,
-			PlayDuration: "00:00:00",
+			Width: 256,
+			Height: 192,
+			Timeline:  30,
+			PlayDuration: "00:00:30",
+			PageDuration: 10,
 		}
 		
 		return new WordComponent(data);
+	}
+	
+	override toModel() {
+		return {
+			Id: this.id,
+			Name: this.name,
+			Type: this.type,
+			ZIndex: this.zIndex,
+			Left: this.left,
+			Top: this.top,
+			Width: this.width,
+			Height: this.height,
+			Source: this.source,
+			Timeline: this.timeLine,
+			PlayCount: this.playCount,
+			PlayDuration: this.playDuration,
+			PageDuration: this.pageDuration,
+			ThumbFilePath: this.thumbFilePath;
+		} as UTSJSONObject
 	}
 }

@@ -174,8 +174,8 @@
 		methods: {
 			async init(){
 				let that = this
-				that.fileManager = new FileManager();
-				that.programList = await that.fileManager.getProgramList();
+				// that.fileManager = new FileManager();
+				// that.programList = await that.fileManager.getProgramList();
 			},
 			handleRouteGoto(route: string): void{
 				let token = uni.getStorageSync("token")

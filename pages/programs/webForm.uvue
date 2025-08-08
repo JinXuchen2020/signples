@@ -15,7 +15,7 @@
 				</view>
 			</view>
 		</view>
-		<view v-if="formData?.isShowInfo == true">
+		<view>
 			<view class="item">
 				<view class="item-key">
 					<text class="t">名称</text>
@@ -30,6 +30,14 @@
 				</view>
 				<view class="item-value">
 					<input type="number" :value="formData?.zIndex" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">内容</text>
+				</view>
+				<view class="item-value">
+					<input type="text" :value="formData?.source" class="uni-input" />
 				</view>
 			</view>
 			<view class="item">
@@ -49,63 +57,29 @@
 				</view>
 			</view>
 		</view>
-		<view class="item" v-else>
-			<view class="item-key">
-				<text class="t">选择文件</text>
-			</view>
-			<view class="options">
-				<view class="options-tab">
-					<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
-					<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">媒体库</text></view>
-				</view>
-				<view class="option-body">
-					<view class="option-a" :class="{active: activeTab == 0}">
-						<view class="local" @click="handleUpload()">
-							<text class="t">+</text>
-						</view>
-					</view>
-					<view class="option-b" :class="{active: activeTab == 1}">
-						<!-- <scroll-view> -->
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>							
-						<!-- </scroll-view> -->
-					</view>
-				</view>
-			</view>
-		</view>			
 	</view>	
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent,VideoComponent } from './mediaConfig.uts'
+	import  { BaseComponent, WebComponent } from './mediaConfig.uts'
 	export default {
 		props: {
 			item: {
 				type: BaseComponent,
 				default: null
-			},
-			medias: {
-				default: () => []
 			}
 		},
 		emits: ['refresh'],
 		data() {
 			return {
-				formData: null as VideoComponent | null,
+				formData: null as WebComponent | null,
 				activeTab: 0,
 			}
 		},
 		watch: {
 			item(newValue?: BaseComponent) {
-				if (newValue instanceof VideoComponent) {	
-					this.formData = newValue as VideoComponent;
+				if (newValue instanceof WebComponent) {	
+					this.formData = newValue as WebComponent;
 					this.activeTab = 0;
 				}
 				else {
@@ -114,8 +88,8 @@
 			}
 		},
 		onReady() {
-			if (this.item instanceof VideoComponent) {
-				this.formData = this.item as VideoComponent;
+			if (this.item instanceof WebComponent) {
+				this.formData = this.item as WebComponent;
 				this.activeTab = 0;
 			}
 			else {
@@ -171,69 +145,7 @@
 				}
 				
 				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-				
-			},
-			handleUpload() {
-				if(this.formData == null) return;
-				uni.chooseMedia({
-					count: 1,
-					sourceType: ['album'],
-					mediaType: ['video'],
-					success: (res) => {
-						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
-
-						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i]
-							this.formData!.source = tempFile.tempFilePath;
-							this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
-							this.formData!.timeLine = tempFile.duration as number;
-							this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-							this.formData!.isShowInfo = true;
-							this.formData!.width = 256;
-							this.formData!.height = 192;
-							const data = this.formData!.toModel();
-							this.$emit("refresh", data);
-						}
-					},
-					fail: (err) => {
-						console.log("err: ", JSON.stringify(err));
-						uni.showToast({
-						  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
-						  position:"bottom"
-						})
-					}
-				})
-			},
-			selectMedia(item: UTSJSONObject) {
-				if(this.formData == null) return;
-				if (item['type'] != 'Video') {
-					uni.showToast({
-						title: "视频组件只能选择视频媒体",
-						icon: 'none'
-					})
-					return;
-				}
-				this.formData!.source = item.src as string;
-				this.formData!.thumbFilePath = item.src as string;
-				this.formData!.timeLine = 10;
-				this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-				this.formData!.isShowInfo = true;						  
-				this.formData!.width = 256;
-				this.formData!.height = 192;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-			},
-			getPlayDuration: (timeLine: number)=> {
-				const seconds = Math.round(timeLine % 60);
-				const minutes = Math.round((timeLine / 60) % 60);
-				let hours = Math.round(timeLine / 60 / 60);
-				if (hours > 23){
-				    hours = 23;
-				}
-				
-				const result = `${hours < 10 ? '0'+ hours : hours}:${minutes < 10 ? '0'+ minutes : minutes}:${seconds < 10 ? '0'+ seconds : seconds}`;
-				return result;
+				this.$emit("refresh", data);				
 			}
 		}
 	}

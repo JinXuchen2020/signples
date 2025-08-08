@@ -1,0 +1,151 @@
+import { UCanvas, Composition, Rectangle, Picture, Text } from "@/uni_modules/u-canvas";
+
+export class DraggableImage {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  source: string;
+  isSelected: boolean = false;
+  isDragging: boolean = false;
+  isResizing: boolean = false;
+  lastTouchX: number = 0;
+  lastTouchY: number = 0;
+
+  constructor(x: number, y: number, width: number, height: number, source: string) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.source = source;
+  }
+
+  // 检测是否点击了图形
+  isHit(touchX: number, touchY: number): boolean {
+    return (
+      touchX >= this.x &&
+      touchX <= this.x + this.width &&
+      touchY >= this.y &&
+      touchY <= this.y + this.height
+    );
+  }
+
+  // 检测是否点击了缩放控制点（右下角）
+  isHitResizeHandle(touchX: number, touchY: number): boolean {
+    const handleSize = 20;
+    return (
+      touchX >= this.x + this.width - handleSize &&
+      touchX <= this.x + this.width &&
+      touchY >= this.y + this.height - handleSize &&
+      touchY <= this.y + this.height
+    );
+  }
+
+  // 绘制图形和边框（选中时）
+  async draw(canvas: UCanvas) {
+    const image = await canvas.createImage(this.source);
+	if(this.isSelected){
+		canvas.addGraphic(
+		  new Composition({
+		    x: 0,
+		    y: 0,
+		    children: [
+		      // 图片
+		      new Picture({
+		        image: image,
+		        x: this.x,
+		        y: this.y,
+		        w: this.width,
+		        h: this.height,
+		      }),
+		      new Rectangle({
+		        x: this.x,
+		        y: this.y,
+		        w: this.width,
+		        h: this.height,
+		        style: {
+		          stroke: {
+		          	color: "black",
+		          	width: 1,
+		          	cap: "butt",
+		          	join: "miter",
+		          },
+		        }
+		      }),
+		      new Rectangle({
+		        x: this.x + this.width - 15,
+		        y: this.y + this.height - 15,
+		        w: 15,
+		        h: 15,
+		      }),
+		    ],
+		  })
+	  );
+	}
+	else {
+		canvas.addGraphic(
+			new Composition({
+				x: 0,
+				y: 0,
+				children: [
+				  // 图片
+					new Picture({
+						image: image,
+						x: this.x,
+						y: this.y,
+						w: this.width,
+						h: this.height,
+					})
+				],
+			})
+		);
+	}
+  }
+  
+  async drawText(canvas: UCanvas) {
+  	if(this.isSelected){
+  		canvas.addGraphic(
+  		  new Composition({
+  		    x: 0,
+  		    y: 0,
+  		    children: [
+  		      new Rectangle({ x: this.x, y: this.y, w: this.width, h: this.height, }),
+  		      new Text({ x: 0, y: 0, text: this.source }),
+  		      new Rectangle({
+  		        x: this.x,
+  		        y: this.y,
+  		        w: this.width,
+  		        h: this.height,
+  		        style: {
+  		          stroke: {
+  		          	color: "black",
+  		          	width: 1,
+  		          	cap: "butt",
+  		          	join: "miter",
+  		          },
+  		        }
+  		      }),
+  		      new Rectangle({
+  		        x: this.x + this.width - 15,
+  		        y: this.y + this.height - 15,
+  		        w: 15,
+  		        h: 15,
+  		      }),
+  		    ],
+  		  })
+  	  );
+  	}
+  	else {
+  		canvas.addGraphic(
+  			new Composition({
+  				x: 0,
+  				y: 0,
+  				children: [
+					new Rectangle({ x: this.x, y: this.y, w: this.width, h: this.height, }),
+					new Text({ x: 0, y: 0, text: this.source }),
+  				],
+  			})
+  		);
+  	}
+  }
+}
