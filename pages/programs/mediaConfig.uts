@@ -379,7 +379,7 @@ export class TextComponent extends BaseComponent {
 	isLoopEnabled: boolean;
 	letterSpacing: number;
 	lineSpacing: number;
-	rtfFilePath: string;
+	rtfFilePath?: string;
 	verticalContentAlignment: string;
 	constructor(data: UTSJSONObject) {
 		super(data);
@@ -394,14 +394,14 @@ export class TextComponent extends BaseComponent {
 		this.isLoopEnabled = data['IsLoopEnabled'] as boolean;
 		this.letterSpacing = data['LetterSpacing'] as number;
 		this.lineSpacing = data['LineSpacing'] as number;
-		this.rtfFilePath = data['RtfFilePath'] as string;
+		this.rtfFilePath = data['RtfFilePath'] == null ? null : data['RtfFilePath'] as string;
 		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
 		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
 	}
 	
 	async draw(uCanvas: UCanvas) {
 		if (this.element == null) return;
-		await this.element!.drawText(uCanvas);
+		await this.element!.drawText(uCanvas, this);
 	}
 	
 	static createInstance(id: number){
@@ -410,6 +410,8 @@ export class TextComponent extends BaseComponent {
 			Name : `文字${id}`,
 			ZIndex : id,
 			Type : "Text",
+			Width: 256,
+			Height: 192,
 			Source : "Hello word",
 			PlayCount : 1,
 			PlayDuration : "00:00:05",

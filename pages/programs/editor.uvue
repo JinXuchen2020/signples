@@ -38,6 +38,7 @@
 					<ImageForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
 					<WebForm :item="activeComponent" @refresh="updateComponent" />
 					<WordForm :item="activeComponent" @refresh="updateComponent" />
+					<TextForm :item="activeComponent" @refresh="updateComponent" />
 				</view>
 				<view class="option-b" :class="{active: activeTab == 1}">
 					<view class="page-option-form">
@@ -214,6 +215,7 @@
 	import ImageForm from './imageForm.uvue'
 	import WebForm from './webForm.uvue'
 	import WordForm from './wordForm.uvue'
+	import TextForm from './textForm.uvue'
 	
 	import i18n from '@/locale'
 	

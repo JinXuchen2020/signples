@@ -15,7 +15,7 @@
 				</view>
 			</view>
 		</view>
-		<view v-if="formData?.isShowInfo == true">
+		<view>
 			<view class="item">
 				<view class="item-key">
 					<text class="t">名称</text>
@@ -34,6 +34,50 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
+					<text class="t">内容</text>
+				</view>
+				<view class="item-value">
+					<input type="textarea" :value="formData?.source" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">背景色</text>
+				</view>
+				<view class="item-value">
+					<input type="color" :value="formData?.background" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">垂直对齐</text>
+				</view>
+				<view class="item-value">
+					<radio-group name="verticalContentAlignment" @change="handleVerticalAlignChange">
+						<view class="radio-group" >
+							<radio class="radio" value="bottom" :checked="formData?.verticalContentAlignment == 'bottom'" >向下</radio>
+							<radio class="radio" value="center" :checked="formData?.verticalContentAlignment == 'center'">居中</radio>
+							<radio class="radio" value="top" :checked="formData?.verticalContentAlignment == 'top'">向上</radio>
+						</view>
+					</radio-group>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">显示方式</text>
+				</view>
+				<view class="item-value">
+					<radio-group name="playMode" @change="handlePlayModeChange">
+						<view class="radio-group" >
+							<radio class="radio" value="pageTurning" :checked="formData?.playMode == 'pageTurning'" >翻页</radio>
+							<radio class="radio" value="rolling" :checked="formData?.playMode == 'rolling'">滚动</radio>
+							<radio class="radio" value="stop" :checked="formData?.playMode == 'stop'">静止</radio>
+						</view>
+					</radio-group>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
 					<text class="t">播放次数</text>
 				</view>
 				<view class="item-value">
@@ -48,59 +92,76 @@
 					<input type="text" :value="formData?.playDuration" class="uni-input" />
 				</view>
 			</view>
+			<view v-if="formData?.playMode == 'pageTurning'">
+				<view class="item">
+					<view class="item-key">
+						<text class="t">特效</text>
+					</view>
+					<view class="item-value">
+						<input type="text" :value="formData?.componentEffect" class="uni-input" />
+					</view>
+				</view>
+				<view class="item">
+					<view class="item-key">
+						<text class="t">特效时长(ms)</text>
+					</view>
+					<view class="item-value">
+						<input type="number" :value="formData?.effectDuration" class="uni-input" />
+					</view>
+				</view>
+			</view>
+			<view v-else-if="formData?.playMode == 'rolling'">
+				<view class="item">
+					<view class="item-key">
+						<text class="t">方向</text>
+					</view>
+					<view class="item-value">
+						<input type="text" :value="formData?.direction" class="uni-input" />
+					</view>
+				</view>
+				<view class="item">
+					<view class="item-key">
+						<text class="t">滚动速度</text>
+					</view>
+					<view class="item-value">
+						<input type="number" :value="formData?.rollingSpeed" class="uni-input" />
+					</view>
+				</view>
+				<view class="item">
+					<view class="item-key">
+						<text class="t">首尾相连</text>
+					</view>
+					<view class="item-value">
+						<checkbox :checked="formData?.isLoopEnabled" @tap="handleValueChange" />
+					</view>
+				</view>
+			</view>
 		</view>
-		<view class="item" v-else>
-			<view class="item-key">
-				<text class="t">选择文件</text>
-			</view>
-			<view class="options">
-				<view class="options-tab">
-					<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
-					<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">媒体库</text></view>
-				</view>
-				<view class="option-body">
-					<view class="option-a" :class="{active: activeTab == 0}">
-						<view class="local" @click="handleUpload()">
-							<text class="t">+</text>
-						</view>
-					</view>
-					<view class="option-b" :class="{active: activeTab == 1}">
-						<!-- <scroll-view> -->
-							<view v-for="(item, index) in (medias as UTSJSONObject[])" :key="index" class="item" @click="selectMedia(item)">
-								<image class="image" :src="item['src']"></image>
-							</view>					
-						<!-- </scroll-view> -->
-					</view>
-				</view>
-			</view>
-		</view>			
 	</view>	
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent,VideoComponent } from './mediaConfig.uts'
+	import  { BaseComponent, TextComponent } from './mediaConfig.uts'
 	export default {
 		props: {
 			item: {
 				type: BaseComponent,
 				default: null
-			},
-			medias: {
-				default: () => []
 			}
 		},
 		emits: ['refresh'],
 		data() {
 			return {
-				formData: null as VideoComponent | null,
-				activeTab: 0,
+				formData: null as TextComponent | null,
 			}
 		},
 		watch: {
 			item(newValue?: BaseComponent) {
-				if (newValue instanceof VideoComponent) {	
-					this.formData = newValue as VideoComponent;
-					this.activeTab = 0;
+				if (newValue instanceof TextComponent) {	
+					this.formData = newValue as TextComponent;
+					
+					const data = this.formData!.toModel();
+					console.log(data);
 				}
 				else {
 					this.formData = null;
@@ -108,17 +169,39 @@
 			}
 		},
 		onReady() {
-			if (this.item instanceof VideoComponent) {
-				this.formData = this.item as VideoComponent;
-				this.activeTab = 0;
+			if (this.item instanceof TextComponent) {
+				this.formData = this.item as TextComponent;
+				
+				const data = this.formData!.toModel();
+				console.log(data);
 			}
 			else {
 				this.formData = null;
 			}
 		},
-		methods: {			
-			handleActiveTab(val: number) {
-				this.activeTab = val
+		methods: {
+			handleVerticalAlignChange(e: UniRadioGroupChangeEvent) {
+				if(this.formData == null) return;
+				const result = e.detail.value;
+				this.formData!.verticalContentAlignment = result;
+				const data = this.formData!.toModel();
+				console.log(data);
+				this.$emit("refresh", data);
+			},
+			handlePlayModeChange(e: UniRadioGroupChangeEvent) {
+				if(this.formData == null) return;
+				const result = e.detail.value;
+				this.formData!.playMode = result;
+				const data = this.formData!.toModel();
+				console.log(data);
+				this.$emit("refresh", data);
+			},
+			handleValueChange(_e: UniPointerEvent) {
+				if (this.formData == null) return;
+				this.formData!.isLoopEnabled = !this.formData!.isLoopEnabled;
+				const data = this.formData!.toModel();
+				console.log(data);
+				this.$emit("refresh", data);
 			},
 			onLeftChange(e: UniInputChangeEvent) {
 				this.handleUpdate(parseInt(e.detail.value), "left")
@@ -165,69 +248,7 @@
 				}
 				
 				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-				
-			},
-			handleUpload() {
-				if(this.formData == null) return;
-				uni.chooseMedia({
-					count: 1,
-					sourceType: ['album'],
-					mediaType: ['video'],
-					success: (res) => {
-						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
-
-						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i]
-							this.formData!.source = tempFile.tempFilePath;
-							this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
-							this.formData!.timeLine = tempFile.duration as number;
-							this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-							this.formData!.isShowInfo = true;
-							this.formData!.width = 256;
-							this.formData!.height = 192;
-							const data = this.formData!.toModel();
-							this.$emit("refresh", data);
-						}
-					},
-					fail: (err) => {
-						console.log("err: ", JSON.stringify(err));
-						uni.showToast({
-						  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
-						  position:"bottom"
-						})
-					}
-				})
-			},
-			selectMedia(item: UTSJSONObject) {
-				if(this.formData == null) return;
-				if (item['type'] != 'Video') {
-					uni.showToast({
-						title: "视频组件只能选择视频媒体",
-						icon: 'none'
-					})
-					return;
-				}
-				this.formData!.source = item.src as string;
-				this.formData!.thumbFilePath = item.src as string;
-				this.formData!.timeLine = 10;
-				this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-				this.formData!.isShowInfo = true;						  
-				this.formData!.width = 256;
-				this.formData!.height = 192;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-			},
-			getPlayDuration: (timeLine: number)=> {
-				const seconds = Math.round(timeLine % 60);
-				const minutes = Math.round((timeLine / 60) % 60);
-				let hours = Math.round(timeLine / 60 / 60);
-				if (hours > 23){
-				    hours = 23;
-				}
-				
-				const result = `${hours < 10 ? '0'+ hours : hours}:${minutes < 10 ? '0'+ minutes : minutes}:${seconds < 10 ? '0'+ seconds : seconds}`;
-				return result;
+				this.$emit("refresh", data);				
 			}
 		}
 	}
@@ -359,6 +380,16 @@
 						height:30rpx
 					}
 				}
+			}
+		}
+		.radio-group {
+			display: flex; /* 横向排列 */
+			flex-direction: row; /* 行排列 */
+			align-items: center; /* 垂直居中 */
+			flex-wrap: wrap;
+			
+			.radio {
+				margin-right: 20rpx;
 			}
 		}
 	}
