@@ -711,7 +711,7 @@
 		await this.fileManager.zipProgram(programName);
 		const size = await this.fileManager.readZipFile(programName);
 		mediaConfig.value.program.size = size;
-		pushPopup. = true;
+		pushPopup.value = true;
 	}
 	
 	async function handlePushProgram() : Promise<void> {

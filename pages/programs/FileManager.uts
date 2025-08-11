@@ -1,12 +1,15 @@
 import { MediaConfig } from './mediaConfig.uts'
+import { APIS } from '@/api/config.uts'
 export class FileManager {
 	fs: FileSystemManager;
 	userInfo: UTSJSONObject;
 	tempDir: string;
+	token: string;
 	
 	constructor(){
 		this.fs = uni.getFileSystemManager();
 		this.userInfo = uni.getStorageSync("userInfo") as UTSJSONObject;
+		this.token = uni.getStorageSync("token") as string;
 		this.tempDir = `${uni.env.USER_DATA_PATH}/temp/program`;
 	}
 	
@@ -125,5 +128,61 @@ export class FileManager {
 		const userAccount = this.userInfo['account'] as string;
 		const sourcePath = `${this.tempDir}/${userAccount}/${programName}`;
 		const zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
+	}
+	
+	async uploadProgram(program: UTSJSONObject) {
+		const userAccount = this.userInfo['account'] as string;
+		const zipFile = `${this.tempDir}/${userAccount}/${program.getString('name')}.zip`;
+		
+		const res = await uni.uploadFile({
+			url: APIS.uploadZip,
+			filePath: zipFile,
+			name: 'file',
+			header: {
+				'Authorization': "Bearer " + this.token
+			},
+		})
+		
+		return res;
+	}
+	
+	async function sendCMD(program: UTSJSONObject, preDevice: UTSJSONObject[]){
+		preDevice.forEach((item, index) => {
+			try {
+				uni.showLoading({
+					title: ''
+				});
+				const cmd = JSON.stringify(program);
+				uni.request({
+					url: APIS.sendCMD as string,
+					method: "POST",
+					header: {
+						'Authorization': "Bearer " + this.token
+					},
+					data:{
+						cmd: "CMD|SendProgram|" + cmd,
+						deviceSnCode: item.getString('snCode')
+					},
+					success: (ress) => {
+						console.log('sendCMD program res', ress)
+						uni.showToast({
+						  title: '发布成功',
+						  icon: 'success',
+						  duration: 1000
+						})
+					},
+					fail: (err) => {
+						console.log('sendCMD program err', err)
+						uni.showToast({
+						  title: '发布失败',
+						  icon: 'success',
+						  duration: 2000
+						})
+					}
+				});
+			} catch (err){
+				console.log(err)
+			}
+		})
 	}
 }
