@@ -78,18 +78,31 @@
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent,VideoComponent } from './mediaConfig.uts'
+	import { FileManager } from './FileManager.uts';
+	import { BaseComponent,VideoComponent } from './mediaConfig.uts'
 	export default {
 		props: {
 			item: {
 				type: BaseComponent,
 				default: null
 			},
+			programName: {
+				type: String,
+				default: ''
+			},
+			pageName: {
+				type: String,
+				default: ''
+			},
+			fileManager: {
+				type: FileManager,
+				default: null
+			},
 			medias: {
 				default: () => []
 			}
 		},
-		emits: ['refresh'],
+		emits: ['refresh', 'copyFile'],
 		data() {
 			return {
 				formData: null as VideoComponent | null,
@@ -178,16 +191,22 @@
 						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
 
 						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i]
-							this.formData!.source = tempFile.tempFilePath;
-							this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
-							this.formData!.timeLine = tempFile.duration as number;
-							this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-							this.formData!.isShowInfo = true;
-							this.formData!.width = 256;
-							this.formData!.height = 192;
-							const data = this.formData!.toModel();
-							this.$emit("refresh", data);
+							const tempFile : ChooseMediaTempFile = tempFiles[i];
+							const fileName = tempFile.tempFilePath.split("/")[tempFile.tempFilePath.split("/").length - 1];
+							console.log(tempFile);
+							const destPath =  `${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+							this.fileManager!.copyFile(tempFile.tempFilePath, destPath).then(res => {
+								this.formData!.source = res;
+								this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
+								this.formData!.timeLine = tempFile.duration as number;
+								this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
+								this.formData!.isShowInfo = true;
+								this.formData!.width = 256;
+								this.formData!.height = 192;
+								const data = this.formData!.toModel();
+								console.log(data);
+								this.$emit("refresh", data);
+							});
 						}
 					},
 					fail: (err) => {
@@ -208,15 +227,19 @@
 					})
 					return;
 				}
-				this.formData!.source = item.src as string;
-				this.formData!.thumbFilePath = item.src as string;
-				this.formData!.timeLine = 10;
-				this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-				this.formData!.isShowInfo = true;						  
-				this.formData!.width = 256;
-				this.formData!.height = 192;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+				const fileName = item.getString('src')!.split("/")[item.getString('src')!.split("/").length - 1];
+				const destPath =  `${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+				this.fileManager!.copyFile(item.getString('src')!, destPath).then((res: string) => {
+					this.formData!.source = res;
+					this.formData!.thumbFilePath = item.src as string;
+					this.formData!.timeLine = 10;
+					this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
+					this.formData!.isShowInfo = true;						  
+					this.formData!.width = 256;
+					this.formData!.height = 192;
+					const data = this.formData!.toModel();
+					this.$emit("refresh", data);
+				});
 			},
 			getPlayDuration: (timeLine: number)=> {
 				const seconds = Math.round(timeLine % 60);

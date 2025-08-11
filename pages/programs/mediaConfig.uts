@@ -1,17 +1,4 @@
-import {
-	UCanvas,
-	Composition,
-	Text,
-	Rectangle,
-	Polyline,
-	Ring,
-	Pie,
-	Circle,
-	Polygon,
-	Picture,
-	ImagePixel,
-	Point,
-} from "@/uni_modules/u-canvas";
+import { UCanvas } from "@/uni_modules/u-canvas";
 import { DraggableImage } from "./DraggableRect.uts";
 export class MediaConfig {
 	left: number;
@@ -27,6 +14,16 @@ export class MediaConfig {
 		this.program = new Program(data['Program'] as UTSJSONObject);
 		const pages = data['Pages'] as UTSJSONObject[] | null;
 		this.pages = pages != null ? pages.map(c=> new MediaPage(c)) : [];
+	}
+	
+	toModel() {
+		return {
+			Left: this.left,
+			Top: this.top,
+			Ratio: this.ratio,
+			Program: this.program.toModel(),
+			Pages: this.pages.map(c=>c.toModel())
+		}
 	}
 }
 
@@ -61,6 +58,21 @@ export class Program {
 		this.validEndDate = data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
 		this.userAccount = data['UserAccount'] as string;
 		this.id = data['Id'] as number;
+	}
+	
+	toModel() {
+		return {
+			Name: this.name,
+			MediaType: this.mediaType,
+			Resolution: this.resolution,
+			Size: this.size,
+			MonitorCount: this.monitorCount,
+			LastUpdatedTime: this.lastUpdatedTime.toISOString(),
+			CreateSource: this.createdSource,
+			Status: this.status,
+			UserAccount: this.userAccount,
+			Id: this.id
+		}
 	}
 }
 
@@ -120,6 +132,23 @@ export class MediaPage{
 				}
 			}
 		}		
+	}	
+	
+	toModel() {
+		return {
+			Id: this.id
+			Name: this.name,
+			Type: this.type,
+			Order: this.order,
+			IsHasValidity: this.isHasValidity,
+			ValidStartDate: this.validStartDate?.toISOString(),
+			ValidEndDate: this.validStartDate?.toISOString(),
+			PlayCount: this.playCount,
+			PlayGap: this.playGap,
+			AdPlayMode: this.adPlayMode,
+			Schedulers: this.schedulers.map(c => c.toModel()),
+			Components: this.components.map(c => c.toModel()),
+		}
 	}
 	
 	async draw(canvas: UCanvas) {
@@ -149,6 +178,30 @@ export class MediaPage{
 			}			
 		}
 	}
+	
+	static createInstance(id: number){
+		const data = {
+			"Id": id ,
+			"Name": "页面" + id,
+			"Type": "normal",
+			"Order": id,
+			"ThumbnailFilePath": "",
+			"IsHasValidity": false,
+			"ValidStartDate": null,
+			"ValidEndDate": null,
+			"PlayCount": 1,
+			"PlayGap": null,
+			"AdPlayMode": null,
+			"Schedulers": [{
+				"Id": 1,
+				"StartTime": "00:00:00",
+				"EndTime": "23:59:59",
+				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
+			}],
+		}
+		
+		return new MediaPage(data);
+	}
 }
 
 export class Scheduler {
@@ -168,7 +221,7 @@ export class Scheduler {
 			Id: this.id,
 			StartTime : this.startTime,
 			EndTime: this.endTime,
-			ScheduleDays: this.scheduleDays.map(c=>c.day);			
+			ScheduleDays: this.scheduleDays.map(c=>c.day);
 		} as UTSJSONObject
 	}
 }

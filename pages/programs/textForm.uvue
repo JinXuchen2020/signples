@@ -37,7 +37,7 @@
 					<text class="t">内容</text>
 				</view>
 				<view class="item-value">
-					<input type="textarea" :value="formData?.source" class="uni-input" />
+					<rich-text class="rich-text" :selectable="true" :nodes="formData?.source"></rich-text>
 				</view>
 			</view>
 			<view class="item">
@@ -98,7 +98,7 @@
 						<text class="t">特效</text>
 					</view>
 					<view class="item-value">
-						<input type="text" :value="formData?.componentEffect" class="uni-input" />
+						<view class="uni-input" @click="showEffectActionSheet"><text class="t">{{currentEffect}}</text></view>
 					</view>
 				</view>
 				<view class="item">
@@ -116,7 +116,7 @@
 						<text class="t">方向</text>
 					</view>
 					<view class="item-value">
-						<input type="text" :value="formData?.direction" class="uni-input" />
+						<view class="uni-input" @click="showDirectionActionSheet"><text class="t">{{currentDirection}}</text></view>
 					</view>
 				</view>
 				<view class="item">
@@ -147,12 +147,42 @@
 			item: {
 				type: BaseComponent,
 				default: null
-			}
+			},
 		},
 		emits: ['refresh'],
 		data() {
 			return {
-				formData: null as TextComponent | null,
+				formData: null as TextComponent | null,				
+				effects: [
+					{
+						key: "Empty",
+						name: "无"
+					},					
+					{
+						key: "FadeIn",
+						name: "淡入",
+					}, 
+				] as UTSJSONObject[],
+				directions: [
+					{
+						key: "rollingLeft",
+						name: "向左滚动"
+					},					
+					{
+						key: "rollingUp",
+						name: "向上滚动",
+					},
+					 {
+					 	key: "rollingRight",
+					 	name: "向右滚动"
+					 },					
+					 {
+					 	key: "rollingDown",
+					 	name: "向下滚动",
+					 }, 
+				] as UTSJSONObject[],
+				currentEffect: '',
+				currentDirection: ''
 			}
 		},
 		watch: {
@@ -160,8 +190,8 @@
 				if (newValue instanceof TextComponent) {	
 					this.formData = newValue as TextComponent;
 					
-					const data = this.formData!.toModel();
-					console.log(data);
+					this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
+					this.currentDirection = this.directions.find(c => c['key'] == this.formData!.direction)!.getString('name')!;
 				}
 				else {
 					this.formData = null;
@@ -171,9 +201,9 @@
 		onReady() {
 			if (this.item instanceof TextComponent) {
 				this.formData = this.item as TextComponent;
+				this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
+				this.currentDirection = this.directions.find(c => c['key'] == this.formData!.direction)!.getString('name')!;
 				
-				const data = this.formData!.toModel();
-				console.log(data);
 			}
 			else {
 				this.formData = null;
@@ -193,15 +223,45 @@
 				const result = e.detail.value;
 				this.formData!.playMode = result;
 				const data = this.formData!.toModel();
-				console.log(data);
 				this.$emit("refresh", data);
 			},
 			handleValueChange(_e: UniPointerEvent) {
 				if (this.formData == null) return;
 				this.formData!.isLoopEnabled = !this.formData!.isLoopEnabled;
 				const data = this.formData!.toModel();
-				console.log(data);
 				this.$emit("refresh", data);
+			},
+			showEffectActionSheet() {
+				const options: ShowActionSheetOptions = {
+					title: '特效',
+					itemList: this.effects.map((c: UTSJSONObject) => c.getString('name')!),
+					success: (res) => {
+						const selectedIndex = res.tapIndex;
+						this.formData!.componentEffect = this.effects[selectedIndex].getString('key')!;
+						const data = this.formData!.toModel();
+						this.$emit("refresh", data);
+					},
+					fail: (error) => {
+						console.log(error);
+					}
+				}
+				uni.showActionSheet(options)
+			},
+			showDirectionActionSheet() {
+				const options: ShowActionSheetOptions = {
+					title: '滚动方向',
+					itemList: this.directions.map((c: UTSJSONObject) => c.getString('name')!),
+					success: (res) => {
+						const selectedIndex = res.tapIndex;
+						this.formData!.direction = this.directions[selectedIndex].getString('key')!;
+						const data = this.formData!.toModel();
+						this.$emit("refresh", data);
+					},
+					fail: (error) => {
+						console.log(error);
+					}
+				}
+				uni.showActionSheet(options)
 			},
 			onLeftChange(e: UniInputChangeEvent) {
 				this.handleUpdate(parseInt(e.detail.value), "left")
@@ -264,7 +324,6 @@
 			padding: 18rpx 24rpx;
 			display: flex;
 			flex-direction: row;
-			align-items: center;
 			justify-content: space-between;
 			
 			.item-key{
@@ -274,94 +333,24 @@
 					color: #999999;
 				}
 			}
-			
-			.options {
-				width: 80%;
-				display: flex;
-				flex-direction: column;
-				.options-tab{
-					width: 100%;
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-					justify-content: center;
-					padding-bottom: 24rpx;
-					
-					.item{
-						padding: 0 24rpx;
-						.t{
-							font-size: 14px;
-							color: $uni-color-grey
-						}
-					}
-					.item.active{
-						.t {
-							color: $uni-color-primary
-						}
-					}
-				}
-				.option-body {
-					.option-a,
-					.option-b {
-						display: none;
-					}
-					.option-a.active,
-					.option-b.active {
-						display: flex;
-					}
-					
-					.local {
-						// width: 21%;
-						height: 220rpx;
-						// flex: 1;
-						background-color: $uni-color-primary;
-						flex-direction: row;
-						align-items: center;
-						justify-content: center;
-						border-radius: $uni-border-radius-lg;
-						margin: 0 2%;
-						.t{
-							color: $uni-text-color-inverse;
-							font-size: $uni-font-size-sm;
-						}
-					}
-					.option-b {
-						.item {
-							display: flex;
-							flex-direction: row;
-							flex-wrap: wrap;
-							.image {
-								width: 220rpx;
-								height: 200rpx;
-								padding: 10rpx;
-							}
-						}
-					}
-				}
-			}
 			.item-value{
 				width: 80%;
 				display: flex;
 				flex-direction: row;
-				.sub-list{
-					width: 100%;
-					
-					.sub-item{
-						width: 100%;
-						
-						.sub-value{
-							flex-direction: row;
-							align-items: center;
-							justify-content: space-between;
-						}
-					}
-				}
 				.uni-input{
 					border: 1px solid #ccc;
 					border-radius: 12rpx;
 					height:30rpx
 				}
+				
+				.rich-text{
+					border: 1px solid #ccc;
+					border-radius: 12rpx;
+					height:160rpx;
+					width: 100%;
+				}
 			}
+			
 			.position {
 				width: 80%;
 				display: flex;

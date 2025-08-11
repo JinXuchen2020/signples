@@ -57,6 +57,25 @@ export class FileManager {
 		}	
 	}
 	
+	async copyFile(srcPath: string, destFilePath: string) {
+		const userAccount = this.userInfo['account'] as string;
+		let destPath = `${this.tempDir}/${userAccount}/${destFilePath}`;
+		this.fs.copyFileSync(srcPath, destPath);
+		return destPath;
+	}
+	
+	async readZipFile(programName: string) {
+		const userAccount = this.userInfo['account'] as string;
+		const destPath = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		const fd = this.fs.openSync({
+			filePath: destPath,
+			flag: 'r'
+		});
+		return this.fs.fstatSync({
+			fd: fd
+		}).size;
+	}
+	
 	async getProgramConfig(programName: string, width: string, height: string) {
 		const userAccount = this.userInfo['account'] as string;
 		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
@@ -92,5 +111,19 @@ export class FileManager {
 		}		
 		
 		return new MediaConfig(configFileContent);
+	}
+	
+	async saveProgram(programName: string, data: UTSJSONObject) {
+		const userAccount = this.userInfo['account'] as string;
+		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
+		const configFilePath = `${programFolder}/MediaConfig.json`;
+		
+		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
+	}
+	
+	async zipProgram(programName: string) {
+		const userAccount = this.userInfo['account'] as string;
+		const sourcePath = `${this.tempDir}/${userAccount}/${programName}`;
+		const zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
 	}
 }

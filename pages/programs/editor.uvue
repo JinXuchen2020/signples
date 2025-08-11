@@ -12,17 +12,17 @@
 		</view>
 		<view class="top-button">
 			<view class="item">
-				<view class="icon-box icon-box-big no-margin">
+				<view class="icon-box icon-box-big no-margin" @click="handleSave" >
 					<image class="icon" src="/static/svg/save.png" mode="widthFix"></image>
 				</view>
 			</view>
 			<view class="item">
-				<view class="icon-box icon-box-big no-margin">
+				<view class="icon-box icon-box-big no-margin" @click="handlePush">
 					<image class="icon" src="/static/svg/push.png" mode="widthFix"></image>
 				</view>
 			</view>
 			<view class="item">
-				<view class="icon-box icon-box-big no-margin">
+				<view class="icon-box icon-box-big no-margin" @click="handleReview">
 					<image class="icon" src="/static/svg/reviewb.png" mode="widthFix"></image>
 				</view>
 			</view>
@@ -34,7 +34,7 @@
 			</view>
 			<scroll-view class="option-body" style="height: 360px;">
 				<view class="option-a" :class="{active: activeTab == 0}">
-					<VideoForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
+					<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<ImageForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
 					<WebForm :item="activeComponent" @refresh="updateComponent" />
 					<WordForm :item="activeComponent" @refresh="updateComponent" />
@@ -184,10 +184,37 @@
 				</view>
 			</view>
 		</view>
+		
+		<popup-default
+			v-model:visible="pushPopup"
+			title="上传发布节目"
+			:show-icon="false"
+			icon-src="/static/svg/suggest.png"
+			@confirm="handlePushProgram"
+		>
+			<view class="program-meta">
+				<view class="uni-flex" style="padding: 6px 0;">
+					<text>节目名称: </text>
+					<text>{{programName}}</text>
+				</view>
+				<view class="uni-flex" style="padding: 6px 0;">
+					<text>请先选择设备</text>
+				</view>
+				<checkbox-group class="" @change="devicesChange">
+					<checkbox 
+						style="margin: 6px 0;"
+						v-for="(item, index) in deviceList" 
+						:key="index" 
+						:value="item.snCode">
+							<text :class="{iscs: item['connectStatus'] == 1}">{{item.name}}</text>
+					</checkbox>
+				</checkbox-group>
+			</view>
+		</popup-default>
 	</view>
 </template>
 <script lang="uts" setup>
-	// import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
+	import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
     import * as ucan from "@/uni_modules/u-canvas";
     import {
         UCanvas,
@@ -219,19 +246,18 @@
 	
 	import i18n from '@/locale'
 	
-	// const tempDir = `${uni.env.USER_DATA_PATH}/temp/program`; //临时目录
-	let programDir = '' //项目目录
-	
-	// const fileManager = new FileManager();
+	const fileManager = new FileManager();
 	
     const uCanvas = new UCanvas({ canvasId: "ucanvas" });
 	
 	const canvasWidth = ref('256');
 	const canvasHeight = ref('192');
 	const mediaList : Ref<UTSJSONObject[]> = ref([]);
+	const deviceList : Ref<UTSJSONObject[]> = ref([]);
 	
 	const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
 	const programName = ref('');
+	const pushPopup = ref(false);
 	const mediaConfig = ref(new MediaConfig({
 		"Left": 0.0,
 		"Top": 0.0,
@@ -461,27 +487,7 @@
 	const addPage = () => {
 		const pagesCount = mediaConfig.value.pages.length + 1;	
 		
-		const newPage = {
-			"Id": pagesCount ,
-			"Name": "页面" + pagesCount,
-			"Type": "normal",
-			"Order": pagesCount,
-			"ThumbnailFilePath": "",
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"PlayCount": 1,
-			"PlayGap": null,
-			"AdPlayMode": null,
-			"Schedulers": [{
-				"Id": 1,
-				"StartTime": "00:00:00",
-				"EndTime": "23:59:59",
-				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
-			}],
-		}
-		
-		const page = new MediaPage(newPage);
+		const page = MediaPage.createInstance(pagesCount);
 		mediaConfig.value.pages.push(page)
 		activePage.value = page;
 		activeComponent.value = null;
@@ -679,25 +685,69 @@
 	}
 	
     async function init() : Promise<void> {
-		const currentConfig = mediaConfig.value; //await fileManager.getProgramConfig(programName.value, canvasWidth.value, canvasHeight.value);
+		const currentConfig = await fileManager.getProgramConfig(programName.value, canvasWidth.value, canvasHeight.value);
 		canvasWidth.value = currentConfig.program.resolution.split("*")[0];
 		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
 		mediaConfig.value = currentConfig;
 		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
 		activeComponent.value = activePage.value == null || activePage.value!.components.length == 0 ? null : activePage.value?.components[0];
-        console.log(activeComponent.value);
 		await uCanvas.ensureInitialize();
 		await drawPage();
     }
 	
-	async function handlePush() :Promise<void> {
+	async function handleSave() :Promise<void> {
+		const data = mediaConfig.value.toModel();
+		await this.fileManager.saveProgram(programName, data);
 		uni.showToast({
 			icon: 'none',
-			title: '请稍候，功能未开放',
+			title: '保存成功',
 			duration: 3000,
 			success: () => { 
 			}
 		})
+	}
+	
+	async function handlePush() :Promise<void> {
+		await this.fileManager.zipProgram(programName);
+		const size = await this.fileManager.readZipFile(programName);
+		mediaConfig.value.program.size = size;
+		pushPopup. = true;
+	}
+	
+	async function handlePushProgram() : Promise<void> {
+		await this.fileManager.zipProgram(programName);
+		const size = await this.fileManager.readZipFile(programName);
+		mediaConfig.value.program.size = size;
+		
+		const file = `${uni.env.USER_DATA_PATH}/temp/program/` + this.prePushProgram.name + '.zip';
+		uni.uploadFile({
+		  url: APIS.uploadZip,
+		  filePath: file,
+		  name: 'file',
+		  header: {
+		  	'Authorization': "Bearer " + this.token
+		  },value
+		  success: (res) => {
+			console.log('uploadZip success, res is:', res)
+			//发布
+			this.sendCMD()
+			uni.showToast({
+			  title: '上传成功',
+			  icon: 'success',
+			  duration: 1000
+			})
+		  },
+		  fail: (err) => {
+			console.log('uploadImage fail', err);
+			uni.showModal({
+			  content: err.errMsg,
+			  showCancel: false
+			});
+		  },
+		  complete: (res) => {
+			uni.hideLoading();
+		  }
+		});
 	}
 	
 	async function handleReview() :Promise<void> {		
@@ -726,24 +776,32 @@
 					});
 				});
 				
-				media.src = downloadResult.tempFilePath;
-				
-				// const saveResult = await new Promise<UTSJSONObject>((resolve: (value: UTSJSONObject) => void, reject: (reason?: any) => void) => {
-				// 	uni.saveFile({
-				// 		tempFilePath: downloadResult['tempFilePath'] as string,
-				// 		success: (res : any) => {
-				// 			resolve(res as UTSJSONObject);
-				// 		},
-				// 		fail: (err : any) => {
-				// 			reject(err);
-				// 		}
-				// 	});
-				// });
+				const destPath =  `mediaStore/${media.getString('name')}/${media.src}`;
+				const filePath = await fileManager.copyFile(downloadResult.tempFilePath, destPath);
+				media.src = filePath;
 			}
 			mediaList.value = d
 			uni.hideLoading();
 		} catch (error) {
 		  console.error('获取媒体库失败', error)
+		  uni.hideLoading();
+		}
+	}
+	
+	async function getDevices() {
+		try {
+			uni.showLoading({
+				title: ''
+			});
+			const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
+			const person: UTSJSONObject = {}
+			const param = '?userAccount=' + activeUser.account;
+			const result = await request('GET', APIS.deviceListPage as string + param, person)
+			const d = result as Array<UTSJSONObject>;
+			deviceList.value = d
+			uni.hideLoading();
+		} catch (error) {
+		  console.error('获取设备列表失败', error)
 		  uni.hideLoading();
 		}
 	}
@@ -773,6 +831,7 @@
         init();
 		getCanvasRect();
 		getMedias();
+		getDevices();
     });
 </script>
 
@@ -810,7 +869,7 @@
 		background-color: $uni-bg-color;
 		padding: 24rpx;
 		.pages{
-			padding: 24rpx  0;
+			padding: 0 0 24rpx 0;
 			.swiper-item{
 				flex-direction: row;
 				align-items: center;
@@ -837,7 +896,7 @@
 			}
 		}
 		.component{
-			padding: 24rpx 0;
+			padding: 0 0 24rpx 0;
 			flex-direction: row;
 			align-items: center;
 			justify-content: space-between;
@@ -952,5 +1011,51 @@
 				}
 			}
 		}
+	}
+	.program-meta{
+		.item{
+			padding: 24rpx 0;
+			.item-title {
+				.t {
+					color: $uni-text-color-grey;
+				}
+			}
+			.item-body{
+				padding-top: 24rpx;
+				.program-size{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					.input-box{
+						width: 45%;
+						.uni-input{
+							background-color: $uni-bg-color-grey;
+							border-radius: $uni-border-radius-lg;
+							font-size: $uni-font-size-lg;
+							padding: 24rpx 32rpx;
+						}
+					}
+					
+				}
+				.program-layout{
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+					.layout{
+						flex-direction: row;
+						align-items: center;
+						justify-content: center;
+						padding: 8rpx;
+					}
+					.layout.checked{
+						background-color: $uni-bg-color-light-blue;
+						border-radius: $uni-border-radius-lg;
+					}
+				}
+			}
+		}
+	}
+	.iscs{
+		color: #00b61f;
 	}
 </style>

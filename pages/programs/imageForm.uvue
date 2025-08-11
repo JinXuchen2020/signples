@@ -53,7 +53,7 @@
 					<text class="t">特效</text>
 				</view>
 				<view class="item-value">
-					<input type="text" :value="formData?.componentEffect" class="uni-input" />
+					<view class="uni-input" @click="showActionSheet"><text class="t">{{currentEffect}}</text></view>
 				</view>
 			</view>
 			<view class="item">
@@ -94,11 +94,24 @@
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent, ImageComponent } from './mediaConfig.uts'
+	import { FileManager } from './FileManager.uts';
+	import { BaseComponent, ImageComponent } from './mediaConfig.uts'
 	export default {
 		props: {
 			item: {
 				type: BaseComponent,
+				default: null
+			},
+			programName: {
+				type: String,
+				default: ''
+			},
+			pageName: {
+				type: String,
+				default: ''
+			},
+			fileManager: {
+				type: FileManager,
 				default: null
 			},
 			medias: {
@@ -110,12 +123,24 @@
 			return {
 				formData: null as ImageComponent | null,
 				activeTab: 0,
+				effects: [
+					{
+						key: "Empty",
+						name: "无"
+					},					
+					{
+						key: "FadeIn",
+						name: "淡入",
+					}, 
+				] as UTSJSONObject[],
+				currentEffect: ''
 			}
 		},
 		watch: {
 			item(newValue?: BaseComponent) {
 				if (newValue instanceof ImageComponent) {	
 					this.formData = newValue as ImageComponent;
+					this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
 					this.activeTab = 0;
 				}
 				else {
@@ -126,13 +151,31 @@
 		onReady() {
 			if (this.item instanceof ImageComponent) {
 				this.formData = this.item as ImageComponent;
+				this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
 				this.activeTab = 0;
 			}
 			else {
 				this.formData = null;
 			}
 		},
-		methods: {			
+		methods: {
+			showActionSheet() {
+				const options: ShowActionSheetOptions = {
+					title: '特效',
+					itemList: this.effects.map((c: UTSJSONObject) => c.getString('name')!),
+					success: (res) => {
+						const selectedIndex = res.tapIndex;
+						this.formData!.componentEffect = this.effects[selectedIndex].getString('key')!;
+						const data = this.formData!.toModel();
+						console.log(data);
+						this.$emit("refresh", data);
+					},
+					fail: (error) => {
+						console.log(error);
+					}
+				}
+				uni.showActionSheet(options)
+			},
 			handleActiveTab(val: number) {
 				this.activeTab = val
 			},
@@ -194,13 +237,17 @@
 						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
 
 						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i]
-							this.formData!.source = tempFile.tempFilePath;
-							this.formData!.isShowInfo = true;
-							this.formData!.width = 256;
-							this.formData!.height = 192;
-							const data = this.formData!.toModel();
-							this.$emit("refresh", data);
+							const tempFile : ChooseMediaTempFile = tempFiles[i];
+							const fileName = tempFile.tempFilePath.split("/")[tempFile.tempFilePath.split("/").length - 1];
+							const destPath =  `${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+							this.fileManager!.copyFile(tempFile.tempFilePath, destPath).then(res => {
+								this.formData!.source = res;
+								this.formData!.isShowInfo = true;
+								this.formData!.width = 256;
+								this.formData!.height = 192;
+								const data = this.formData!.toModel();
+								this.$emit("refresh", data);
+							});
 						}
 					},
 					fail: (err) => {
@@ -221,12 +268,17 @@
 					})
 					return;
 				}
-				this.formData!.source = item.src as string;
-				this.formData!.isShowInfo = true;						  
-				this.formData!.width = 256;
-				this.formData!.height = 192;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+				
+				const fileName = item.getString('src')!.split("/")[item.getString('src')!.split("/").length - 1];
+				const destPath =  `${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+				this.fileManager!.copyFile(item.getString('src')!, destPath).then((res: string) => {
+					this.formData!.source = res;
+					this.formData!.isShowInfo = true;
+					this.formData!.width = 256;
+					this.formData!.height = 192;
+					const data = this.formData!.toModel();
+					this.$emit("refresh", data);
+				});
 			}
 		}
 	}

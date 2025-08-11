@@ -109,24 +109,7 @@ export class DraggableImage {
   		  new Composition({
   		    x: 0,
   		    y: 0,
-  		    children: [
-  		      new Rectangle({
-  		      	x: this.x, 
-  		      	y: this.y, 
-  		      	w: this.width, 
-  		      	h: this.height,
-  		      	style: {
-  		      	  stroke: {
-  		      	  	color: "white",
-  		      	  	width: 2,
-  		      	  	cap: "butt",
-  		      	  	join: "miter",
-  		      	  },
-  		      	  fill: {
-  		      		  color: textStyle.background
-  		      	  }
-  		      	}
-  		      }),
+  		    children: [  		      
   		      new Rectangle({
   		        x: this.x,
   		        y: this.y,
@@ -154,15 +137,35 @@ export class DraggableImage {
 				  	join: "miter",
 				  },
 				}
-  		      }),			  
+  		      }),
+			  new Rectangle({
+			  x: this.x, 
+			  y: this.y, 
+			  w: this.width, 
+			  h: this.height,
+			  style: {
+			    stroke: {
+			    	color: "white",
+			    	width: 2,
+			    	cap: "butt",
+			    	join: "miter",
+			    },
+			    fill: {
+			  		color: textStyle.background
+			  	}
+			    }
+			  }),
 			  new Text({ 
 			  	x: this.x, 
-			  	y: this.y, 
+			  	y: this.y + 14, 
 			  	text: this.source,
 			  	style: {
 			  		fill: {
 			  			color: textStyle.textColor
-			  		}
+			  		},
+					text: {
+						fontSize: 16
+					}
 			  	}
 			  }),
   		    ],
