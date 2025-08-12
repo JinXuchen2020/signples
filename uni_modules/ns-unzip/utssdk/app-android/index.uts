@@ -1,0 +1,64 @@
+import { ZiperType, end, initType,optType } from "../interface.uts"
+import JsCallback from "com.example.unzip.JsCallback"
+import ZiperRow from "com.example.unzip.ZiperRow"
+
+class End implements JsCallback {
+	callback : end;
+	constructor(onend : end) {
+		this.callback = onend;
+	}
+	public override onend(message : string) {
+		this.callback(message)
+	}
+}
+
+export class Ziper implements ZiperType {
+	private zipfile : ZiperRow;
+	/**
+	 * @param zipfilepath:要解压或创建的zip文件路径
+	 * @param password:可选参数，仅在解压被密码保护的zip文件时使用
+	 */
+	constructor(init : initType) {
+		console.log("进入uts");
+		
+		if (init.password != null) {
+			this.zipfile = new ZiperRow(init.zipfilepath, init.password)
+		} else {
+			console.log("创建ziperrow");
+			this.zipfile = new ZiperRow(init.zipfilepath)
+			console.log("创建ziperrow完成");
+			
+		}
+
+	}
+
+	public extractAll( opt:optType) : void {
+		if (opt.onend != null) {
+			this.zipfile.extractAll(opt.path, new End(opt.onend!))
+		} else {
+			this.zipfile.extractAll(opt.path)
+		}
+	}
+	public addFolder(opt:optType) : void {
+		if (opt.onend != null) {
+			this.zipfile.addFolder(opt.path, new End(opt.onend!))
+		} else {
+			console.log(opt.path);
+			this.zipfile.addFolder(opt.path)
+		}
+
+	}
+	public addFile(opt:optType) : void {
+		if (opt.onend != null) {
+			this.zipfile.addFile(opt.path, new End(opt.onend!))
+		} else {
+			this.zipfile.addFile(opt.path)
+		}
+
+	}
+	public setCharset(charset : string) : void {
+		this.zipfile.setCharset(charset)
+	}
+
+}
+

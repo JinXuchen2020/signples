@@ -1,5 +1,6 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { DraggableImage } from "./DraggableRect.uts";
+import { ProgramFolder} from "./FileManager.uts";
 export class MediaConfig {
 	left: number;
 	top: number;
@@ -14,6 +15,7 @@ export class MediaConfig {
 		this.program = new Program(data['Program'] as UTSJSONObject);
 		const pages = data['Pages'] as UTSJSONObject[] | null;
 		this.pages = pages != null ? pages.map(c=> new MediaPage(c)) : [];
+		console.log(data);
 	}
 	
 	toModel() {
@@ -51,9 +53,9 @@ export class Program {
 		this.monitorCount = data['MonitorCount'] as number;
 		this.lastUpdatedTime = new Date(data['LastUpdatedTime'] as string);
 		this.createdSource = data['CreatedSource'] as string;
-		this.status = data['Status'] as number;
+		this.status = data['Status'] as number;	
 		this.playCountPerHour = data['PlayCountPerHour'] == null ? null : data['PlayCountPerHour'] as number;
-		this.isHasValidity = data['IsHasValidity'] as boolean;
+		this.isHasValidity = data['IsHasValidity'] == null ? false : data['IsHasValidity'] as boolean;
 		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string);
 		this.validEndDate = data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
 		this.userAccount = data['UserAccount'] as string;
@@ -68,7 +70,7 @@ export class Program {
 			Size: this.size,
 			MonitorCount: this.monitorCount,
 			LastUpdatedTime: this.lastUpdatedTime.toISOString(),
-			CreateSource: this.createdSource,
+			CreatedSource: this.createdSource,
 			Status: this.status,
 			UserAccount: this.userAccount,
 			Id: this.id
@@ -95,7 +97,7 @@ export class MediaPage{
 		this.name = data.Name as string;
 		this.type = data.Type as string;
 		this.order = data.Order as number;
-		this.thumbnailFilePath = data.ThumbnailFilePath as string;
+		this.thumbnailFilePath = data['ThumbnailFilePath'] == null ? '' : `${ProgramFolder}/${data.ThumbnailFilePath}`;
 		this.isHasValidity = data.IsHasValidity as boolean;
 		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string); 
 		this.validEndDate =  data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
@@ -131,7 +133,8 @@ export class MediaPage{
 					this.components.push(component);
 				}
 			}
-		}		
+		}
+		console.log(data);
 	}	
 	
 	toModel() {
@@ -140,6 +143,7 @@ export class MediaPage{
 			Name: this.name,
 			Type: this.type,
 			Order: this.order,
+			ThumbnailFilePath: this.thumbnailFilePath.replace(ProgramFolder + '/', ''),
 			IsHasValidity: this.isHasValidity,
 			ValidStartDate: this.validStartDate?.toISOString(),
 			ValidEndDate: this.validStartDate?.toISOString(),
@@ -295,6 +299,7 @@ export abstract class BaseComponent {
 		this.playCount = data['PlayCount'] == null ? 1 : data.PlayCount as number;
 		this.playDuration = data['PlayDuration'] == null ? "00:00:00" : data.PlayDuration as string;
 		this.element = null;
+		console.log(data);
 	}
 	
 	abstract toModel() : UTSJSONObject;
@@ -310,6 +315,7 @@ export class VideoComponent extends BaseComponent {
 		super(data);
 		this.playMode = data['PlayMode'] as string;
 		this.isClip = data['IsClip'] == null ? false : data['IsClip'] as boolean;
+		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.thumbFilePath != null) {
@@ -318,6 +324,7 @@ export class VideoComponent extends BaseComponent {
 		else {
 			this.element = null;
 		}		
+		console.log(data);
 	}
 	
 	async draw(uCanvas: UCanvas) {
@@ -335,7 +342,7 @@ export class VideoComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source,
+			Source: this.source.replace(ProgramFolder + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,
@@ -369,6 +376,7 @@ export class ImageComponent extends BaseComponent {
 		super(data);
 		this.effectDuration = data['EffectDuration'] as number;
 		this.componentEffect = data['ComponentEffect'] as string;
+		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.source.length > 0) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
@@ -376,6 +384,7 @@ export class ImageComponent extends BaseComponent {
 		else {
 			this.element = null;
 		}
+		console.log(data);
 	}
 	
 	async draw(uCanvas: UCanvas) {
@@ -408,7 +417,7 @@ export class ImageComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source,
+			Source: this.source.replace(ProgramFolder + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,
@@ -450,6 +459,7 @@ export class TextComponent extends BaseComponent {
 		this.rtfFilePath = data['RtfFilePath'] == null ? null : data['RtfFilePath'] as string;
 		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
 		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
+		console.log(data);
 	}
 	
 	async draw(uCanvas: UCanvas) {
@@ -575,6 +585,7 @@ export class WordComponent extends BaseComponent {
 		super(data);
 		this.pageDuration = data.PageDuration as number;
 		this.isShowInfo = this.source.length > 0 ? true : false;
+		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		if (this.thumbFilePath != null) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.thumbFilePath);
@@ -615,7 +626,7 @@ export class WordComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source,
+			Source: this.source.replace(ProgramFolder + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,

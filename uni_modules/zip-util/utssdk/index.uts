@@ -1,0 +1,15 @@
+import { zipFolder as androidZip } from './app-android'
+import { zipFolder as iosZip } from './app-ios'
+
+export function zipFolder(sourceDir: string, destZip: string): boolean {
+    const platform = uni.getSystemInfoSync().osName
+    
+    if (platform === 'android') {
+        return androidZip(sourceDir, destZip)
+    } else if (platform === 'ios') {
+        return iosZip(sourceDir, destZip)
+    } else {
+        console.error("Unsupported platform: " + platform)
+        return false
+    }
+}

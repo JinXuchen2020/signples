@@ -1,0 +1,38 @@
+// 引入必要的类
+const NSFileManager = plus.ios.importClass('NSFileManager')
+const NSURL = plus.ios.importClass('NSURL')
+const SSZipArchive = plus.ios.importClass('SSZipArchive')
+
+export function zipFolder(sourceDir: string, destZip: string): boolean {
+    try {
+        const fileManager = NSFileManager.defaultManager()
+        
+        // 检查源目录是否存在
+        if (!fileManager.fileExistsAtPath(sourceDir)) {
+            console.error("Source directory does not exist")
+            return false
+        }
+        
+        // 确保目标目录存在
+        const destDir = destZip.substring(0, destZip.lastIndexOf('/'))
+        if (!fileManager.fileExistsAtPath(destDir)) {
+            fileManager.createDirectoryAtPathWithIntermediateDirectoriesAttributes(destDir, true, null)
+        }
+        
+        // 删除已存在的ZIP文件
+        if (fileManager.fileExistsAtPath(destZip)) {
+            fileManager.removeItemAtPathError(destZip, null)
+        }
+        
+        // 使用SSZipArchive进行压缩
+        const sourceURL = NSURL.fileURLWithPath(sourceDir)
+        const destURL = NSURL.fileURLWithPath(destZip)
+        
+        const success = SSZipArchive.createZipFileAtPathWithContentsOfDirectory(destZip, sourceDir)
+        
+        return success
+    } catch (err) {
+        console.error("zipFolder error: " + err)
+        return false
+    }
+}

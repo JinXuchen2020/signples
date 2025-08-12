@@ -1,5 +1,10 @@
+import { UCanvas } from "@/uni_modules/u-canvas";
 import { MediaConfig } from './mediaConfig.uts'
 import { APIS } from '@/api/config.uts'
+import { Ziper } from "@/uni_modules/ns-unzip"
+import { zipFolder } from "@/uni_modules/zip-util"
+
+export const ProgramFolder = `${uni.env.USER_DATA_PATH}/temp/program/${(uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string}`;
 export class FileManager {
 	fs: FileSystemManager;
 	userInfo: UTSJSONObject;
@@ -60,6 +65,12 @@ export class FileManager {
 		}	
 	}
 	
+	async deleteProgram(programName: string) {
+		const userAccount = this.userInfo['account'] as string;
+		const destPath = `${this.tempDir}/${userAccount}/${programName}`;
+		this.fs.rmdirSync(destPath, true);
+	}
+	
 	async copyFile(srcPath: string, destFilePath: string) {
 		const userAccount = this.userInfo['account'] as string;
 		let destPath = `${this.tempDir}/${userAccount}/${destFilePath}`;
@@ -67,19 +78,8 @@ export class FileManager {
 		return destPath;
 	}
 	
-	async readZipFile(programName: string) {
-		const userAccount = this.userInfo['account'] as string;
-		const destPath = `${this.tempDir}/${userAccount}/${programName}.zip`;
-		const fd = this.fs.openSync({
-			filePath: destPath,
-			flag: 'r'
-		});
-		return this.fs.fstatSync({
-			fd: fd
-		}).size;
-	}
-	
 	async getProgramConfig(programName: string, width: string, height: string) {
+		console.log(this.userInfo);
 		const userAccount = this.userInfo['account'] as string;
 		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
@@ -87,6 +87,7 @@ export class FileManager {
 		if (await this.IsExist(configFilePath)) {
 			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
 			configFileContent = JSON.parse(content) as UTSJSONObject;
+			console.log(configFileContent);
 		} else {
 			await this.createFolder(programFolder);
 			configFileContent = {
@@ -126,33 +127,97 @@ export class FileManager {
 	
 	async zipProgram(programName: string) {
 		const userAccount = this.userInfo['account'] as string;
-		const sourcePath = `${this.tempDir}/${userAccount}/${programName}`;
-		const zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		let sourcePath = `${this.tempDir}/${userAccount}/${programName}`;
+		let packageName = UTSAndroid.getAppContext()?.packageName
+		if (sourcePath.startsWith("unifile://")) {
+			sourcePath = sourcePath.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
+		}
+		let zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		if(await this.IsExist(zipFile)){
+			this.fs.unlinkSync(zipFile);
+		}
+		if (zipFile.startsWith("unifile://")) {
+			zipFile = zipFile.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
+		}
+		
+		// const result = zipFolder(sourcePath, zipFile);
+		// console.log(result);
+		// console.log(result);
+		// const items = this.fs.readdirSync(`${this.tempDir}/${userAccount}`);
+		// console.log(items);
+		const ziper = new Ziper({
+			zipfilepath: zipFile
+		});
+		//设置编码，中文出现乱码时使用
+		ziper.setCharset("UTF8")
+		//其他方法实参同此方法
+		ziper.addFolder({
+		    "path": sourcePath,
+		})
+		
+		const items = this.fs.readdirSync(`${this.tempDir}/${userAccount}`);
+		console.log(items);
+	}	
+	
+	async readZipFile(programName: string) {
+		const userAccount = this.userInfo['account'] as string;
+		const destPath = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		
+		const items = this.fs.readdirSync(ProgramFolder);
+		console.log(items);
+		
+		const res = await new Promise<StatSuccessResult>((resolve, reject) => {
+			this.fs.stat({
+				path: destPath,
+				recursive: false,
+				success: res => {
+					resolve(res)
+				},
+				fail: res => {
+					reject(res)
+				}
+			});
+		})
+		
+		console.log(res);
+		return res.stats[0].stats.size;
 	}
 	
-	async uploadProgram(program: UTSJSONObject) {
+	async uploadProgram(programName: string) : Promise<UploadFileSuccess> {
 		const userAccount = this.userInfo['account'] as string;
-		const zipFile = `${this.tempDir}/${userAccount}/${program.getString('name')}.zip`;
+		let zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		let packageName = UTSAndroid.getAppContext()?.packageName
+		if (zipFile.startsWith("unifile://")) {
+			zipFile = zipFile.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
+		}
 		
-		const res = await uni.uploadFile({
-			url: APIS.uploadZip,
-			filePath: zipFile,
-			name: 'file',
-			header: {
-				'Authorization': "Bearer " + this.token
-			},
-		})
+		const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
+			uni.uploadFile({
+				url: APIS.uploadZip,
+				filePath: zipFile,
+				name: 'file',
+				header: {
+					'Authorization': "Bearer " + this.token
+				},
+				success(res){
+					resolve(res);
+				},
+				fail(res){
+					reject(res);
+				}
+			})
+		}) 
 		
 		return res;
 	}
 	
-	async function sendCMD(program: UTSJSONObject, preDevice: UTSJSONObject[]){
-		preDevice.forEach((item, index) => {
-			try {
-				uni.showLoading({
-					title: ''
-				});
-				const cmd = JSON.stringify(program);
+	async sendProgram(program: UTSJSONObject, snCode: string){
+		try {
+			uni.showLoading({
+				title: ''
+			});
+			const cmd = JSON.stringify(program);
+			const res = await new Promise<RequestSuccess<UTSJSONObject>>((resolve, reject) => {
 				uni.request({
 					url: APIS.sendCMD as string,
 					method: "POST",
@@ -161,28 +226,36 @@ export class FileManager {
 					},
 					data:{
 						cmd: "CMD|SendProgram|" + cmd,
-						deviceSnCode: item.getString('snCode')
+						deviceSnCode: snCode
 					},
-					success: (ress) => {
-						console.log('sendCMD program res', ress)
-						uni.showToast({
-						  title: '发布成功',
-						  icon: 'success',
-						  duration: 1000
-						})
+					success: (res) => {
+						console.log('sendCMD program res', res)
+						resolve(res as RequestSuccess<UTSJSONObject>);
 					},
 					fail: (err) => {
 						console.log('sendCMD program err', err)
-						uni.showToast({
-						  title: '发布失败',
-						  icon: 'success',
-						  duration: 2000
-						})
+						reject(err);
 					}
 				});
-			} catch (err){
-				console.log(err)
-			}
-		})
+			})
+			
+			uni.hideLoading();			
+			return res.data;
+		} 
+		catch (err){
+			console.log(err);
+			uni.hideLoading();
+			return null;
+		}
+	}
+	
+	async capture(programName: string, pageName: string, canvas: UCanvas){
+		const userAccount = this.userInfo['account'] as string;
+		const thumbnailPath = `${this.tempDir}/${userAccount}/${programName}/${pageName}/thumbnail.png`;
+		const dataString = canvas.toDataURL();
+		const base64Data = dataString.split(',')[1];
+		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
+		this.fs.writeFileSync(thumbnailPath, dataBuffer,"utf-8");
+		return thumbnailPath;
 	}
 }

@@ -35,9 +35,9 @@
 			<scroll-view class="option-body" style="height: 360px;">
 				<view class="option-a" :class="{active: activeTab == 0}">
 					<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-					<ImageForm :item="activeComponent" :medias="mediaList" @refresh="updateComponent" />
+					<ImageForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<WebForm :item="activeComponent" @refresh="updateComponent" />
-					<WordForm :item="activeComponent" @refresh="updateComponent" />
+					<WordForm :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<TextForm :item="activeComponent" @refresh="updateComponent" />
 				</view>
 				<view class="option-b" :class="{active: activeTab == 1}">
@@ -214,7 +214,6 @@
 	</view>
 </template>
 <script lang="uts" setup>
-	import { addZip,unZip,addZipAndSaveDisk } from "@/uni_modules/x-zip-s"
     import * as ucan from "@/uni_modules/u-canvas";
     import {
         UCanvas,
@@ -235,7 +234,7 @@
 	
 	import { routeGoto } from '@/common/router.uts'
 	import { FileManager} from './FileManager.uts'
-	import { APIS } from '@/api/config.uts'
+	import { APIS, requestApi } from '@/api/config.uts'
 	import { request } from '@/utils/http/index'
 	
 	import VideoForm from './videoForm.uvue'
@@ -254,6 +253,7 @@
 	const canvasHeight = ref('192');
 	const mediaList : Ref<UTSJSONObject[]> = ref([]);
 	const deviceList : Ref<UTSJSONObject[]> = ref([]);
+	const selectedDevices = ref<string[]>([]);
 	
 	const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
 	const programName = ref('');
@@ -493,7 +493,11 @@
 		activeComponent.value = null;
 	}
 	
-	const selectPage = (item: MediaPage) =>{
+	const selectPage = async (item: MediaPage) =>{
+		if(activePage.value != null) {			
+			const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
+			activePage.value!.thumbnailFilePath = thunmbailFilePath;
+		}
 		activePage.value = item;
 		activeComponent.value = null;
 	}	
@@ -686,6 +690,7 @@
 	
     async function init() : Promise<void> {
 		const currentConfig = await fileManager.getProgramConfig(programName.value, canvasWidth.value, canvasHeight.value);
+		console.log(currentConfig);
 		canvasWidth.value = currentConfig.program.resolution.split("*")[0];
 		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
 		mediaConfig.value = currentConfig;
@@ -696,8 +701,11 @@
     }
 	
 	async function handleSave() :Promise<void> {
+		if(activePage.value == null) return;
+		const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
+		activePage.value!.thumbnailFilePath = thunmbailFilePath;
 		const data = mediaConfig.value.toModel();
-		await this.fileManager.saveProgram(programName, data);
+		await fileManager.saveProgram(programName.value, data);
 		uni.showToast({
 			icon: 'none',
 			title: '保存成功',
@@ -708,50 +716,75 @@
 	}
 	
 	async function handlePush() :Promise<void> {
-		await this.fileManager.zipProgram(programName);
-		const size = await this.fileManager.readZipFile(programName);
+		await fileManager.zipProgram(programName.value);
+		const size = await fileManager.readZipFile(programName.value);
 		mediaConfig.value.program.size = size;
 		pushPopup.value = true;
 	}
 	
 	async function handlePushProgram() : Promise<void> {
-		await this.fileManager.zipProgram(programName);
-		const size = await this.fileManager.readZipFile(programName);
+		await fileManager.zipProgram(programName.value);
+		const size = await fileManager.readZipFile(programName.value);
 		mediaConfig.value.program.size = size;
+		mediaConfig.value.program.status = 1;
+		const programData = mediaConfig.value.program.toModel();
+		console.log(programData);
 		
-		const file = `${uni.env.USER_DATA_PATH}/temp/program/` + this.prePushProgram.name + '.zip';
-		uni.uploadFile({
-		  url: APIS.uploadZip,
-		  filePath: file,
-		  name: 'file',
-		  header: {
-		  	'Authorization': "Bearer " + this.token
-		  },value
-		  success: (res) => {
-			console.log('uploadZip success, res is:', res)
-			//发布
-			this.sendCMD()
+		const uploadResult = await fileManager.uploadProgram(programName.value);
+		if (uploadResult.statusCode != 0) {
 			uni.showToast({
-			  title: '上传成功',
-			  icon: 'success',
+			  title: '上传失败',
+			  icon: 'none',
 			  duration: 1000
 			})
-		  },
-		  fail: (err) => {
-			console.log('uploadImage fail', err);
-			uni.showModal({
-			  content: err.errMsg,
-			  showCancel: false
-			});
-		  },
-		  complete: (res) => {
-			uni.hideLoading();
-		  }
-		});
+			return;
+		}
+		
+		for (const snCode of selectedDevices.value) {
+			let playRecord = { 
+				MediaName: mediaConfig.value.program.name, 
+				MediaType: mediaConfig.value.program.mediaType, 
+				MonitorSnCode: snCode, 
+				PlaySuccess: false,
+				IsTimerPlay: false, 
+				NextPlayTime: new Date().toISOString() 
+			};
+			const sendResult = await fileManager.sendProgram(programData, snCode);
+			if (sendResult != null && sendResult!.getBoolean('Data') == true) {
+				playRecord.PlaySuccess = true;
+				
+				const apiUrl = APIS.playbackRecord.getAll as string;
+				const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
+				const playbackRecords = await requestApi<UTSJSONObject[]>(apiUrl + params, "GET", {});
+				if (playbackRecords != null) {
+					for (let record of playbackRecords){
+						record.PlaySuccess = false;
+						const result = await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", record);
+						console.log(result);
+					}
+				}
+				
+				await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", playRecord);
+			}
+		}
+		
+		const data = mediaConfig.value.toModel();
+		await fileManager.saveProgram(programName.value, data);
+		uni.showToast({
+			icon: 'none',
+			title: '发布成功',
+			duration: 3000,
+			success: () => { 
+			}
+		})
 	}
 	
 	async function handleReview() :Promise<void> {		
 		routeGoto('/pages/programs/review')
+	}
+	
+	async function devicesChange(e: CheckboxGroupChangeEvent) {
+		selectedDevices.value = e.detail.value;
 	}
 	
 	async function getMedias(){

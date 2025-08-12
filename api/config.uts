@@ -13,6 +13,7 @@ export type ApiEndpoints = {
   createDevice: string;
   uploadZip: string;
   sendCMD: string;
+  playbackRecord: UTSJSONObject;
 };
 
 export const APIS: ApiEndpoints = {
@@ -28,6 +29,35 @@ export const APIS: ApiEndpoints = {
   createDevice: BASE_URL + '/monitor',
   uploadZip: BASE_URL + '/programme/upload',
   sendCMD: BASE_URL + '/monitor/sendCmd',
+  playbackRecord: {
+	  getAll: BASE_URL + '/playbackRecord/all',
+	  save: BASE_URL + '/playbackRecord/save',
+  }
 };
+
+export async function requestApi<T>(apiUrl: string, method: RequestMethod, data?: UTSJSONObject ){
+	const token = uni.getStorageSync('token');	
+	const res = await new Promise<RequestSuccess<T>>((resolve, reject) => {
+		uni.request<T>({
+			url: apiUrl,
+			method: method,
+			header: {
+				'Authorization': "Bearer " + token
+			},
+			data: data
+			success: (res) => {
+				resolve(res);
+			},
+			fail: (res) => {
+				reject(res);
+			}
+		}) 
+	});
+	
+	if (res != null) {
+		return res.data;
+	}
+	return null;
+}
 
 export default APIS;

@@ -320,8 +320,9 @@
 				this.pushPopup = false;
 				this.prePushProgram = {} as UTSJSONObject;
 			},
-			handleDel(item: UTSJSONObject){
-				console.log(item)
+			async handleDel(item: UTSJSONObject){
+				await this.fileManager.deleteProgram(item.getString('name')!);
+				this.programList = await this.fileManager.getProgramList();
 			}
 		}
 	}

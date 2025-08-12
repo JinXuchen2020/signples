@@ -1,0 +1,73 @@
+import File from 'java.io.File'
+import FileInputStream from 'java.io.FileInputStream'
+import FileOutputStream from 'java.io.FileOutputStream'
+import ZipEntry from 'java.util.zip.ZipEntry'
+import ZipOutputStream from 'java.util.zip.ZipOutputStream'
+
+export function zipFolder(sourceDir: string, destZip: string): boolean {
+    try {
+		console.log(sourceDir)
+		console.log(destZip)
+        const sourceDirFile = new File(sourceDir)
+		console.log(sourceDirFile.exists())
+        if (!sourceDirFile.exists() || !sourceDirFile.isDirectory()) {
+            console.error("Source directory does not exist or is not a directory")
+            return false
+        }
+
+        // 确保目标目录存在
+        const destFile = new File(destZip)
+        const parentDir = destFile.getParentFile()
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs()
+        }
+
+        const fos = new FileOutputStream(destFile)
+        const zos = new ZipOutputStream(fos)
+        const buffer = new ByteArray(4096)
+
+        zipDirectory(sourceDirFile, "", zos, buffer)
+
+        zos.close()
+        fos.close()
+        return true
+    } catch (err) {
+        console.error("zipFolder error: " + err)
+        return false
+    }
+}
+
+function zipDirectory(directory: File, basePath: string, zos: ZipOutputStream, buffer: ByteArray): void {
+    const files = directory.listFiles()
+    if (files == null || files.count() <= 0) return
+
+	let i : Int;
+    for (i = 0; i < files.count(); i++) {
+        const file = files.elementAt<File>(i);
+        const entryName = basePath + (basePath.isEmpty() ? "" : File.separator) + file.getName()
+        
+        if (file.isDirectory()) {
+            // 递归处理子目录
+            zipDirectory(file, entryName, zos, buffer)
+        } else {
+            // 添加文件到ZIP
+            const fis = new FileInputStream(file)
+            const entry = new ZipEntry(entryName)
+            zos.putNextEntry(entry)
+            
+            let length: Int
+            while (true) {
+				length = fis.read(buffer);
+				if (length > 0) {
+					zos.write(buffer, 0, length)					
+				}
+				else {
+					break;
+				}
+            }
+            
+            fis.close()
+            zos.closeEntry()
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "zip-util",
+  "id": "zip-util",
+  "version": "1.0.0",
+  "description": "UTS plugin for zipping folders",
+  "keywords": [
+    "zip",
+    "folder",
+    "compression",
+    "uts"
+  ],
+  "uni-app-x": {
+    "dependencies": {
+      "ios": {
+        "podspec": {
+          "dependencies": {
+            "SSZipArchive": "~> 2.4.3"
+          }
+        }
+      }
+    }
+  }
+}
