@@ -263,6 +263,7 @@ export class FileManager {
 					header: {
 						'Authorization': "Bearer " + this.token
 					},
+					timeout: 1000 * 60 * 60
 					data:{
 						cmd: "CMD|SendProgram|" + cmd,
 						deviceSnCode: snCode
