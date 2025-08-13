@@ -15,7 +15,6 @@ export class MediaConfig {
 		this.program = new Program(data['Program'] as UTSJSONObject);
 		const pages = data['Pages'] as UTSJSONObject[] | null;
 		this.pages = pages != null ? pages.map(c=> new MediaPage(c)) : [];
-		console.log(data);
 	}
 	
 	toModel() {
@@ -134,7 +133,6 @@ export class MediaPage{
 				}
 			}
 		}
-		console.log(data);
 	}	
 	
 	toModel() {
@@ -299,7 +297,6 @@ export abstract class BaseComponent {
 		this.playCount = data['PlayCount'] == null ? 1 : data.PlayCount as number;
 		this.playDuration = data['PlayDuration'] == null ? "00:00:00" : data.PlayDuration as string;
 		this.element = null;
-		console.log(data);
 	}
 	
 	abstract toModel() : UTSJSONObject;
@@ -323,8 +320,7 @@ export class VideoComponent extends BaseComponent {
 		}
 		else {
 			this.element = null;
-		}		
-		console.log(data);
+		}
 	}
 	
 	async draw(uCanvas: UCanvas) {
@@ -384,7 +380,6 @@ export class ImageComponent extends BaseComponent {
 		else {
 			this.element = null;
 		}
-		console.log(data);
 	}
 	
 	async draw(uCanvas: UCanvas) {
@@ -459,7 +454,6 @@ export class TextComponent extends BaseComponent {
 		this.rtfFilePath = data['RtfFilePath'] == null ? null : data['RtfFilePath'] as string;
 		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
 		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
-		console.log(data);
 	}
 	
 	async draw(uCanvas: UCanvas) {

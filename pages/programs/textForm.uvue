@@ -215,7 +215,6 @@
 				const result = e.detail.value;
 				this.formData!.verticalContentAlignment = result;
 				const data = this.formData!.toModel();
-				console.log(data);
 				this.$emit("refresh", data);
 			},
 			handlePlayModeChange(e: UniRadioGroupChangeEvent) {

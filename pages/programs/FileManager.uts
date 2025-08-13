@@ -2,31 +2,25 @@ import { UCanvas } from "@/uni_modules/u-canvas";
 import { MediaConfig } from './mediaConfig.uts'
 import { APIS } from '@/api/config.uts'
 import { Ziper } from "@/uni_modules/ns-unzip"
-import { zipFolder } from "@/uni_modules/zip-util"
 
 export const ProgramFolder = `${uni.env.USER_DATA_PATH}/temp/program/${(uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string}`;
+export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 export class FileManager {
 	fs: FileSystemManager;
-	userInfo: UTSJSONObject;
-	tempDir: string;
 	token: string;
 	
 	constructor(){
 		this.fs = uni.getFileSystemManager();
-		this.userInfo = uni.getStorageSync("userInfo") as UTSJSONObject;
 		this.token = uni.getStorageSync("token") as string;
-		this.tempDir = `${uni.env.USER_DATA_PATH}/temp/program`;
 	}
 	
 	async getProgramList() {
 		let results: UTSJSONObject[] = [];
-		const userAccount = this.userInfo['account'] as string;
-		const userProgramFolder = `${this.tempDir}/${userAccount}`
 		try {
-			const items = this.fs.readdirSync(userProgramFolder);
+			const items = this.fs.readdirSync(ProgramFolder);
 			
 			items?.forEach(item => {
-				const itemPath = `${userProgramFolder}/${item}`;
+				const itemPath = `${ProgramFolder}/${item}`;
 				this.fs.stat({
 					path: itemPath,
 					recursive: false,
@@ -42,7 +36,6 @@ export class FileManager {
 					}
 				});
 			});
-			console.log('文件夹列表:', items);
 		} catch (err) {
 			console.error('读取目录失败:', err);
 		}
@@ -66,28 +59,22 @@ export class FileManager {
 	}
 	
 	async deleteProgram(programName: string) {
-		const userAccount = this.userInfo['account'] as string;
-		const destPath = `${this.tempDir}/${userAccount}/${programName}`;
+		const destPath = `${ProgramFolder}/${programName}`;
 		this.fs.rmdirSync(destPath, true);
 	}
 	
 	async copyFile(srcPath: string, destFilePath: string) {
-		const userAccount = this.userInfo['account'] as string;
-		let destPath = `${this.tempDir}/${userAccount}/${destFilePath}`;
-		this.fs.copyFileSync(srcPath, destPath);
-		return destPath;
+		this.fs.copyFileSync(srcPath, destFilePath);
+		return destFilePath;
 	}
 	
 	async getProgramConfig(programName: string, width: string, height: string) {
-		console.log(this.userInfo);
-		const userAccount = this.userInfo['account'] as string;
-		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
+		const programFolder = `${ProgramFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
 		if (await this.IsExist(configFilePath)) {
 			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
 			configFileContent = JSON.parse(content) as UTSJSONObject;
-			console.log(configFileContent);
 		} else {
 			await this.createFolder(programFolder);
 			configFileContent = {
@@ -107,7 +94,7 @@ export class FileManager {
 					"IsHasValidity": false,
 					"ValidStartDate": null,
 					"ValidEndDate": null,
-					"UserAccount": userAccount,
+					"UserAccount": (uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string,
 					"Id": 1
 				}
 			}
@@ -118,21 +105,19 @@ export class FileManager {
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject) {
-		const userAccount = this.userInfo['account'] as string;
-		const programFolder = `${this.tempDir}/${userAccount}/${programName}`;
+		const programFolder = `${ProgramFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
 	async zipProgram(programName: string) {
-		const userAccount = this.userInfo['account'] as string;
-		let sourcePath = `${this.tempDir}/${userAccount}/${programName}`;
+		let sourcePath = `${ProgramFolder}/${programName}`;
 		let packageName = UTSAndroid.getAppContext()?.packageName
 		if (sourcePath.startsWith("unifile://")) {
 			sourcePath = sourcePath.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
 		}
-		let zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		let zipFile = `${ProgramFolder}/${programName}.zip`;
 		if(await this.IsExist(zipFile)){
 			this.fs.unlinkSync(zipFile);
 		}
@@ -154,17 +139,14 @@ export class FileManager {
 		ziper.addFolder({
 		    "path": sourcePath,
 		})
-		
-		const items = this.fs.readdirSync(`${this.tempDir}/${userAccount}`);
-		console.log(items);
 	}	
 	
 	async readZipFile(programName: string) {
-		const userAccount = this.userInfo['account'] as string;
-		const destPath = `${this.tempDir}/${userAccount}/${programName}.zip`;
+		const destPath = `${ProgramFolder}/${programName}.zip`;
 		
-		const items = this.fs.readdirSync(ProgramFolder);
-		console.log(items);
+		if(!await this.IsExist(destPath)){
+			await this.zipProgram(programName);
+		}
 		
 		const res = await new Promise<StatSuccessResult>((resolve, reject) => {
 			this.fs.stat({
@@ -179,42 +161,99 @@ export class FileManager {
 			});
 		})
 		
-		console.log(res);
 		return res.stats[0].stats.size;
 	}
 	
 	async uploadProgram(programName: string) : Promise<UploadFileSuccess> {
-		const userAccount = this.userInfo['account'] as string;
-		let zipFile = `${this.tempDir}/${userAccount}/${programName}.zip`;
-		let packageName = UTSAndroid.getAppContext()?.packageName
-		if (zipFile.startsWith("unifile://")) {
-			zipFile = zipFile.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
+		let zipFile = `${ProgramFolder}/${programName}.zip`;
+		
+		const fileExists = await this.IsExist(zipFile);
+		
+		if (!fileExists) {
+			uni.showToast({
+				title: '没有节目包, 请先去编辑页面打包',
+				icon: 'none'
+			})
+			return {
+				data: null,
+				statusCode: -1;
+			}
 		}
 		
-		const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
-			uni.uploadFile({
-				url: APIS.uploadZip,
-				filePath: zipFile,
-				name: 'file',
-				header: {
-					'Authorization': "Bearer " + this.token
-				},
-				success(res){
-					resolve(res);
-				},
-				fail(res){
-					reject(res);
-				}
-			})
-		}) 
+		const rightResult = await new Promise<boolean>((resolve, reject) => {
+			if (UTSAndroid.checkSystemPermissionGranted(UTSAndroid.getUniActivity()!, ['android.permission.READ_EXTERNAL_STORAGE'])) {
+				resolve(true);
+			}else {
+				UTSAndroid.requestSystemPermission(
+					UTSAndroid.getUniActivity()!, 
+					['android.permission.READ_EXTERNAL_STORAGE'],
+					(allRight : boolean, _grantedList : Array<string>) => {
+						resolve(allRight);
+					},
+					(doNotAskAgain : boolean, _grantedList: Array<string>) => {
+						resolve(false);
+						reject(doNotAskAgain);
+					},
+				)
+			}
+		})
 		
-		return res;
+		if (!rightResult) {
+			uni.showToast({
+				title: '没有文件权限',
+				icon: 'none'
+			})
+			
+			return {
+				data: null,
+				statusCode: -1;
+			}
+		}		
+		
+		try {
+			uni.showLoading({
+				title: '上传中...'
+			});
+			const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
+				uni.downloadFile({
+					url: "https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png",
+				    filePath: `${uni.env.USER_DATA_PATH}/uni-app.png`,
+					success: (_res) => {					
+						uni.uploadFile({
+							url: APIS.uploadZip,
+							filePath: zipFile,
+							name: 'file',
+							header: {
+								'Authorization': "Bearer " + this.token
+							},
+							success(res){
+								resolve(res);
+							},
+							fail(res){
+								console.error("上传失败:", JSON.stringify(res, null, 2));
+								reject(res);
+							}
+						})
+					}
+				})
+			})
+			
+			uni.hideLoading();
+			return res;
+		}
+		catch (err){
+			uni.hideLoading();
+			return {
+				data: null,
+				statusCode: -1;
+			}
+		}		
 	}
 	
 	async sendProgram(program: UTSJSONObject, snCode: string){
 		try {
 			uni.showLoading({
-				title: ''
+				title: '发布中...'
 			});
 			const cmd = JSON.stringify(program);
 			const res = await new Promise<RequestSuccess<UTSJSONObject>>((resolve, reject) => {
@@ -229,7 +268,6 @@ export class FileManager {
 						deviceSnCode: snCode
 					},
 					success: (res) => {
-						console.log('sendCMD program res', res)
 						resolve(res as RequestSuccess<UTSJSONObject>);
 					},
 					fail: (err) => {
@@ -243,15 +281,13 @@ export class FileManager {
 			return res.data;
 		} 
 		catch (err){
-			console.log(err);
 			uni.hideLoading();
 			return null;
 		}
 	}
 	
 	async capture(programName: string, pageName: string, canvas: UCanvas){
-		const userAccount = this.userInfo['account'] as string;
-		const thumbnailPath = `${this.tempDir}/${userAccount}/${programName}/${pageName}/thumbnail.png`;
+		const thumbnailPath = `${ProgramFolder}/${programName}/${pageName}/thumbnail.png`;
 		const dataString = canvas.toDataURL();
 		const base64Data = dataString.split(',')[1];
 		const dataBuffer = uni.base64ToArrayBuffer(base64Data);

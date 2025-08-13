@@ -78,7 +78,7 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager } from './FileManager.uts';
+	import { FileManager, ProgramFolder } from './FileManager.uts';
 	import { BaseComponent,VideoComponent } from './mediaConfig.uts'
 	export default {
 		props: {
@@ -193,8 +193,7 @@
 						for (let i = 0; i < tempFiles.length; i++) {
 							const tempFile : ChooseMediaTempFile = tempFiles[i];
 							const fileName = tempFile.tempFilePath.split("/")[tempFile.tempFilePath.split("/").length - 1];
-							console.log(tempFile);
-							const destPath =  `${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+							const destPath =  `${ProgramFolder}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
 							this.fileManager!.copyFile(tempFile.tempFilePath, destPath).then(res => {
 								this.formData!.source = res;
 								this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
@@ -204,7 +203,6 @@
 								this.formData!.width = 256;
 								this.formData!.height = 192;
 								const data = this.formData!.toModel();
-								console.log(data);
 								this.$emit("refresh", data);
 							});
 						}

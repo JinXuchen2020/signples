@@ -43,7 +43,6 @@ export class Ziper implements ZiperType {
 		if (opt.onend != null) {
 			this.zipfile.addFolder(opt.path, new End(opt.onend!))
 		} else {
-			console.log(opt.path);
 			this.zipfile.addFolder(opt.path)
 		}
 

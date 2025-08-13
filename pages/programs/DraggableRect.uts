@@ -78,6 +78,14 @@ export class DraggableImage {
 		        y: this.y + this.height - 15,
 		        w: 15,
 		        h: 15,
+				style: {
+				  stroke: {
+				  	color: "white",
+				  	width: 2,
+				  	cap: "butt",
+				  	join: "miter",
+				  },
+				}
 		      }),
 		    ],
 		  })

@@ -108,7 +108,7 @@
 		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
 		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
 	}
-	import { APIS } from '@/api/config.uts'
+	import { APIS, requestApi } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index'
 	import { FileManager} from './FileManager.uts'
@@ -205,7 +205,7 @@
 					});
 					const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
 					const person: UTSJSONObject = {}
-					const param = '?userAccount=' + activeUser.account;
+					const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount={activeUser.account}&eanbled=1`;
 					const result = await request('GET', APIS.deviceListPage as string + param, person)
 					const d = result as Array<UTSJSONObject>;
 					this.deviceList = d
@@ -227,98 +227,79 @@
 				this.prePushProgram = item;
 			},
 			devicesChange(e: UniCheckboxGroupChangeEvent){
-				console.log('e.detail.value', e.detail.value)
 				this.preDevice = e.detail.value as Array<String>;
 			},
-			handlePushProgram(){
-				//先上传选中节目的zip
-				const file = `${uni.env.USER_DATA_PATH}/temp/program/` + this.prePushProgram.name + '.zip';
-				uni.uploadFile({
-				  url: APIS.uploadZip,
-				  filePath: file,
-				  name: 'file',
-				  header: {
-				  	'Authorization': "Bearer " + this.token
-				  },
-				  success: (res) => {
-					console.log('uploadZip success, res is:', res)
-					//发布
-					this.sendCMD()
+			async handlePushProgram(){
+				const programName = this.prePushProgram.getString('name')!;
+				const currentConfig = await this.fileManager.getProgramConfig(programName, '256', '192');
+				currentConfig.program.status = 1;
+				const programData = currentConfig.program.toModel();
+				
+				const uploadResult = await this.fileManager.uploadProgram(programName);
+				if (uploadResult.statusCode != 200) {
 					uni.showToast({
-					  title: '上传成功',
-					  icon: 'success',
+					  title: '上传失败',
+					  icon: 'none',
 					  duration: 1000
 					})
-				  },
-				  fail: (err) => {
-					console.log('uploadImage fail', err);
-					uni.showModal({
-					  content: err.errMsg,
-					  showCancel: false
-					});
-				  },
-				  complete: (res) => {
-					uni.hideLoading();
-				  }
-				});
-			},
-			sendCMD(){
-				console.log('开始发布')
-				this.preDevice.forEach((item, index) => {
-					console.log('开始发布item', item)
-					try {
-						uni.showLoading({
-							title: ''
-						});
-						const cmd = JSON.stringify({
-							"name": this.prePushProgram.name,
-							"mediaType": "PROGRAM",
-							"resolution": "256*192",
-							"size": 22088256,
-							"monitorCount": 2,
-							"lastUpdatedTime": "2025-07-17 22:46:00",
-							"createdSource": "admin",
-							"status": 1,
-							"playCountPerHour": null,
-							"isHasValidity": false,
-							"validStartDate": null,
-							"validEndDate": null,
-							"userAccount": this.userInfo.account,
-							"id": 1
-						});
-						uni.request({
-							url: APIS.sendCMD as string,
-							method: "POST",
-							header: {
-								'Authorization': "Bearer " + this.token
-							},
-							data:{
-								cmd: "CMD|SendProgram|" + cmd,
-								deviceSnCode: item
-							},
-							success: (ress) => {
-								console.log('sendCMD program res', ress)
-								uni.showToast({
-								  title: '发布成功',
-								  icon: 'success',
-								  duration: 1000
-								})
-							},
-							fail: (err) => {
-								console.log('sendCMD program err', err)
-								uni.showToast({
-								  title: '发布失败',
-								  icon: 'success',
-								  duration: 2000
-								})
+					return;
+				}
+				
+				let pushResult = true;
+				
+				for (const snCode of this.preDevice) {
+					let playRecord = { 
+						MediaName: currentConfig.program.name, 
+						MediaType: currentConfig.program.mediaType, 
+						MonitorSnCode: snCode, 
+						PlaySuccess: false,
+						IsTimerPlay: false, 
+						NextPlayTime: new Date().toISOString() 
+					};
+					const sendResult = await this.fileManager.sendProgram(programData, snCode);
+					if (sendResult != null && sendResult!.getBoolean('data') == true) {
+						playRecord.PlaySuccess = true;
+						
+						const apiUrl = APIS.playbackRecord.getAll as string;
+						const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
+						const playbackRecords = await requestApi<UTSJSONObject[]>(apiUrl + params, "GET", {});
+						console.log(playbackRecords);
+						if (playbackRecords != null) {
+							for (let record of playbackRecords){
+								record.PlaySuccess = false;
+								const result = await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", record);
+								console.log(result);
 							}
-						});
-					} catch (err){
-						console.log(err)
+						}
+						
+						await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", playRecord);
 					}
-				})
-				this.pushPopup = false;
-				this.prePushProgram = {} as UTSJSONObject;
+					else {
+						uni.showToast({
+							icon: 'none',
+							title: `设备：${snCode} 发布命令执行失败`,
+							duration: 3000,
+							success: () => { 
+							}
+						})
+						
+						pushResult = false;
+					}
+				}
+				
+				if (pushResult) {
+					const data = currentConfig.toModel();
+					await this.fileManager.saveProgram(programName, data);
+					uni.showToast({
+						icon: 'none',
+						title: '发布成功',
+						duration: 3000,
+						success: () => {
+							this.pushPopup = false;
+							this.prePushProgram = {} as UTSJSONObject;
+						}
+					})
+				}
 			},
 			async handleDel(item: UTSJSONObject){
 				await this.fileManager.deleteProgram(item.getString('name')!);

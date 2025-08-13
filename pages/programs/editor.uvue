@@ -127,7 +127,7 @@
 			<view class="pages">
 				<swiper id="swiper-view" class="swiper">
 					<swiper-item v-if="activeTab == 1" class="swiper-item" item-id="1">
-						<view v-for="(item, index) in mediaConfig.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
+						<view v-for="(item, index) in mediaConfig?.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
 							<text class="t">{{item.name}}</text>
 						</view>
 						<view class="item" style="background-color: #cccccc;" @click="addPage()">
@@ -214,7 +214,6 @@
 	</view>
 </template>
 <script lang="uts" setup>
-    import * as ucan from "@/uni_modules/u-canvas";
     import {
         UCanvas,
         Composition,
@@ -233,7 +232,7 @@
 	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
 	
 	import { routeGoto } from '@/common/router.uts'
-	import { FileManager} from './FileManager.uts'
+	import { FileManager, MediaStoreFolder } from './FileManager.uts'
 	import { APIS, requestApi } from '@/api/config.uts'
 	import { request } from '@/utils/http/index'
 	
@@ -251,186 +250,18 @@
 	
 	const canvasWidth = ref('256');
 	const canvasHeight = ref('192');
-	const mediaList : Ref<UTSJSONObject[]> = ref([]);
-	const deviceList : Ref<UTSJSONObject[]> = ref([]);
+	const mediaList = ref<UTSJSONObject[]>([]);
+	const deviceList = ref<UTSJSONObject[]>([]);
 	const selectedDevices = ref<string[]>([]);
 	
 	const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
 	const programName = ref('');
 	const pushPopup = ref(false);
-	const mediaConfig = ref(new MediaConfig({
-		"Left": 0.0,
-		"Top": 0.0,
-		"Ratio": 1.0,
-		"Program": {
-			"Name": "节目名称20250523021648",
-			"MediaType": "PROGRAM",
-			"Resolution": "256*192",
-			"Size": 25929792.0,
-			"MonitorCount": 1,
-			"LastUpdatedTime": "2025-05-23 14:16:00",
-			"CreatedSource": "admin",
-			"Status": 0,
-			"PlayCountPerHour": null,
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"UserAccount": "user001",
-			"Id": 9
-		},
-		"Pages": [{
-			"Id": 1,
-			"Name": "页面1",
-			"Type": "normal",
-			"Order": 1,
-			"ThumbnailFilePath": "节目名称20250523021648\\页面1\\thumbnail.png",
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"PlayCount": 1,
-			"PlayGap": 0,
-			"AdPlayMode": null,
-			"Schedulers": [{
-				"Id": 1,
-				"StartTime": "00:00:00",
-				"EndTime": "23:59:59",
-				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
-			}],
-			"Components": [{
-				"Type": "Video",
-				"PlayMode": "fullscreen",
-				"IsClip": false,
-				"Id": 1,
-				"Name": "视频1",
-				"ZIndex": 1,
-				"Left": 0.0,
-				"Top": 0.0,
-				"Width": 256.0,
-				"Height": 192.0,
-				"Source": "节目名称20250523021648\\页面1\\视频1\\test2.mp4",
-				"Timeline": 20.0,
-				"PlayCount": 1,
-				"PlayDuration": "00:00:20"
-			}]
-		}, {
-			"Id": 2,
-			"Name": "页面2",
-			"Type": "normal",
-			"Order": 2,
-			"ThumbnailFilePath": "节目名称20250523021648\\页面2\\thumbnail.png",
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"PlayCount": 1,
-			"PlayGap": 10,
-			"AdPlayMode": "perday",
-			"Schedulers": [{
-				"Id": 1,
-				"StartTime": "00:00:00",
-				"EndTime": "23:59:59",
-				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
-			}],
-			"Components": [{
-				"Type": "Image",
-				"EffectDuration": 1000,
-				"ComponentEffect": "Empty",
-				"Id": 1,
-				"Name": "图片1",
-				"ZIndex": 1,
-				"Left": 0.0,
-				"Top": 0.0,
-				"Width": 256.0,
-				"Height": 192.0,
-				"Source": "节目名称20250523021648\\页面2\\图片1\\图片1.jpg",
-				"Timeline": 5.0,
-				"PlayCount": 1,
-				"PlayDuration": "00:00:05"
-			}]
-		}, {
-			"Id": 3,
-			"Name": "页面3",
-			"Type": "normal",
-			"Order": 3,
-			"ThumbnailFilePath": "节目名称20250523021648\\页面3\\thumbnail.png",
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"PlayCount": 1,
-			"PlayGap": 10,
-			"AdPlayMode": "perday",
-			"Schedulers": [{
-				"Id": 1,
-				"StartTime": "00:00:00",
-				"EndTime": "23:59:59",
-				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
-			}],
-			"Components": [{
-				"Type": "Text",
-				"Background": "#FF000000",
-				"TextColor": "#FFFFFFFF",
-				"PlayMode": "pageTurning",
-				"Direction": "rollingLeft",
-				"EffectDuration": 1000,
-				"ComponentEffect": "Empty",
-				"RollingSpeed": 2,
-				"TextSize": 16.0,
-				"IsLoopEnabled": true,
-				"LetterSpacing": 2.0,
-				"LineSpacing": 2.0,
-				"RtfFilePath": "节目名称20250523021648\\页面3\\文本1\\文本1.xaml",
-				"VerticalContentAlignment": "Center",
-				"Id": 1,
-				"Name": "文本1",
-				"ZIndex": 1,
-				"Left": 0.0,
-				"Top": 0.0,
-				"Width": 256.0,
-				"Height": 192.0,
-				"Source": "你好，世界sfsf\r\n",
-				"Timeline": 5.0,
-				"PlayCount": 1,
-				"PlayDuration": "00:00:05"
-			}]
-		}, {
-			"Id": 4,
-			"Name": "页面4",
-			"Type": "normal",
-			"Order": 4,
-			"ThumbnailFilePath": "节目名称20250523021648\\页面4\\thumbnail.png",
-			"IsHasValidity": false,
-			"ValidStartDate": null,
-			"ValidEndDate": null,
-			"PlayCount": 1,
-			"PlayGap": 10,
-			"AdPlayMode": "perday",
-			"Schedulers": [{
-				"Id": 1,
-				"StartTime": "00:00:00",
-				"EndTime": "23:59:59",
-				"ScheduleDays": [1, 2, 3, 4, 5, 6, 7]
-			}],
-			"Components": [{
-				"Type": "Video",
-				"PlayMode": "fullscreen",
-				"IsClip": false,
-				"Id": 1,
-				"Name": "视频1",
-				"ZIndex": 1,
-				"Left": 0.0,
-				"Top": 0.0,
-				"Width": 256.0,
-				"Height": 192.0,
-				"Source": "节目名称20250523021648/页面4/视频1/视频3.mp4",
-				"Timeline": 4.0,
-				"PlayCount": 1,
-				"PlayDuration": "00:00:04"
-			}]
-		}]
-	}));
+	const mediaConfig = ref<MediaConfig | null>(null);
 	
-	const activePage : Ref<MediaPage | null> = ref(null);
+	const activePage = ref<MediaPage | null>(null);
 	
-	const activeComponent : Ref<BaseComponent | null> = ref(null);
+	const activeComponent = ref<BaseComponent | null>(null);
 	
 	const activeTab = ref(1);
 	
@@ -485,10 +316,10 @@
 	}
 	
 	const addPage = () => {
-		const pagesCount = mediaConfig.value.pages.length + 1;	
+		const pagesCount = mediaConfig.value!.pages.length + 1;	
 		
 		const page = MediaPage.createInstance(pagesCount);
-		mediaConfig.value.pages.push(page)
+		mediaConfig.value!.pages.push(page)
 		activePage.value = page;
 		activeComponent.value = null;
 	}
@@ -520,7 +351,6 @@
 
 		// 检测点击的图形
 		for (const component of activePage.value.components.filter(c => c.element != null).sort((a,b)=>b.zIndex - a.zIndex)) {
-			console.log(component);
 			const image = component.element!;
 			if (image.isHitResizeHandle(touchX, touchY)) {
 				image.isResizing = true;
@@ -690,12 +520,14 @@
 	
     async function init() : Promise<void> {
 		const currentConfig = await fileManager.getProgramConfig(programName.value, canvasWidth.value, canvasHeight.value);
-		console.log(currentConfig);
 		canvasWidth.value = currentConfig.program.resolution.split("*")[0];
 		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
 		mediaConfig.value = currentConfig;
 		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
 		activeComponent.value = activePage.value == null || activePage.value!.components.length == 0 ? null : activePage.value?.components[0];
+		if (activeComponent.value!.element!= null) {			
+			activeComponent.value!.element.isSelected = true;
+		}
 		await uCanvas.ensureInitialize();
 		await drawPage();
     }
@@ -704,7 +536,7 @@
 		if(activePage.value == null) return;
 		const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
 		activePage.value!.thumbnailFilePath = thunmbailFilePath;
-		const data = mediaConfig.value.toModel();
+		const data = mediaConfig.value!.toModel();
 		await fileManager.saveProgram(programName.value, data);
 		uni.showToast({
 			icon: 'none',
@@ -718,20 +550,16 @@
 	async function handlePush() :Promise<void> {
 		await fileManager.zipProgram(programName.value);
 		const size = await fileManager.readZipFile(programName.value);
-		mediaConfig.value.program.size = size;
+		mediaConfig.value!.program.size = size;
 		pushPopup.value = true;
 	}
 	
 	async function handlePushProgram() : Promise<void> {
-		await fileManager.zipProgram(programName.value);
-		const size = await fileManager.readZipFile(programName.value);
-		mediaConfig.value.program.size = size;
-		mediaConfig.value.program.status = 1;
-		const programData = mediaConfig.value.program.toModel();
-		console.log(programData);
+		mediaConfig.value!.program.status = 1;
+		const programData = mediaConfig.value!.program.toModel();
 		
 		const uploadResult = await fileManager.uploadProgram(programName.value);
-		if (uploadResult.statusCode != 0) {
+		if (uploadResult.statusCode != 200) {
 			uni.showToast({
 			  title: '上传失败',
 			  icon: 'none',
@@ -740,22 +568,25 @@
 			return;
 		}
 		
+		let pushResult = true;
+		
 		for (const snCode of selectedDevices.value) {
 			let playRecord = { 
-				MediaName: mediaConfig.value.program.name, 
-				MediaType: mediaConfig.value.program.mediaType, 
+				MediaName: mediaConfig.value!.program.name, 
+				MediaType: mediaConfig.value!.program.mediaType, 
 				MonitorSnCode: snCode, 
 				PlaySuccess: false,
 				IsTimerPlay: false, 
 				NextPlayTime: new Date().toISOString() 
 			};
 			const sendResult = await fileManager.sendProgram(programData, snCode);
-			if (sendResult != null && sendResult!.getBoolean('Data') == true) {
+			if (sendResult != null && sendResult!.getBoolean('data') == true) {
 				playRecord.PlaySuccess = true;
 				
 				const apiUrl = APIS.playbackRecord.getAll as string;
 				const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
 				const playbackRecords = await requestApi<UTSJSONObject[]>(apiUrl + params, "GET", {});
+				console.log(playbackRecords);
 				if (playbackRecords != null) {
 					for (let record of playbackRecords){
 						record.PlaySuccess = false;
@@ -766,17 +597,31 @@
 				
 				await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", playRecord);
 			}
+			else {
+				uni.showToast({
+					icon: 'none',
+					title: `设备：${snCode} 发布命令执行失败`,
+					duration: 3000,
+					success: () => { 
+					}
+				})
+				
+				pushResult = false;
+			}
 		}
 		
-		const data = mediaConfig.value.toModel();
-		await fileManager.saveProgram(programName.value, data);
-		uni.showToast({
-			icon: 'none',
-			title: '发布成功',
-			duration: 3000,
-			success: () => { 
-			}
-		})
+		if (pushResult) {		
+			const data = mediaConfig.value!.toModel();
+			await fileManager.saveProgram(programName.value, data);
+			uni.showToast({
+				icon: 'none',
+				title: '发布成功',
+				duration: 3000,
+				success: () => {
+					pushPopup.value = false;
+				}
+			})
+		}
 	}
 	
 	async function handleReview() :Promise<void> {		
@@ -809,7 +654,7 @@
 					});
 				});
 				
-				const destPath =  `mediaStore/${media.getString('name')}/${media.src}`;
+				const destPath =  `${MediaStoreFolder}/${media.getString('name')}/${media.src}`;
 				const filePath = await fileManager.copyFile(downloadResult.tempFilePath, destPath);
 				media.src = filePath;
 			}
@@ -828,7 +673,7 @@
 			});
 			const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
 			const person: UTSJSONObject = {}
-			const param = '?userAccount=' + activeUser.account;
+			const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount={activeUser.account}&eanbled=1`;
 			const result = await request('GET', APIS.deviceListPage as string + param, person)
 			const d = result as Array<UTSJSONObject>;
 			deviceList.value = d
