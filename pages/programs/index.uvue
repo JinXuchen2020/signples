@@ -108,10 +108,10 @@
 		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
 		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
 	}
-	import { APIS, requestApi } from '@/api/config.uts'
+	import { APIS, postApi, getApi } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index'
-	import { FileManager} from './FileManager.uts'
+	import { FileManager} from './fileManager.uts'
 	
 	export default {
 		data() {
@@ -257,22 +257,23 @@
 						NextPlayTime: new Date().toISOString() 
 					};
 					const sendResult = await this.fileManager.sendProgram(programData, snCode);
-					if (sendResult != null && sendResult!.getBoolean('data') == true) {
+					if (sendResult) {
 						playRecord.PlaySuccess = true;
 						
 						const apiUrl = APIS.playbackRecord.getAll as string;
 						const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
-						const playbackRecords = await requestApi<UTSJSONObject[]>(apiUrl + params, "GET", {});
+						const result = await request('GET', apiUrl + params, {});
+						const playbackRecords = result as Array<UTSJSONObject>;
 						console.log(playbackRecords);
 						if (playbackRecords != null) {
 							for (let record of playbackRecords){
 								record.PlaySuccess = false;
-								const result = await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", record);
+								const result = await postApi(APIS.playbackRecord.save as string, record);
 								console.log(result);
 							}
 						}
 						
-						await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", playRecord);
+						await postApi(APIS.playbackRecord.save as string, playRecord);
 					}
 					else {
 						uni.showToast({

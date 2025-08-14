@@ -28,23 +28,51 @@ export const APIS: ApiEndpoints = {
   updateDevice: BASE_URL + '/monitor',
   createDevice: BASE_URL + '/monitor',
   uploadZip: BASE_URL + '/programme/upload',
-  sendCMD: BASE_URL + '/monitor/sendCmd',
+  sendCMD: BASE_URL + '/monitor/sendMobileCmd',
   playbackRecord: {
 	  getAll: BASE_URL + '/playbackRecord/all',
 	  save: BASE_URL + '/playbackRecord/save',
   }
 };
 
-export async function requestApi<T>(apiUrl: string, method: RequestMethod, data?: UTSJSONObject ){
+export async function postApi(apiUrl: string, data: UTSJSONObject){
+	console.log(apiUrl);
+	const token = uni.getStorageSync('token');	
+	const res = await new Promise<RequestSuccess<UTSJSONObject>>((resolve, reject) => {
+		uni.request<UTSJSONObject>({
+			url: apiUrl,
+			method: "POST",
+			header: {
+				'Authorization': "Bearer " + token
+			},
+			timeout: 1000 * 60 * 30,
+			data: data,
+			success: (res) => {
+				resolve(res);
+			},
+			fail: (res) => {
+				reject(res);
+			}
+		}) 
+	});
+	
+	if (res != null) {
+		return res.data;
+	}
+	return null;
+}
+
+export async function getApi<T>(apiUrl: string){
+	console.log(apiUrl);
 	const token = uni.getStorageSync('token');	
 	const res = await new Promise<RequestSuccess<T>>((resolve, reject) => {
 		uni.request<T>({
 			url: apiUrl,
-			method: method,
+			method: "GET",
 			header: {
 				'Authorization': "Bearer " + token
 			},
-			data: data
+			timeout: 1000 * 60 * 30,
 			success: (res) => {
 				resolve(res);
 			},

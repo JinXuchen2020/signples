@@ -1,7 +1,8 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { MediaConfig } from './mediaConfig.uts'
-import { APIS } from '@/api/config.uts'
+import { APIS, postApi } from '@/api/config.uts'
 import { Ziper } from "@/uni_modules/ns-unzip"
+import { request } from '@/utils/http/index'
 
 export const ProgramFolder = `${uni.env.USER_DATA_PATH}/temp/program/${(uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string}`;
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
@@ -82,24 +83,24 @@ export class FileManager {
 				"Top": 0.0,
 				"Ratio": 1.0,
 				"Program": {
-					"Name": programName,
-					"MediaType": "PROGRAM",
-					"Resolution": `${width}*${height}`,
-					"Size": 0,
-					"MonitorCount": 0,
-					"LastUpdatedTime": new Date().toISOString(),
-					"CreatedSource": "admin",
-					"Status": 0,
-					"PlayCountPerHour": null,
-					"IsHasValidity": false,
-					"ValidStartDate": null,
-					"ValidEndDate": null,
-					"UserAccount": (uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string,
-					"Id": 1
+					"name": programName,
+					"mediaType": "PROGRAM",
+					"resolution": `${width}*${height}`,
+					"size": 0,
+					"monitorCount": 0,
+					// "lastUpdatedTime": new Date().toISOString(),
+					"createdSource": "admin",
+					"status": 0,
+					"playCountPerHour": null,
+					"isHasValidity": false,
+					"validStartDate": null,
+					"validEndDate": null,
+					"userAccount": (uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string,
+					"id": 1
 				}
 			}
 			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
-		}		
+		}
 		
 		return new MediaConfig(configFileContent);
 	}
@@ -255,35 +256,23 @@ export class FileManager {
 			uni.showLoading({
 				title: '发布中...'
 			});
-			const cmd = JSON.stringify(program);
-			const res = await new Promise<RequestSuccess<UTSJSONObject>>((resolve, reject) => {
-				uni.request({
-					url: APIS.sendCMD as string,
-					method: "POST",
-					header: {
-						'Authorization': "Bearer " + this.token
-					},
-					timeout: 1000 * 60 * 60
-					data:{
-						cmd: "CMD|SendProgram|" + cmd,
-						deviceSnCode: snCode
-					},
-					success: (res) => {
-						resolve(res as RequestSuccess<UTSJSONObject>);
-					},
-					fail: (err) => {
-						console.log('sendCMD program err', err)
-						reject(err);
-					}
-				});
-			})
+			const dataObj = {
+				cmd: 'CMD|SendProgram|',
+				data: program
+				deviceSnCode: snCode
+			} as UTSJSONObject
 			
-			uni.hideLoading();			
-			return res.data;
+			console.log(JSON.stringify(dataObj));
+			
+			const res = await request("POST", APIS.sendCMD as string, dataObj);
+			console.log(res)
+			uni.hideLoading();
+			return res as boolean;
 		} 
 		catch (err){
+			console.log('sendCMD program err', err)
 			uni.hideLoading();
-			return null;
+			return false;
 		}
 	}
 	

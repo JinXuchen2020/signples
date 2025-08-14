@@ -232,8 +232,8 @@
 	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
 	
 	import { routeGoto } from '@/common/router.uts'
-	import { FileManager, MediaStoreFolder } from './FileManager.uts'
-	import { APIS, requestApi } from '@/api/config.uts'
+	import { FileManager, MediaStoreFolder } from './fileManager.uts'
+	import { APIS, postApi, getApi } from '@/api/config.uts'
 	import { request } from '@/utils/http/index'
 	
 	import VideoForm from './videoForm.uvue'
@@ -525,8 +525,8 @@
 		mediaConfig.value = currentConfig;
 		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
 		activeComponent.value = activePage.value == null || activePage.value!.components.length == 0 ? null : activePage.value?.components[0];
-		if (activeComponent.value!.element!= null) {			
-			activeComponent.value!.element.isSelected = true;
+		if (activeComponent.value != null && activeComponent.value!.element != null) {
+			activeComponent.value!.element!.isSelected = true;
 		}
 		await uCanvas.ensureInitialize();
 		await drawPage();
@@ -580,22 +580,23 @@
 				NextPlayTime: new Date().toISOString() 
 			};
 			const sendResult = await fileManager.sendProgram(programData, snCode);
-			if (sendResult != null && sendResult!.getBoolean('data') == true) {
+			if (sendResult) {
 				playRecord.PlaySuccess = true;
 				
 				const apiUrl = APIS.playbackRecord.getAll as string;
 				const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
-				const playbackRecords = await requestApi<UTSJSONObject[]>(apiUrl + params, "GET", {});
+				const result = await request('GET', apiUrl + params, {});
+				const playbackRecords = result as Array<UTSJSONObject>;
 				console.log(playbackRecords);
 				if (playbackRecords != null) {
 					for (let record of playbackRecords){
 						record.PlaySuccess = false;
-						const result = await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", record);
+						const result = await postApi(APIS.playbackRecord.save as string, record);
 						console.log(result);
 					}
 				}
 				
-				await requestApi<UTSJSONObject>(APIS.playbackRecord.save as string, "POST", playRecord);
+				await postApi(APIS.playbackRecord.save as string, playRecord);
 			}
 			else {
 				uni.showToast({
@@ -610,7 +611,7 @@
 			}
 		}
 		
-		if (pushResult) {		
+		if (pushResult) {
 			const data = mediaConfig.value!.toModel();
 			await fileManager.saveProgram(programName.value, data);
 			uni.showToast({
@@ -618,9 +619,11 @@
 				title: '发布成功',
 				duration: 3000,
 				success: () => {
-					pushPopup.value = false;
 				}
 			})
+			
+			console.log("发布成功");
+			pushPopup.value = false;
 		}
 	}
 	

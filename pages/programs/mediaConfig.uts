@@ -1,6 +1,6 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
-import { DraggableImage } from "./DraggableRect.uts";
-import { ProgramFolder} from "./FileManager.uts";
+import { DraggableImage } from "./draggableRect.uts";
+import { ProgramFolder} from "./fileManager.uts";
 export class MediaConfig {
 	left: number;
 	top: number;
@@ -34,7 +34,7 @@ export class Program {
 	resolution: string;
 	size: number;
 	monitorCount: number;
-	lastUpdatedTime: Date;
+	// lastUpdatedTime: Date;
 	createdSource?: string;
 	status: number;
 	playCountPerHour?: number;
@@ -45,34 +45,38 @@ export class Program {
 	id: number
 	
 	constructor(data: UTSJSONObject){
-		this.name = data['Name'] as string;
-		this.mediaType = data['MediaType'] as string;
-		this.resolution = data['Resolution'] as string;
-		this.size = data['Size'] as number;
-		this.monitorCount = data['MonitorCount'] as number;
-		this.lastUpdatedTime = new Date(data['LastUpdatedTime'] as string);
-		this.createdSource = data['CreatedSource'] as string;
-		this.status = data['Status'] as number;	
-		this.playCountPerHour = data['PlayCountPerHour'] == null ? null : data['PlayCountPerHour'] as number;
-		this.isHasValidity = data['IsHasValidity'] == null ? false : data['IsHasValidity'] as boolean;
-		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string);
-		this.validEndDate = data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
-		this.userAccount = data['UserAccount'] as string;
-		this.id = data['Id'] as number;
+		this.name = data['name'] as string;
+		this.mediaType = data['mediaType'] as string;
+		this.resolution = data['resolution'] as string;
+		this.size = data['size'] as number;
+		this.monitorCount = data['monitorCount'] as number;
+		// this.lastUpdatedTime = new Date(data['lastUpdatedTime'] as string);
+		this.createdSource = data['createdSource'] as string;
+		this.status = data['status'] as number;	
+		this.playCountPerHour = data['playCountPerHour'] == null ? null : data['playCountPerHour'] as number;
+		this.isHasValidity = data['isHasValidity'] == null ? false : data['isHasValidity'] as boolean;
+		this.validStartDate = data['validStartDate'] == null ? null :  new Date(data['validStartDate'] as string);
+		this.validEndDate = data['validEndDate'] == null ? null :  new Date(data['validEndDate'] as string);
+		this.userAccount = data['userAccount'] as string;
+		this.id = data['id'] as number;
 	}
 	
 	toModel() {
 		return {
-			Name: this.name,
-			MediaType: this.mediaType,
-			Resolution: this.resolution,
-			Size: this.size,
-			MonitorCount: this.monitorCount,
-			LastUpdatedTime: this.lastUpdatedTime.toISOString(),
-			CreatedSource: this.createdSource,
-			Status: this.status,
-			UserAccount: this.userAccount,
-			Id: this.id
+			name: this.name,
+			mediaType: this.mediaType,
+			resolution: this.resolution,
+			size: this.size,
+			monitorCount: this.monitorCount,
+			// lastUpdatedTime: this.lastUpdatedTime.toISOString(),
+			createdSource: this.createdSource,
+			status: this.status,
+			playCountPerHour = this.playCountPerHour;
+			isHasValidity = this.isHasValidity;
+			validStartDate = this.validStartDate;
+			validEndDate = this.validEndDate;
+			userAccount: this.userAccount,
+			id: this.id
 		}
 	}
 }

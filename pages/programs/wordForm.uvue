@@ -79,7 +79,7 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager, ProgramFolder } from './FileManager.uts';
+	import { FileManager, ProgramFolder } from './fileManager.uts';
 	import  { BaseComponent, WordComponent } from './mediaConfig.uts'
 	export default {
 		props: {
