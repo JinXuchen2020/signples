@@ -1,6 +1,6 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { MediaConfig } from './mediaConfig.uts'
-import { APIS, postApi } from '@/api/config.uts'
+import { APIS } from '@/api/config.uts'
 import { Ziper } from "@/uni_modules/ns-unzip"
 import { request } from '@/utils/http/index'
 
@@ -88,7 +88,7 @@ export class FileManager {
 					"resolution": `${width}*${height}`,
 					"size": 0,
 					"monitorCount": 0,
-					// "lastUpdatedTime": new Date().toISOString(),
+					"lastUpdatedTime": new Date().toISOString(),
 					"createdSource": "admin",
 					"status": 0,
 					"playCountPerHour": null,

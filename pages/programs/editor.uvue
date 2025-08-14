@@ -233,7 +233,7 @@
 	
 	import { routeGoto } from '@/common/router.uts'
 	import { FileManager, MediaStoreFolder } from './fileManager.uts'
-	import { APIS, postApi, getApi } from '@/api/config.uts'
+	import { APIS } from '@/api/config.uts'
 	import { request } from '@/utils/http/index'
 	
 	import VideoForm from './videoForm.uvue'
@@ -591,12 +591,12 @@
 				if (playbackRecords != null) {
 					for (let record of playbackRecords){
 						record.PlaySuccess = false;
-						const result = await postApi(APIS.playbackRecord.save as string, record);
+						const result = await request("POST", APIS.playbackRecord.save as string, record);
 						console.log(result);
 					}
 				}
 				
-				await postApi(APIS.playbackRecord.save as string, playRecord);
+				await request("POST", APIS.playbackRecord.save as string, playRecord);
 			}
 			else {
 				uni.showToast({

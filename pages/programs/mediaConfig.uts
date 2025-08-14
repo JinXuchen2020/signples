@@ -34,7 +34,7 @@ export class Program {
 	resolution: string;
 	size: number;
 	monitorCount: number;
-	// lastUpdatedTime: Date;
+	lastUpdatedTime: Date;
 	createdSource?: string;
 	status: number;
 	playCountPerHour?: number;
@@ -50,7 +50,7 @@ export class Program {
 		this.resolution = data['resolution'] as string;
 		this.size = data['size'] as number;
 		this.monitorCount = data['monitorCount'] as number;
-		// this.lastUpdatedTime = new Date(data['lastUpdatedTime'] as string);
+		this.lastUpdatedTime = new Date(data['lastUpdatedTime'] as string);
 		this.createdSource = data['createdSource'] as string;
 		this.status = data['status'] as number;	
 		this.playCountPerHour = data['playCountPerHour'] == null ? null : data['playCountPerHour'] as number;
@@ -68,7 +68,7 @@ export class Program {
 			resolution: this.resolution,
 			size: this.size,
 			monitorCount: this.monitorCount,
-			// lastUpdatedTime: this.lastUpdatedTime.toISOString(),
+			lastUpdatedTime: this.lastUpdatedTime.toISOString(),
 			createdSource: this.createdSource,
 			status: this.status,
 			playCountPerHour = this.playCountPerHour;

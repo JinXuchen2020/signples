@@ -108,7 +108,7 @@
 		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
 		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
 	}
-	import { APIS, postApi, getApi } from '@/api/config.uts'
+	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index'
 	import { FileManager} from './fileManager.uts'
@@ -268,12 +268,12 @@
 						if (playbackRecords != null) {
 							for (let record of playbackRecords){
 								record.PlaySuccess = false;
-								const result = await postApi(APIS.playbackRecord.save as string, record);
+								const result = await request('POST', APIS.playbackRecord.save as string, record);
 								console.log(result);
 							}
 						}
 						
-						await postApi(APIS.playbackRecord.save as string, playRecord);
+						await request('POST', APIS.playbackRecord.save as string, playRecord);
 					}
 					else {
 						uni.showToast({
