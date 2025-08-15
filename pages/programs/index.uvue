@@ -129,7 +129,7 @@
 				programList: [] as Array<UTSJSONObject>,
 				prePushProgram: {} as UTSJSONObject,
 				deviceList: [] as Array<UTSJSONObject>,
-				preDevice: [] as Array<String>,
+				preDevice: [] as Array<string>,
 				fileManager: {} as FileManager
 			}
 		},
@@ -245,48 +245,7 @@
 					return;
 				}
 				
-				let pushResult = true;
-				
-				for (const snCode of this.preDevice) {
-					let playRecord = { 
-						MediaName: currentConfig.program.name, 
-						MediaType: currentConfig.program.mediaType, 
-						MonitorSnCode: snCode, 
-						PlaySuccess: false,
-						IsTimerPlay: false, 
-						NextPlayTime: new Date().toISOString() 
-					};
-					const sendResult = await this.fileManager.sendProgram(programData, snCode);
-					if (sendResult) {
-						playRecord.PlaySuccess = true;
-						
-						const apiUrl = APIS.playbackRecord.getAll as string;
-						const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
-						const result = await request('GET', apiUrl + params, {});
-						const playbackRecords = result as Array<UTSJSONObject>;
-						console.log(playbackRecords);
-						if (playbackRecords != null) {
-							for (let record of playbackRecords){
-								record.PlaySuccess = false;
-								const result = await request('POST', APIS.playbackRecord.save as string, record);
-								console.log(result);
-							}
-						}
-						
-						await request('POST', APIS.playbackRecord.save as string, playRecord);
-					}
-					else {
-						uni.showToast({
-							icon: 'none',
-							title: `设备：${snCode} 发布命令执行失败`,
-							duration: 3000,
-							success: () => { 
-							}
-						})
-						
-						pushResult = false;
-					}
-				}
+				const pushResult = await this.fileManager.pushProgram(programData, this.preDevice);
 				
 				if (pushResult) {
 					const data = currentConfig.toModel();

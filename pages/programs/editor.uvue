@@ -568,48 +568,7 @@
 			return;
 		}
 		
-		let pushResult = true;
-		
-		for (const snCode of selectedDevices.value) {
-			let playRecord = { 
-				MediaName: mediaConfig.value!.program.name, 
-				MediaType: mediaConfig.value!.program.mediaType, 
-				MonitorSnCode: snCode, 
-				PlaySuccess: false,
-				IsTimerPlay: false, 
-				NextPlayTime: new Date().toISOString() 
-			};
-			const sendResult = await fileManager.sendProgram(programData, snCode);
-			if (sendResult) {
-				playRecord.PlaySuccess = true;
-				
-				const apiUrl = APIS.playbackRecord.getAll as string;
-				const params = "?PlaySuccess=true&MonitorSnCode=" + snCode;
-				const result = await request('GET', apiUrl + params, {});
-				const playbackRecords = result as Array<UTSJSONObject>;
-				console.log(playbackRecords);
-				if (playbackRecords != null) {
-					for (let record of playbackRecords){
-						record.PlaySuccess = false;
-						const result = await request("POST", APIS.playbackRecord.save as string, record);
-						console.log(result);
-					}
-				}
-				
-				await request("POST", APIS.playbackRecord.save as string, playRecord);
-			}
-			else {
-				uni.showToast({
-					icon: 'none',
-					title: `设备：${snCode} 发布命令执行失败`,
-					duration: 3000,
-					success: () => { 
-					}
-				})
-				
-				pushResult = false;
-			}
-		}
+		const pushResult = await fileManager.pushProgram(programData, selectedDevices.value);
 		
 		if (pushResult) {
 			const data = mediaConfig.value!.toModel();

@@ -101,7 +101,7 @@ export class FileManager {
 			}
 			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
 		}
-		
+
 		return new MediaConfig(configFileContent);
 	}
 	
@@ -265,7 +265,6 @@ export class FileManager {
 			console.log(JSON.stringify(dataObj));
 			
 			const res = await request("POST", APIS.sendCMD as string, dataObj);
-			console.log(res)
 			uni.hideLoading();
 			return res as boolean;
 		} 
@@ -274,6 +273,52 @@ export class FileManager {
 			uni.hideLoading();
 			return false;
 		}
+	}
+	
+	async pushProgram(programData: UTSJSONObject, snCodes: string[]){
+		let pushResult = true;
+		
+		for (const snCode of snCodes) {
+			let playRecord = { 
+				mediaName: programData.name, 
+				mediaType: programData.mediaType, 
+				monitorSnCode: snCode, 
+				playSuccess: false,
+				isTimerPlay: false, 
+				nextPlayTime: new Date().toISOString() 
+			};
+			
+			const sendResult = await this.sendProgram(programData, snCode);
+			if (sendResult) {
+				playRecord.playSuccess = true;
+				
+				const apiUrl = APIS.playbackRecord.getAll as string;
+				const params = "?playSuccess=true&monitorSnCode=" + snCode;
+				const result = await request('GET', apiUrl + params, {});
+				const playbackRecords = result as Array<UTSJSONObject>;
+				if (playbackRecords != null) {
+					for (let record of playbackRecords){
+						record.playSuccess = false;
+						await request('POST', APIS.playbackRecord.save as string, record);
+					}
+				}
+				
+				await request('POST', APIS.playbackRecord.save as string, playRecord);
+			}
+			else {
+				uni.showToast({
+					icon: 'none',
+					title: `设备：${snCode} 发布命令执行失败`,
+					duration: 3000,
+					success: () => { 
+					}
+				})
+				
+				pushResult = false;
+			}
+		}
+		
+		return pushResult;
 	}
 	
 	async capture(programName: string, pageName: string, canvas: UCanvas){
