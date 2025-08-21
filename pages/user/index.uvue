@@ -224,6 +224,7 @@
 								if(result.hasOwnProperty('data')){
 									this.userInfo = result['data'] as UTSJSONObject;
 									uni.setStorageSync('userInfo', this.userInfo as UTSJSONObject)
+									uni.setStorageSync('program-folder', `${uni.env.USER_DATA_PATH}/temp/program/${this.userInfo['account'] as string}`)
 									this.popupLogin = false;
 								}
 							}

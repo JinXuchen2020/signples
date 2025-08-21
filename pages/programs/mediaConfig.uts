@@ -1,6 +1,6 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { DraggableImage } from "./draggableRect.uts";
-import { ProgramFolder} from "./fileManager.uts";
+// import { ProgramFolder} from "./fileManager.uts";
 export class MediaConfig {
 	left: number;
 	top: number;
@@ -100,7 +100,7 @@ export class MediaPage{
 		this.name = data.Name as string;
 		this.type = data.Type as string;
 		this.order = data.Order as number;
-		this.thumbnailFilePath = data['ThumbnailFilePath'] == null ? '' : `${ProgramFolder}/${data.ThumbnailFilePath}`;
+		this.thumbnailFilePath = data['ThumbnailFilePath'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.ThumbnailFilePath}`;
 		this.isHasValidity = data.IsHasValidity as boolean;
 		this.validStartDate = data['ValidStartDate'] == null ? null :  new Date(data['ValidStartDate'] as string); 
 		this.validEndDate =  data['ValidEndDate'] == null ? null :  new Date(data['ValidEndDate'] as string);
@@ -145,7 +145,7 @@ export class MediaPage{
 			Name: this.name,
 			Type: this.type,
 			Order: this.order,
-			ThumbnailFilePath: this.thumbnailFilePath.replace(ProgramFolder + '/', ''),
+			ThumbnailFilePath: this.thumbnailFilePath.replace(uni.getStorageSync("program-folder") as string + '/', ''),
 			IsHasValidity: this.isHasValidity,
 			ValidStartDate: this.validStartDate?.toISOString(),
 			ValidEndDate: this.validStartDate?.toISOString(),
@@ -316,7 +316,7 @@ export class VideoComponent extends BaseComponent {
 		super(data);
 		this.playMode = data['PlayMode'] as string;
 		this.isClip = data['IsClip'] == null ? false : data['IsClip'] as boolean;
-		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
+		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.thumbFilePath != null) {
@@ -342,7 +342,7 @@ export class VideoComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source.replace(ProgramFolder + '/', ''),
+			Source: this.source.replace(uni.getStorageSync("program-folder") as string + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,
@@ -376,7 +376,7 @@ export class ImageComponent extends BaseComponent {
 		super(data);
 		this.effectDuration = data['EffectDuration'] as number;
 		this.componentEffect = data['ComponentEffect'] as string;
-		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
+		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.source.length > 0) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
@@ -416,7 +416,7 @@ export class ImageComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source.replace(ProgramFolder + '/', ''),
+			Source: this.source.replace(uni.getStorageSync("program-folder") as string + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,
@@ -583,7 +583,7 @@ export class WordComponent extends BaseComponent {
 		super(data);
 		this.pageDuration = data.PageDuration as number;
 		this.isShowInfo = this.source.length > 0 ? true : false;
-		this.source = data['Source'] == null ? '' : `${ProgramFolder}/${data.Source}`;
+		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		if (this.thumbFilePath != null) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.thumbFilePath);
@@ -624,7 +624,7 @@ export class WordComponent extends BaseComponent {
 			Top: this.top,
 			Width: this.width,
 			Height: this.height,
-			Source: this.source.replace(ProgramFolder + '/', ''),
+			Source: this.source.replace(uni.getStorageSync("program-folder") as string + '/', ''),
 			Timeline: this.timeLine,
 			PlayCount: this.playCount,
 			PlayDuration: this.playDuration,

@@ -94,7 +94,7 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager, ProgramFolder } from './fileManager.uts';
+	import { FileManager } from './fileManager.uts';
 	import { BaseComponent, ImageComponent } from './mediaConfig.uts'
 	export default {
 		props: {
@@ -238,7 +238,7 @@
 						for (let i = 0; i < tempFiles.length; i++) {
 							const tempFile : ChooseMediaTempFile = tempFiles[i];
 							const fileName = tempFile.tempFilePath.split("/")[tempFile.tempFilePath.split("/").length - 1];
-							const destPath =  `${ProgramFolder}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+							const destPath =  `${uni.getStorageSync("program-folder") as string}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
 							this.fileManager!.copyFile(tempFile.tempFilePath, destPath).then(res => {
 								this.formData!.source = res;
 								this.formData!.isShowInfo = true;
@@ -269,7 +269,7 @@
 				}
 				
 				const fileName = item.getString('src')!.split("/")[item.getString('src')!.split("/").length - 1];
-				const destPath =  `${ProgramFolder}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+				const destPath =  `${uni.getStorageSync("program-folder") as string}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
 				this.fileManager!.copyFile(item.getString('src')!, destPath).then((res: string) => {
 					this.formData!.source = res;
 					this.formData!.isShowInfo = true;

@@ -1,27 +1,28 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
-import { MediaConfig } from './mediaConfig.uts'
-import { APIS } from '@/api/config.uts'
-import { Ziper } from "@/uni_modules/ns-unzip"
-import { request } from '@/utils/http/index'
+import { MediaConfig } from './mediaConfig.uts';
+import { APIS } from '@/api/config.uts';
+import { Ziper } from "@/uni_modules/ns-unzip";
+import { request } from '@/utils/http/index';
 
-export const ProgramFolder = `${uni.env.USER_DATA_PATH}/temp/program/${(uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string}`;
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 export class FileManager {
 	fs: FileSystemManager;
 	token: string;
+	programFolder: string;
 	
 	constructor(){
 		this.fs = uni.getFileSystemManager();
 		this.token = uni.getStorageSync("token") as string;
+		this.programFolder = uni.getStorageSync('program-folder') as string;
 	}
 	
 	async getProgramList() {
 		let results: UTSJSONObject[] = [];
 		try {
-			const items = this.fs.readdirSync(ProgramFolder);
+			const items = this.fs.readdirSync(this.programFolder);
 			
 			items?.forEach(item => {
-				const itemPath = `${ProgramFolder}/${item}`;
+				const itemPath = `${this.programFolder}/${item}`;
 				this.fs.stat({
 					path: itemPath,
 					recursive: false,
@@ -60,7 +61,7 @@ export class FileManager {
 	}
 	
 	async deleteProgram(programName: string) {
-		const destPath = `${ProgramFolder}/${programName}`;
+		const destPath = `${this.programFolder}/${programName}`;
 		this.fs.rmdirSync(destPath, true);
 	}
 	
@@ -70,14 +71,14 @@ export class FileManager {
 	}
 	
 	async getProgramConfig(programName: string, width: string, height: string) {
-		const programFolder = `${ProgramFolder}/${programName}`;
-		const configFilePath = `${programFolder}/MediaConfig.json`;
+		const newProgramFolder = `${this.programFolder}/${programName}`;
+		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
 		if (await this.IsExist(configFilePath)) {
 			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
 			configFileContent = JSON.parse(content) as UTSJSONObject;
 		} else {
-			await this.createFolder(programFolder);
+			await this.createFolder(newProgramFolder);
 			configFileContent = {
 				"Left": 0.0,
 				"Top": 0.0,
@@ -106,19 +107,19 @@ export class FileManager {
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject) {
-		const programFolder = `${ProgramFolder}/${programName}`;
+		const programFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
 	async zipProgram(programName: string) {
-		let sourcePath = `${ProgramFolder}/${programName}`;
+		let sourcePath = `${this.programFolder}/${programName}`;
 		let packageName = UTSAndroid.getAppContext()?.packageName
 		if (sourcePath.startsWith("unifile://")) {
 			sourcePath = sourcePath.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
 		}
-		let zipFile = `${ProgramFolder}/${programName}.zip`;
+		let zipFile = `${this.programFolder}/${programName}.zip`;
 		if(await this.IsExist(zipFile)){
 			this.fs.unlinkSync(zipFile);
 		}
@@ -143,7 +144,7 @@ export class FileManager {
 	}	
 	
 	async readZipFile(programName: string) {
-		const destPath = `${ProgramFolder}/${programName}.zip`;
+		const destPath = `${this.programFolder}/${programName}.zip`;
 		
 		if(!await this.IsExist(destPath)){
 			await this.zipProgram(programName);
@@ -166,7 +167,7 @@ export class FileManager {
 	}
 	
 	async uploadProgram(programName: string) : Promise<UploadFileSuccess> {
-		let zipFile = `${ProgramFolder}/${programName}.zip`;
+		let zipFile = `${this.programFolder}/${programName}.zip`;
 		
 		const fileExists = await this.IsExist(zipFile);
 		
@@ -322,7 +323,7 @@ export class FileManager {
 	}
 	
 	async capture(programName: string, pageName: string, canvas: UCanvas){
-		const thumbnailPath = `${ProgramFolder}/${programName}/${pageName}/thumbnail.png`;
+		const thumbnailPath = `${this.programFolder}/${programName}/${pageName}/thumbnail.png`;
 		const dataString = canvas.toDataURL();
 		const base64Data = dataString.split(',')[1];
 		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
