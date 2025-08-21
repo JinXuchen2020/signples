@@ -189,7 +189,7 @@
 						for (let i = 0; i < tempFiles.length; i++) {
 							const tempFile : ChooseFileTempFile = tempFiles[i];
 							const fileName = tempFile.path.split("/")[tempFile.path.split("/").length - 1];
-							const destPath =  `${ProgramFolder}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+							const destPath =  `${uni.getStorageSync("program-folder") as string}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
 							this.fileManager!.copyFile(tempFile.path, destPath).then(res => {
 								this.formData!.source = res;
 								this.formData!.thumbFilePath = this.getThumbnail(tempFile.path);
