@@ -133,16 +133,8 @@
 </template>
 
 <script lang="uts">
-	function getCurrentTimeYYMMDDHHmmss() {
-		  const now = new Date();
-		  const year = now.getFullYear().toString();       // YYYY
-		  const month = (now.getMonth() + 1).toString().padStart(2, '0'); // MM
-		  const day = (now.getDate()).toString().padStart(2, '0');        // DD
-		  const hours = (now.getHours()).toString().padStart(2, '0');     // HH
-		  const minutes = (now.getMinutes()).toString().padStart(2, '0'); // mm
-		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
-		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
-	}
+	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
+	import { useState } from '@/store/index.uts'
 	export default {
 		data() {
 			return {

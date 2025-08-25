@@ -97,6 +97,8 @@
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
+	import { useState }  from '@/store/index.uts'
+	import { request } from '@/utils/http/index'
 	export default {
 		data() {
 			return {
@@ -113,30 +115,36 @@
 			});
 		},
 		onShow() {
-			let that = this
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log('userindex token=', res)
-				  const token = res.data ?? '';
-				  if(token !== ''){
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log('userindex userInfo', r)
-							const userInfo = r.data ?? {};
-					  		that.userInfo = userInfo as UTSJSONObject;
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				  }
-			  },
-			  fail: function(err) {
-			    console.log('读取失败token或不存在', err);
-			  }
-			});
+			const { state } = useState()
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				this.userInfo = state.loginUser;
+			}
+			else {
+				console.log('读取失败userInfo或不存在', err);
+			}
+			// uni.getStorage({
+			//   key: 'token',
+			//   success: function(res) {
+			// 	  console.log('userindex token=', res)
+			// 	  const token = res.data ?? '';
+			// 	  if(token !== ''){
+			// 		  uni.getStorage({
+			// 		    key: 'userInfo',
+			// 		    success: function(r) {
+			// 				console.log('userindex userInfo', r)
+			// 				const userInfo = r.data ?? {};
+			// 		  		that.userInfo = userInfo as UTSJSONObject;
+			// 		    },
+			// 		    fail: function(err) {
+			// 		      console.log('读取失败userInfo或不存在', err);
+			// 		    }
+			// 		  });
+			// 	  }
+			//   },
+			//   fail: function(err) {
+			//     console.log('读取失败token或不存在', err);
+			//   }
+			// });
 		},
 		methods: {
 			//跳转翻译
@@ -145,7 +153,6 @@
 					url:"/pages/user/language"
 				})	
 			},
-			
 			getActiveUserAndDeviceFromStorage(){
 				const activeUser = uni.getStorageSync('active-user');
 				const activeDevice = uni.getStorageSync('active-device');
@@ -156,6 +163,8 @@
 					uni.showLoading({
 						title: ''
 					});
+					
+					const { setToken } = useState()
 					uni.request({
 						url: APIS.login as string,
 						method: "POST",
@@ -172,8 +181,11 @@
 									if(d.hasOwnProperty('userId')){
 										const userId = parseInt(d['userId'] as string);
 										const token = d['token'] as String; 
-										uni.setStorageSync('token', token);
-										this.getAccountInfo(userId, token);
+										
+										setToken(token);
+										// uni.setStorageSync('token', token);
+										// this.getAccountInfo(userId, token);
+										this.getAccountInfo(userId);
 									}
 								}else{
 									uni.showToast({
@@ -206,34 +218,42 @@
 					console.log(err)
 				}
 			},
-			async getAccountInfo(id: Number, token: String){
+			// async getAccountInfo(id: Number, token: String){
+			async getAccountInfo(id: Number){
 				try {
 					uni.showLoading({
 						title: ''
 					});
-					uni.request({
-						url: APIS.userInfo as string + id,
-						method: "GET",
-						header: {
-							'Authorization': "Bearer " + token
-						},
-						data:{},
-						success: (res) => {
-							if(res.statusCode == 200){
-								const result = res.data as UTSJSONObject
-								if(result.hasOwnProperty('data')){
-									this.userInfo = result['data'] as UTSJSONObject;
-									uni.setStorageSync('userInfo', this.userInfo as UTSJSONObject)
-									uni.setStorageSync('program-folder', `${uni.env.USER_DATA_PATH}/temp/program/${this.userInfo['account'] as string}`)
-									this.popupLogin = false;
-								}
-							}
-							uni.hideLoading();
-						},
-						fail: () => {
+					
+					const { setLoginUser, setProgramFolder}  = useState()
+					const result = await request('GET', APIS.user.getString('getById')!.replace('{id}', id), {}) as UTSJSONObject;
+					setLoginUser(result);
+					setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${result['account'] as string}`);
+					this.popupLogin = false;
+					uni.hideLoading();
+					// uni.request({
+					// 	url: APIS.userInfo as string + id,
+					// 	method: "GET",
+					// 	header: {
+					// 		'Authorization': "Bearer " + token
+					// 	},
+					// 	data:{},
+					// 	success: (res) => {
+					// 		if(res.statusCode == 200){
+					// 			const result = res.data as UTSJSONObject
+					// 			if(result.hasOwnProperty('data')){
+					// 				this.userInfo = result['data'] as UTSJSONObject;
+					// 				uni.setStorageSync('userInfo', this.userInfo as UTSJSONObject)
+					// 				uni.setStorageSync('program-folder', `${uni.env.USER_DATA_PATH}/temp/program/${this.userInfo['account'] as string}`)
+					// 				this.popupLogin = false;
+					// 			}
+					// 		}
+					// 		uni.hideLoading();
+					// 	},
+					// 	fail: () => {
 							
-						}
-					});
+					// 	}
+					// });
 				} catch (err){
 					console.log(err)
 				}
@@ -244,31 +264,40 @@
 				});
 			},
 			handleLogout(){
-				let that = this
+				const { setToken, setLoginUser}  = useState()
 				uni.showModal({
 					title: "确定要退出登录吗?",
 					success: (res: UniShowModalResult) => {
 						if(res.confirm){
-							uni.removeStorage({
-								key: 'token',
-								success: function(res) {
-									uni.showToast({
-										icon: 'none',
-										title: '已退出登录',
-										duration: 2000,
-										success: () => {
-											uni.removeStorage({
-												key: 'device-info',
-												success: function(res) {
-													setTimeout(()=>{
-														that.userInfo = {} as UTSJSONObject
-													}, 2000)
-												}
-											})
-										}
-									})
+							setToken('')
+							uni.showToast({
+								icon: 'none',
+								title: '已退出登录',
+								duration: 2000,
+								success: () => {
+									setLoginUser({})
 								}
 							})
+							// uni.removeStorage({
+							// 	key: 'token',
+							// 	success: function(res) {
+							// 		uni.showToast({
+							// 			icon: 'none',
+							// 			title: '已退出登录',
+							// 			duration: 2000,
+							// 			success: () => {
+							// 				uni.removeStorage({
+							// 					key: 'device-info',
+							// 					success: function(res) {
+							// 						setTimeout(()=>{
+							// 							that.userInfo = {} as UTSJSONObject
+							// 						}, 2000)
+							// 					}
+							// 				})
+							// 			}
+							// 		})
+							// 	}
+							// })
 						}
 					}
 				})

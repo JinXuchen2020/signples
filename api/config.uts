@@ -14,6 +14,7 @@ export type ApiEndpoints = {
   uploadZip: string;
   sendCMD: string;
   playbackRecord: UTSJSONObject;
+  user:UTSJSONObject;
 };
 
 export const APIS: ApiEndpoints = {
@@ -32,6 +33,11 @@ export const APIS: ApiEndpoints = {
   playbackRecord: {
 	  getAll: BASE_URL + '/playbackRecord/all',
 	  save: BASE_URL + '/playbackRecord/save',
+  },
+  user: {
+  	  getAll: BASE_URL + '/user/all',
+	  getById: BASE_URL + '/user/{id}',
+  	  save: BASE_URL + '/user/save',
   }
 };
 

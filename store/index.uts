@@ -1,13 +1,47 @@
 import { reactive } from 'vue'
 
 export type State = {
-	program: UTSJSONObject
+	token: string,
+	loginUser: UTSJSONObject,
+	program: UTSJSONObject,
+	programFolder: string,
+	activeDevice: UTSJSONObject
 }
 
-export const state = reactive({
+const state = reactive<State>({
+	token: ''
+	loginUser: {}
 	program: {}
+	programFolder: ''
+	activeDevice: {}
 } as State)
 
-export const setProgram = (program: UTSJSONObject) => {
-	state.program = program
+export function useState() {
+	const setToken = (token: string) => {
+		state.token = token
+	}
+	const setProgram = (program: UTSJSONObject) => {
+		state.program = program
+	}
+	
+	const setProgramFolder = (folderPath: string) => {
+		state.programFolder = folderPath;
+	}
+	
+	const setActiveDevice = (device: UTSJSONObject) => {
+		state.activeDevice = device
+	}
+  
+	const setLoginUser = (userInfo: UTSJSONObject) => {
+		state.loginUser = userInfo
+	}
+
+	return {
+		state,
+		setProgram,
+		setProgramFolder,
+		setLoginUser,
+		setToken,
+		setActiveDevice
+	}
 }
