@@ -40,7 +40,7 @@
 							<text class="desc">{{ $t('index.Choice') }}</text>
 						</view>
 						<view class="button-box">
-							<button class="button" size="mini" @click="handleRouteGoto('/pages/index/users')">
+							<button class="button" size="mini" @click="handleGotoSelectDevice()">
 								+ {{ $t('index.SelectDevice') }}
 							</button>
 						</view>
@@ -69,7 +69,7 @@
 			<view class="space-box"></view>
 			<view class="home-menus">
 				<view class="column">
-					<view class="menu-box " @click="handleRouteGoto('/pages/programs/index')">
+					<view class="menu-box " @click="handleGotoSelectProgram()">
 						<view class="text-box">
 							<text class="menu-name">  {{ $t("index.ProgramManagement") }}</text>
 							<text class="menu-desc"> {{ $t("index.ProgramRelease") }}</text>
@@ -135,6 +135,7 @@
 <script lang="uts">
 	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
 	import { useState } from '@/store/index.uts'
+	import { routeGoto } from '@/common/router.uts'
 	export default {
 		data() {
 			return {
@@ -159,33 +160,41 @@
 		},
 		onShow(){
 			let that = this
-			//获取当前有没有用户登录
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log(res)
-				  const token = res.data ?? '';
-				  this.token = token as String
-				  if(token !== ''){
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log(r)
-							const userInfo = r.data ?? {};
-					  		this.userInfo = userInfo as UTSJSONObject;
-							that.getActiveUserAndDeviceFromStorage();
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				  }
-			  },
-			  fail: function(err) {
-			    console.log('读取失败token或不存在', err);
+			const { state } = useState();
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				that.userInfo = state.loginUser;
+				that.getActiveUserAndDeviceFromStorage();
+			}
+			else {
+				console.log('读取失败userInfo或不存在');
+			}
+			// //获取当前有没有用户登录
+			// uni.getStorage({
+			//   key: 'token',
+			//   success: function(res) {
+			// 	  console.log(res)
+			// 	  const token = res.data ?? '';
+			// 	  this.token = token as String
+			// 	  if(token !== ''){
+			// 		  uni.getStorage({
+			// 		    key: 'userInfo',
+			// 		    success: function(r) {
+			// 				console.log(r)
+			// 				const userInfo = r.data ?? {};
+			// 		  		this.userInfo = userInfo as UTSJSONObject;
+			// 				that.getActiveUserAndDeviceFromStorage();
+			// 		    },
+			// 		    fail: function(err) {
+			// 		      console.log('读取失败userInfo或不存在', err);
+			// 		    }
+			// 		  });
+			// 	  }
+			//   },
+			//   fail: function(err) {
+			//     console.log('读取失败token或不存在', err);
 				
-			  }
-			});
+			//   }
+			// });
 		},
 		methods: {
 			getActiveUserAndDeviceFromStorage(){
@@ -202,17 +211,17 @@
 			},
 			handleSubmit(){
 				this.createPopup = false;
-				this.handleRouteGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
+				routeGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
 			},
 			handleGotoEditDevice(){
 				if(JSON.stringify(this.activeDevice) != '{}'){
-					this.handleRouteGoto('/pages/devices/edit?device_id=' + this.activeDevice['id']);
+					routeGoto('/pages/devices/edit?device_id=' + this.activeDevice['id']);
 				}else{
 					uni.showModal({
 						title: "请您先选择设备?",
 						success: (res: UniShowModalResult) => {
 							if(res.confirm){
-								this.handleRouteGoto('/pages/index/users');
+								routeGoto('/pages/index/users');
 							}
 						}
 					})
@@ -225,29 +234,14 @@
 				this.activeUser = {} as UTSJSONObject
 				this.activeDevice = {} as UTSJSONObject
 				
-				this.handleRouteGoto('/pages/index/users')
+				routeGoto('/pages/index/users')
 				
 			},
-			handleRouteGoto(route: string): void{
-				let token = uni.getStorageSync("token")
-				//判断是否登录
-				if(token == ''){
-					uni.showModal({
-						title: "尚未登录，请您先登录?",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								uni.switchTab({
-									url: '/pages/user/index'
-								});
-							}
-						}
-					})
-					return;
-				}else{
-					uni.navigateTo({
-						url: route
-					});
-				}
+			handleGotoSelectDevice(){
+				routeGoto('/pages/index/users');
+			},
+			handleGotoSelectProgram(){
+				routeGoto('/pages/programs/index');
 			},
 			handleCloudManage(){
 				uni.showToast({

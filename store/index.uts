@@ -8,6 +8,15 @@ export type State = {
 	activeDevice: UTSJSONObject
 }
 
+export type UserState = {
+	state: State,
+	setToken: (token: string) => void,
+	setProgram:(program: UTSJSONObject) => void,
+	setProgramFolder: (folderPath: string) => void,
+	setActiveDevice: (device: UTSJSONObject) => void,
+	setLoginUser: (userInfo: UTSJSONObject) => void
+}
+
 const state = reactive<State>({
 	token: ''
 	loginUser: {}
@@ -19,21 +28,26 @@ const state = reactive<State>({
 export function useState() {
 	const setToken = (token: string) => {
 		state.token = token
+		uni.setStorageSync('token', token);
 	}
 	const setProgram = (program: UTSJSONObject) => {
 		state.program = program
+		uni.setStorageSync('program', program);
 	}
 	
 	const setProgramFolder = (folderPath: string) => {
 		state.programFolder = folderPath;
+		uni.setStorageSync('program-folder', folderPath);
 	}
 	
 	const setActiveDevice = (device: UTSJSONObject) => {
 		state.activeDevice = device
+		uni.setStorageSync('active-device', device);
 	}
   
 	const setLoginUser = (userInfo: UTSJSONObject) => {
 		state.loginUser = userInfo
+		uni.setStorageSync('userInfo', userInfo);
 	}
 
 	return {
@@ -43,5 +57,5 @@ export function useState() {
 		setLoginUser,
 		setToken,
 		setActiveDevice
-	}
+	} as UserState
 }

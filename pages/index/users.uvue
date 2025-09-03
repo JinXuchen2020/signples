@@ -54,6 +54,7 @@
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
+	import { useState } from '@/store/index.uts'
 	import { routeGoto } from '@/common/router.uts'
 	
 	import { request } from '@/utils/http/index'
@@ -76,78 +77,20 @@
 		},
 		onShow() {
 			let that = this
-			//获取当前有没有用户登录
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log('token res', res)
-				  const token = res.data ?? '';
-				  if(token !== ''){
-					  that.token = token as String;
-					  console.log('this.token =', that.token)
-					  // this.getDeviceListPage();
-					  that.getUserList();
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log(r)
-							const userInfo = r.data ?? {};
-					  		this.userInfo = userInfo as UTSJSONObject;
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				  }
-			  },
-			  fail: function(err) {
-			    console.log('读取失败token或不存在，请先登录', err);
-				this.userList =  [] as Array<UTSJSONObject>;
-				uni.showModal({
-					title: "尚未登录，请您先登录?",
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							uni.removeStorage({
-								key: 'token',
-								success: function(res) {
-								}
-							});
-							uni.switchTab({
-								url: '/pages/user/index'
-							});
-						}
-					}
-				})
-			  }
-			});
+			const { state } = useState();
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				that.userInfo = state.loginUser;
+			}
+			else {
+				console.log('读取失败userInfo或不存在');
+			}
 		},
 		methods: {
-			handleRouteGoto(route: string): void{
-				let token = uni.getStorageSync("token")
-				//判断是否登录
-				if(token == ''){
-					uni.showModal({
-						title: "尚未登录，请您先登录??",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								uni.switchTab({
-									url: '/pages/user/index'
-								});
-							}
-						}
-					})
-					return;
-				}else{
-					uni.navigateTo({
-						url: route
-					});
-				}
-			},
 			async getUserList() {
 			  try {
-				  const person: UTSJSONObject = {
-				          agentAccount:  this.userInfo['account'],
-				        }
+				const person: UTSJSONObject = {
+					agentAccount:  this.userInfo['account'],
+				}
 			    const result = await request('GET', APIS.usersAll as string, person)
 				const d = result as Array<UTSJSONObject>;
 				console.log('d', d);
@@ -162,8 +105,7 @@
 				uni.showModal({
 					title: "确定要删除该用户吗?",
 					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							
+						if(res.confirm){							
 							try {
 								uni.showLoading({
 									title: ''

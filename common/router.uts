@@ -1,25 +1,27 @@
+import { useState }  from '@/store/index.uts'
 export function routeGoto(route: string): void{
 	console.log('routeGoto=', route)
-		let token = uni.getStorageSync("token")
-		//判断是否登录
-		if(token == ''){
-			uni.showModal({
-				title: "尚未登录，请您先登录??",
-				success: (res: UniShowModalResult) => {
-					if(res.confirm){
-						uni.switchTab({
-							url: '/pages/user/index'
-						});
-					}
+	const { state } = useState()
+	let token = state.token;
+	//判断是否登录
+	if(token == ''){
+		uni.showModal({
+			title: "尚未登录，请您先登录??",
+			success: (res: UniShowModalResult) => {
+				if(res.confirm){
+					uni.switchTab({
+						url: '/pages/user/index'
+					});
 				}
-			})
-			return;
-		}else{
-			uni.navigateTo({
-				url: route
-			});
-		}
+			}
+		})
+		return;
+	}else{
+		uni.navigateTo({
+			url: route
+		});
 	}
+}
 	
 export default {
   routeGoto

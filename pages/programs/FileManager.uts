@@ -3,6 +3,7 @@ import { MediaConfig } from './mediaConfig.uts';
 import { APIS } from '@/api/config.uts';
 import { Ziper } from "@/uni_modules/ns-unzip";
 import { request } from '@/utils/http/index';
+import { useState }  from '@/store/index.uts'
 
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 export class FileManager {
@@ -11,9 +12,10 @@ export class FileManager {
 	programFolder: string;
 	
 	constructor(){
+		const { state } = useState();
 		this.fs = uni.getFileSystemManager();
-		this.token = uni.getStorageSync("token") as string;
-		this.programFolder = uni.getStorageSync('program-folder') as string;
+		this.token = state.token;
+		this.programFolder = state.programFolder;
 	}
 	
 	async getProgramList() {
@@ -305,6 +307,24 @@ export class FileManager {
 				}
 				
 				await request('POST', APIS.playbackRecord.save as string, playRecord);
+				
+				const dataObj = {
+					cmd: 'CMD|PlayTime|',
+					data: playRecord
+					deviceSnCode: snCode
+				} as UTSJSONObject
+				
+				console.log(JSON.stringify(dataObj));
+				
+				const res = await request("POST", APIS.sendCMD as string, dataObj) as Boolean;
+				
+				if(!res) {
+					uni.showToast({
+						icon: 'none',
+						title: `设备：${snCode} 设置播放时间命令执行失败`,
+						duration: 3000,
+					})
+				}
 			}
 			else {
 				uni.showToast({

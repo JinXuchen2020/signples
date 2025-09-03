@@ -115,12 +115,12 @@
 			});
 		},
 		onShow() {
-			const { state } = useState()
+			const { state } = useState();
 			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
 				this.userInfo = state.loginUser;
 			}
 			else {
-				console.log('读取失败userInfo或不存在', err);
+				console.log('读取失败userInfo或不存在');
 			}
 			// uni.getStorage({
 			//   key: 'token',
@@ -226,7 +226,9 @@
 					});
 					
 					const { setLoginUser, setProgramFolder}  = useState()
-					const result = await request('GET', APIS.user.getString('getById')!.replace('{id}', id), {}) as UTSJSONObject;
+					const apiUrl = APIS.user.getString('getById')!;
+					const result = await request('GET', apiUrl.replace("{id}", `${id}`), {}) as UTSJSONObject;
+					this.userInfo = result;
 					setLoginUser(result);
 					setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${result['account'] as string}`);
 					this.popupLogin = false;

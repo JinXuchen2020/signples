@@ -98,20 +98,12 @@
 </template>
 
 <script lang="uts">
-	function getCurrentTimeYYMMDDHHmmss() {
-		  const now = new Date();
-		  const year = now.getFullYear().toString();       // YYYY
-		  const month = (now.getMonth() + 1).toString().padStart(2, '0'); // MM
-		  const day = (now.getDate()).toString().padStart(2, '0');        // DD
-		  const hours = (now.getHours()).toString().padStart(2, '0');     // HH
-		  const minutes = (now.getMinutes()).toString().padStart(2, '0'); // mm
-		  const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
-		  return `${year}${month}${day}${hours}${minutes}${seconds}`;
-	}
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index'
+	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index'
 	import { FileManager} from './fileManager.uts'
+	import { useState }  from '@/store/index.uts'
 	
 	export default {
 		data() {
@@ -138,35 +130,14 @@
 				title: this.$t('pages.programManagement')
 			});
 		},
-		onReady() {
-				
-		},
-		onShow(){
-			//获取当前有没有用户登录
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log(res)
-				  const token = res.data ?? '';
-				  this.token = token as String
-				  if(token !== ''){
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log(r)
-							const userInfo = r.data ?? {};
-					  		this.userInfo = userInfo as UTSJSONObject;
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				}
-			  },
-			  fail: function(err) {
-				console.log('读取失败token或不存在', err);				
-			  }
-			});			
+		onShow(){			
+			const { state } = useState();
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				this.userInfo = state.loginUser;
+			}
+			else {
+				console.log('读取失败userInfo或不存在');
+			}	
 			
 			this.init()
 			this.getDevices()
@@ -177,35 +148,14 @@
 				that.fileManager = new FileManager();
 				that.programList = await that.fileManager.getProgramList();
 			},
-			handleRouteGoto(route: string): void{
-				let token = uni.getStorageSync("token")
-				//判断是否登录
-				if(token == ''){
-					uni.showModal({
-						title: "尚未登录，请您先登录?",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								uni.switchTab({
-									url: '/pages/user/index'
-								});
-							}
-						}
-					})
-					return;
-				}else{
-					uni.navigateTo({
-						url: route
-					});
-				}
-			},
 			async getDevices(){
 				try {
 					uni.showLoading({
 						title: ''
 					});
-					const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
+					const activeUser = this.userInfo;
 					const person: UTSJSONObject = {}
-					const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount={activeUser.account}&eanbled=1`;
+					const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount=${activeUser.account}&enabled=1`;
 					const result = await request('GET', APIS.deviceListPage as string + param, person)
 					const d = result as Array<UTSJSONObject>;
 					this.deviceList = d
@@ -227,7 +177,7 @@
 				this.prePushProgram = item;
 			},
 			devicesChange(e: UniCheckboxGroupChangeEvent){
-				this.preDevice = e.detail.value as Array<String>;
+				this.preDevice = e.detail.value as Array<string>;
 			},
 			async handlePushProgram(){
 				const programName = this.prePushProgram.getString('name')!;
