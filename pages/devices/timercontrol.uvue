@@ -1,6 +1,28 @@
 <template>
 	<scroll-view class="app">
 		<form class="defalut-form" @submit="onFormSubmit">
+			<list-view class="uc-menus end">
+				<list-item class="uc-menus-item" @click="handleRouteGoto('/pages/devices/editbrightness?device_id=' + deviceId);">
+					<view class="uc-menus-item-title">
+						<text>{{$t('device.BrightnessAdjustment')}}</text>
+					</view>
+					<view class="input-box">
+						<text class="t">{{formData.value}}%</text>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item-2">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeZero.png" mode="widthFix"></image>
+					</view>
+					<slider 
+						v-model="formData.value" 
+						foreColor="#007aff"
+						style="width: 76%"></slider>
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeHigh.png" mode="widthFix"></image>
+					</view>
+				</list-item>
+			</list-view>
 			<view class="item">
 				<view class="label"><text class="t">{{ $t('device.RepeatMode') }}</text></view>
 				<view class="input-box">
@@ -40,51 +62,15 @@
 			<view class="item">
 				<view class="label"><text class="t">{{$t('device.ScheduleTime')}}</text></view>
 				<view class="input-box">
-					<input :value="formData?.validStartDate" class="uni-input" />
+					<input v-model="executeTime" class="uni-input" />
 				</view>
 			</view>
 			<view class="item">
-				<view class="label"><text class="t">{{$t('index.Resolution')}}</text></view>
-				<view class="input-box input-box-row">
-					<input class="uni-input shadow" name="width" type="number" v-model="width" :placeholder="$t('device.PleaseEnterWidth')" maxlength="-1" />
-					<view style="width: 24rpx;"></view>
-					<input class="uni-input shadow" name="height" type="number" v-model="height" :placeholder="$t('device.PleaseEnterHeight')" maxlength="-1" />
-				</view>
-			</view>
-	
-			<view class="item">
-				<view class="label"><text class="t">{{$t('device.DeviceValidityPeriod')}}</text></view>
-				<view class="input-box input-box-row">
-					<input 
-						class="uni-input shadow" 
-						:disabled="true" 
-						name="validStart" 
-						v-model="validStart" 
-						:placeholder="$t('device.PleaseSelectStartDate')" 
-						maxlength="-1" 
-						@click="acticeField='validStart'; popupDate = true;" />
-					<view style="width: 24rpx;"></view>
-					<input 
-						class="uni-input shadow" 
-						:disabled="true" 
-						name="validEnd" 
-						v-model="validEnd" 
-						:placeholder="$t('device.PleaseSelectEndDate')"  
-						maxlength="-1" 
-						@click="acticeField='validEnd';popupDate = true;" />
-				</view>
-			</view>
-			
-			<view class="item">
-				<view class="label"><text class="t">{{$t('index.ContactName')}}</text></view>
+				<view class="label"><text class="t">{{$t('device.ValidTime')}}</text></view>
 				<view class="input-box">
-					<input class="uni-input shadow" name="contactName" v-model="contactName" :placeholder="$t('device.PleaseEnterContactName')"   maxlength="-1" />
-				</view>
-			</view>
-			<view class="item">
-				<view class="label"><text class="t">{{$t('index.ContactPhone')}}</text></view>
-				<view class="input-box">
-					<input class="uni-input shadow" name="contactPhone" v-model="contactPhone" :placeholder="$t('device.PleaseEnterContactPhone')" maxlength="-1" />
+					<input type="text" v-model="formData.validDateStart" class="uni-input" />
+					<text>至</text>
+					<input type="text" v-model="formData.validDateEnd" class="uni-input" />
 				</view>
 			</view>
 			<view class="item">

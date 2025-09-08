@@ -123,4 +123,43 @@
 			height: 48rpx;
 		}
 	}
+	
+	.uc-menus{
+		border-radius: $uni-border-radius-lg;
+		background-color: $uni-bg-color;
+		padding: 0rpx 32rpx;
+		border-radius: $uni-border-radius-lg;
+		
+		.uc-menus-item{
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid #eeeeee;
+			padding: 32rpx 0rpx;
+			.uc-menus-item-title{
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+			}
+			.icon-box{
+				margin-right: 0 !important;
+			}
+			.input-box{
+				.t{
+					font-size: 24rpx;
+				}
+			}
+		}
+		.uc-menus-item.end{
+			border: none;
+		}
+		.uc-menus-item-2{
+			width: 100%;
+			padding: 0rpx 0rpx 32rpx 0;
+			border-bottom: 1px solid #eeeeee;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+	}
 </style>
