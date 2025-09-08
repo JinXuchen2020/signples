@@ -100,6 +100,7 @@
 			const { state } = useState();
 			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
 				that.userInfo = state.loginUser;
+				that.getDeviceList();
 			}
 			else {
 				console.log('读取失败userInfo或不存在');
@@ -135,88 +136,6 @@
 			  } catch (error) {
 			    console.error('获取设备列表失败', error)
 			  }
-			},
-			async getDeviceListPage(){
-				// try {
-				// 	uni.showLoading({
-				// 		title: ''
-				// 	});
-				// 	uni.request({
-				// 		url: APIS.deviceListPage as string,
-				// 		method: "GET",
-				// 		header: {
-				// 			'Authorization': "Bearer " + this.token
-				// 		},
-				// 		data:{
-							
-				// 		},
-				// 		success: (res) => {
-				// 			console.log('list=', res)
-				// 			uni.hideLoading();
-				// 			if(res.statusCode == 200){
-				// 				const result = res.data as UTSJSONObject;
-				// 				const currentDate = new Date().getTime();
-				// 				if(result['code'] == 200){
-				// 					const d = result['data'] as Array<UTSJSONObject>;
-				// 					const copyD: UTSJSONObject[] = [];
-				// 					      d.forEach((item: UTSJSONObject) => {
-				// 							  const nitem = item as UTSJSONObject;
-				// 							  const day = item['validEnd'] as String;
-				// 							  const daynum = new Date(day).getTime();
-				// 							  if(currentDate > daynum){
-				// 								  nitem['isvalidEnd'] = true;
-				// 							  }else{
-				// 								  nitem['isvalidEnd'] = false;
-				// 							  }
-				// 					        copyD.push(nitem);
-				// 					      });
-				// 					console.log('copyD', copyD)
-				// 					this.deviceList = copyD
-				// 				}else if(result['code'] == 401){
-				// 					uni.removeStorage({
-				// 						key: 'token',
-				// 						success: function(res) {
-				// 							uni.showModal({
-				// 								title: "尚未登录，请您先登录?",
-				// 								success: (res: UniShowModalResult) => {
-				// 									if(res.confirm){
-				// 										uni.switchTab({
-				// 											url: '/pages/user/index'
-				// 										});
-				// 									}
-				// 								}
-				// 							})
-				// 						}
-				// 					})
-									
-				// 				}else{
-				// 					uni.showToast({
-				// 						icon: 'none',
-				// 						title: result['msg'] as string,
-				// 						duration: 2000,
-				// 						success: () => {
-				// 						}
-				// 					})
-				// 				}
-				// 			}else{
-				// 				uni.showToast({
-				// 					icon: 'none',
-				// 					title: '获取设备列表失败',
-				// 					duration: 2000,
-				// 					success: () => {
-										
-				// 					}
-				// 				})
-				// 			}
-							
-				// 		},
-				// 		fail: () => {
-							
-				// 		}
-				// 	});
-				// } catch (err){
-				// 	console.log(err)
-				// }
 			},
 			async handleDelete(device: UTSJSONObject){
 				let that = this

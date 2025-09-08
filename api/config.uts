@@ -15,6 +15,7 @@ export type ApiEndpoints = {
   sendCMD: string;
   playbackRecord: UTSJSONObject;
   user:UTSJSONObject;
+  deviceControl:UTSJSONObject; 
 };
 
 export const APIS: ApiEndpoints = {
@@ -25,7 +26,7 @@ export const APIS: ApiEndpoints = {
   mediaDownload: BASE_URL + '/media/download',
   deviceListPage: BASE_URL + '/monitor/all',
   deviceInfo: BASE_URL + '/monitor/',
-  deleteDevice: BASE_URL + '/monitor',
+  deleteDevice: BASE_URL + '/monitor/',
   updateDevice: BASE_URL + '/monitor',
   createDevice: BASE_URL + '/monitor',
   uploadZip: BASE_URL + '/programme/upload',
@@ -38,6 +39,9 @@ export const APIS: ApiEndpoints = {
   	  getAll: BASE_URL + '/user/all',
 	  getById: BASE_URL + '/user/{id}',
   	  save: BASE_URL + '/user/save',
+  },
+  deviceControl: {
+	  getById: BASE_URL + '/deviceControl/{id}',
   }
 };
 

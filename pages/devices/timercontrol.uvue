@@ -1,0 +1,395 @@
+<template>
+	<scroll-view class="app">
+		<form class="defalut-form" @submit="onFormSubmit">
+			<view class="item">
+				<view class="label"><text class="t">{{ $t('device.RepeatMode') }}</text></view>
+				<view class="input-box">
+					<view class="uni-input" @click="showEffectActionSheet"><text class="t">{{currentRepeatMode}}</text></view>
+				</view>
+				<checkbox-group v-if="formData.repeatMode == 'week'" class="checkgroup-flex-row" @change="repeatStringChange">
+					<checkbox 
+						style="margin: 6px;"
+						v-for="(item, index) in weekList" 
+						:checked="repeatString.includes(item.key)"
+						:key="index" 
+						:value="item.key">
+							<text>{{item.name}}</text>
+					</checkbox>
+				</checkbox-group>
+				<checkbox-group v-if="formData.repeatMode == 'month'" class="checkgroup-flex-row" @change="repeatStringChange">
+					<checkbox 
+						style="margin: 6px;"
+						v-for="(item, index) in dayList" 
+						:checked="repeatString.includes(item.key)"
+						:key="index" 
+						:value="item.key">
+							<text>{{item.name}}</text>
+					</checkbox>
+				</checkbox-group>
+				<checkbox-group v-if="formData.repeatMode == 'year'" class="checkgroup-flex-row" @change="repeatStringChange">
+					<checkbox 
+						style="margin: 6px;"
+						v-for="(item, index) in monthList" 
+						:checked="repeatString.includes(item.key)"
+						:key="index" 
+						:value="item.key">
+							<text>{{item.name}}</text>
+					</checkbox>
+				</checkbox-group>
+			</view>
+			<view class="item">
+				<view class="label"><text class="t">{{$t('device.ScheduleTime')}}</text></view>
+				<view class="input-box">
+					<input :value="formData?.validStartDate" class="uni-input" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="label"><text class="t">{{$t('index.Resolution')}}</text></view>
+				<view class="input-box input-box-row">
+					<input class="uni-input shadow" name="width" type="number" v-model="width" :placeholder="$t('device.PleaseEnterWidth')" maxlength="-1" />
+					<view style="width: 24rpx;"></view>
+					<input class="uni-input shadow" name="height" type="number" v-model="height" :placeholder="$t('device.PleaseEnterHeight')" maxlength="-1" />
+				</view>
+			</view>
+	
+			<view class="item">
+				<view class="label"><text class="t">{{$t('device.DeviceValidityPeriod')}}</text></view>
+				<view class="input-box input-box-row">
+					<input 
+						class="uni-input shadow" 
+						:disabled="true" 
+						name="validStart" 
+						v-model="validStart" 
+						:placeholder="$t('device.PleaseSelectStartDate')" 
+						maxlength="-1" 
+						@click="acticeField='validStart'; popupDate = true;" />
+					<view style="width: 24rpx;"></view>
+					<input 
+						class="uni-input shadow" 
+						:disabled="true" 
+						name="validEnd" 
+						v-model="validEnd" 
+						:placeholder="$t('device.PleaseSelectEndDate')"  
+						maxlength="-1" 
+						@click="acticeField='validEnd';popupDate = true;" />
+				</view>
+			</view>
+			
+			<view class="item">
+				<view class="label"><text class="t">{{$t('index.ContactName')}}</text></view>
+				<view class="input-box">
+					<input class="uni-input shadow" name="contactName" v-model="contactName" :placeholder="$t('device.PleaseEnterContactName')"   maxlength="-1" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="label"><text class="t">{{$t('index.ContactPhone')}}</text></view>
+				<view class="input-box">
+					<input class="uni-input shadow" name="contactPhone" v-model="contactPhone" :placeholder="$t('device.PleaseEnterContactPhone')" maxlength="-1" />
+				</view>
+			</view>
+			<view class="item">
+				<button class="btn btn-submit" form-type="submit" type="primary">{{$t('index.Save')}}</button>
+			</view>
+		</form>
+	</scroll-view>
+</template>
+
+<script lang="uts">
+	import { APIS } from '@/api/config.uts'
+	import { routeGoto } from '@/common/router.uts'
+	import { request } from '@/utils/http/index'
+	import { useState } from '@/store/index.uts'
+	export default {
+		data() {
+			return {
+				controlId: '',
+				formData: {} as UTSJSONObject,
+				repeatModes: [
+					{
+						key: "day",
+						name: $t('device.PerDay')
+					},					
+					{
+						key: "week",
+						name: $t('device.PerWeek'),
+					}, 
+					{
+						key: "month",
+						name: $t('device.PerMonth'),
+					}, 
+					{
+						key: "year",
+						name: $t('device.PerYear'),
+					}, 
+				] as UTSJSONObject[],
+				weekList: [
+					{
+						key: "Sunday",
+						name: $t('device.Sunday')
+					},					
+					{
+						key: "Monday",
+						name: $t('device.Monday'),
+					}, 
+					{
+						key: "Tuesday",
+						name: $t('device.Tuesday'),
+					}, 
+					{
+						key: "Wednesday",
+						name: $t('device.Wednesday'),
+					}, 
+					{
+						key: "Thursday",
+						name: $t('device.Thursday'),
+					}, 
+					{
+						key: "Friday",
+						name: $t('device.Friday'),
+					}, 
+					{
+						key: "Saturday",
+						name: $t('device.Saturday'),
+					},
+				] as UTSJSONObject[],
+				dayList: [] as UTSJSONObject[],
+				monthList: [
+					{
+						key: "January", name: $t('device.January')
+					},					
+					{
+						key: "February", name: $t('device.February')
+					}, 
+					{
+						key: "March", name: $t('device.March')
+					}, 
+					{
+						key: "April", name: $t('device.April')
+					}, 
+					{
+						key: "May", name: $t('device.May')
+					}, 
+					{
+						key: "June", name: $t('device.June')
+					}, 
+					{
+						key: "July", name: $t('device.July')
+					},
+					{
+						key: "August", name: $t('device.August')
+					},
+					{
+						key: "September", name: $t('device.September')
+					},
+					{
+						key: "October", name: $t('device.October')
+					},
+					{
+						key: "November", name: $t('device.November')
+					},
+					{
+						key: "December", name: $t('device.December')
+					},
+				] as UTSJSONObject[],
+				currentRepeatMode:'',
+				repeatString:'',
+				executeTime: ''
+			};
+		},
+		onLoad(e: OnLoadOptions) {
+			this.controlId = e['control_id'] as string;
+			if(this.controlId != null && this.controlId != "-1") {
+				this.getDeviceControlInfo();
+			}
+			this.currentRepeatMode = this.repeatModes[0].getString('name')!;
+			this.dayList = [] as UTSJSONObject[]
+			for (let i = 0; i < 30; i++) {
+				this.dayList.push({
+					key: (i+1).toString(),
+					name: (i+1).toString()
+				} as UTSJSONObject)
+			}
+			
+			
+		},
+		methods: {
+			async getDeviceControlInfo() {
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					const apiUrl = APIS.deviceControl.getString('getById')!;
+					const result = await request('GET', apiUrl.replace("{id}", `${this.controlId}`), {}) as UTSJSONObject;
+					this.formData = result as UTSJSONObject;
+					const executionString = result.getString('Execution')!;
+					if (executionString.includes("|")) {						
+						this.executeTime = result.getString('Execution')!.split('|')[1];
+						this.repeatString = result.getString('Execution')!.split('|')[0];
+					}else {						
+						this.executeTime = executionString;
+						this.repeatString = '';
+					}
+					if(this.deviceInfo['volume'] == null){
+						this.value_input = 0;
+					}else{
+						this.value_input = this.deviceInfo['volume'] as number;
+					}
+					
+					const currentDate = new Date().getTime()
+					const day = this.deviceInfo['validEnd'] as String;
+					const daynum = new Date(day).getTime() as number;
+					if(currentDate > daynum){
+						this.deviceInfo['isvalidEnd'] = true;
+					}else{
+						this.deviceInfo['isvalidEnd'] = false;
+					}
+					
+					uni.hideLoading();
+				} catch (err){
+					console.log(err)
+				}
+			},
+			async repeatStringChange(e: CheckboxGroupChangeEvent) {
+				console.log(e.detail);
+				this.repeatString = e.detail.value.map(c => `${c}#`).join('');
+				console.log(this.repeatString);
+			},
+			onFormSubmit(){
+				// if(this.name == '' || this.snCode == '' || this.width == '' || this.height == '' || this.validStart == '' || this.validEnd == '' || this.contactName == '' || this.contactPhone == ''){
+				// 	uni.showToast({
+				// 		icon: 'none',
+				// 		title: '字段不能为空',
+				// 		duration: 3000,
+				// 		success: () => {
+				// 		}
+				// 	})
+				// }else{
+				// 	try {
+				// 		uni.showLoading({
+				// 			title: ''
+				// 		});
+				// 		uni.request({
+				// 			url: APIS.createDevice as string,
+				// 			method: "POST",
+				// 			header: {
+				// 				'Authorization': "Bearer " + this.token
+				// 			},
+				// 			data:{
+				// 				name: this.name,
+				// 				snCode: this.snCode,
+				// 				width: this.width,
+				// 				height: this.height,
+				// 				validStart: this.validStart,
+				// 				validEnd: this.validEnd,
+				// 				contactName: this.contactName,
+				// 				contactPhone: this.contactPhone,
+				// 				userAccount: this.userInfo.account,
+				// 				brightness: 10,
+				// 				volume: 10,
+				// 				status: 0
+				// 			},
+				// 			success: (res) => {
+				// 				console.log('createDevice res', res)
+				// 				const result = res.data as UTSJSONObject
+				// 				uni.showToast({
+				// 					icon: 'none',
+				// 					title: result['msg'] as string,
+				// 					duration: 2000,
+				// 					success: () => {
+				// 						this.name = '' as string
+				// 						this.snCode = '' as string
+				// 						this.width = '' as string
+				// 						this.height = '' as string
+				// 						this.validStart = '' as string
+				// 						this.validEnd = '' as string
+				// 						this.contactName =  '' as string
+				// 						this.contactPhone = '' as string
+				// 					}
+				// 				})
+				// 				uni.hideLoading();
+				// 			},
+				// 			fail: () => {
+								
+				// 			}
+				// 		});
+						
+				// 	} catch (err){
+				// 		console.log(err)
+				// 	}
+				// }
+			},
+			showEffectActionSheet() {
+				const options: ShowActionSheetOptions = {
+					title: $t('device.RepeatMode'),
+					itemList: this.repeatModes.map((c: UTSJSONObject) => c.getString('name')!),
+					success: (res) => {
+						const selectedIndex = res.tapIndex;
+						this.formData!.repeatMode = this.repeatModes[selectedIndex].getString('key')!;
+						this.currentRepeatMode = this.repeatModes[selectedIndex].getString('name')!;
+						this.repeatString = '';
+					},
+					fail: (error) => {
+						console.log(error);
+					}
+				}
+				uni.showActionSheet(options)
+			},
+		}
+	}
+</script>
+
+<style lang="scss">
+	.defalut-form{
+		padding: 18rpx 36rpx;
+		.item{
+			padding: 18rpx 0;
+			.label{
+				.t{
+					font-size: $uni-font-size-base;
+				}
+			}
+			.input-box{
+				padding-top: 18rpx;
+				.uni-input{
+					padding: 18rpx;
+					border-radius: $uni-border-radius-lg;
+					border: 1px solid;
+					border-color: $uni-color-grey2;
+				}
+			}
+			.input-box.input-box-row{
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+			}
+		}
+		
+	}
+	.form{
+		.selected-day{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			.t{
+				font-size: $uni-font-size-base;
+			}
+		}
+		.picker-view {
+		    width: 100%;
+		    height: 220px;
+			.item {
+				height: 50px;
+				.text {
+					line-height: 50px;
+					text-align: center;
+				}
+			}
+		}
+	}
+	.checkgroup-flex-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		
+	}
+</style>

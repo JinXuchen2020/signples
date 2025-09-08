@@ -1,8 +1,11 @@
 <script lang="uts">
+	import { useState } from '@/store/index.uts'
 	let firstBackTime = 0
 	export default {
 		onLaunch: function () {
 			console.log('App Launch')
+			const { loadStateFromStorage } = useState();
+			loadStateFromStorage();
 		},
 		onShow: function () {
 			console.log('App Show')
@@ -101,6 +104,23 @@
 		.t{
 			font-size: 24rpx;
 			color: $uni-text-color-grey;
+		}
+	}
+	.add{
+		position: fixed;
+		z-index: 99999;
+		width: 96rpx;
+		height: 96rpx;
+		right: 25rpx;
+		bottom: 256rpx;
+		flex-direction: row;
+		align-items: center;
+		justify-content:center;
+		background-color: $uni-color-success;
+		border-radius: $uni-border-radius-circle;
+		.image{
+			width: 48rpx;
+			height: 48rpx;
 		}
 	}
 </style>

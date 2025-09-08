@@ -5,7 +5,8 @@ export type State = {
 	loginUser: UTSJSONObject,
 	program: UTSJSONObject,
 	programFolder: string,
-	activeDevice: UTSJSONObject
+	activeDevice: UTSJSONObject,
+	activeUser: UTSJSONObject
 }
 
 export type UserState = {
@@ -14,15 +15,18 @@ export type UserState = {
 	setProgram:(program: UTSJSONObject) => void,
 	setProgramFolder: (folderPath: string) => void,
 	setActiveDevice: (device: UTSJSONObject) => void,
-	setLoginUser: (userInfo: UTSJSONObject) => void
+	setLoginUser: (userInfo: UTSJSONObject) => void,
+	setActiveUser: (userInfo: UTSJSONObject) => void,
+	loadStateFromStorage: () => void
 }
 
 const state = reactive<State>({
-	token: ''
-	loginUser: {}
-	program: {}
-	programFolder: ''
-	activeDevice: {}
+	token: '',
+	loginUser: {},
+	program: {},
+	programFolder: '',
+	activeDevice: {},
+	activeUser: {},
 } as State)
 
 export function useState() {
@@ -44,11 +48,29 @@ export function useState() {
 		state.activeDevice = device
 		uni.setStorageSync('active-device', device);
 	}
+	
+	const setActiveUser = (user: UTSJSONObject) => {
+		state.activeUser = user
+		uni.setStorageSync('active-user', user);
+	}
   
 	const setLoginUser = (userInfo: UTSJSONObject) => {
 		state.loginUser = userInfo
 		uni.setStorageSync('userInfo', userInfo);
 	}
+	
+	const loadStateFromStorage = () => {
+	    try {
+	        state.token = uni.getStorageSync('token') as string;
+	        state.loginUser = uni.getStorageSync('userInfo') as UTSJSONObject;
+	        state.program = uni.getStorageSync('program') as UTSJSONObject;
+	        state.programFolder = uni.getStorageSync('program-folder') as string;
+	        state.activeDevice = uni.getStorageSync('active-device') as UTSJSONObject;
+	        state.activeUser = uni.getStorageSync('active-user') as UTSJSONObject;
+	    } catch (e) {
+	        console.error('Failed to load state from storage', e);
+	    }
+	};
 
 	return {
 		state,
@@ -56,6 +78,8 @@ export function useState() {
 		setProgramFolder,
 		setLoginUser,
 		setToken,
-		setActiveDevice
+		setActiveDevice,
+		setActiveUser,
+		loadStateFromStorage
 	} as UserState
 }

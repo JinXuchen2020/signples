@@ -1,0 +1,29 @@
+<template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
+		
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
+</template>
+
+<script lang="uts">
+	export default {
+		data() {
+			return {
+				userId: ''
+			};
+		},
+		onLoad(e: OnLoadOptions): void {
+		    this.userId = e['user_id'] as string;
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.userManagement')
+			});
+		},
+	}
+</script>
+
+<style lang="scss">
+
+</style>

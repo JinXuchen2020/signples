@@ -54,7 +54,7 @@
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
-	import { useState } from '@/store/index.uts'
+	import { UserState, useState } from '@/store/index.uts'
 	import { routeGoto } from '@/common/router.uts'
 	
 	import { request } from '@/utils/http/index'
@@ -65,7 +65,7 @@
 				isRotating: true,
 				userInfo: {} as UTSJSONObject,
 				userList: [] as Array<UTSJSONObject>,
-				token: '' as String
+				token: '' as String,
 				
 			}
 		},
@@ -80,6 +80,7 @@
 			const { state } = useState();
 			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
 				that.userInfo = state.loginUser;
+				that.getUserList();
 			}
 			else {
 				console.log('读取失败userInfo或不存在');
@@ -88,8 +89,11 @@
 		methods: {
 			async getUserList() {
 			  try {
-				const person: UTSJSONObject = {
-					agentAccount:  this.userInfo['account'],
+				let person = {};
+				if (this.userInfo.getString("role") == "agent") {
+					person = {
+						agentAccount:  this.userInfo['account'],
+					}
 				}
 			    const result = await request('GET', APIS.usersAll as string, person)
 				const d = result as Array<UTSJSONObject>;
@@ -142,12 +146,16 @@
 			},
 			handleChooseUser(user: UTSJSONObject){
 				//写入到缓存，再跳转到设备列表
-				uni.setStorageSync('active-user', user);
+				const { setActiveUser, setProgramFolder}  = useState()
+				setActiveUser(user);
+				setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${user['account'] as string}`);
+				// uni.setStorageSync('active-user', user);
 				routeGoto('/pages/index/devices?user_id=' + user['id'] + '&user_account=' + user['account']);
 				
 			},
 			handleEdit(user: UTSJSONObject){
-				routeGoto('/pages/user/edit?user_id=' + user['id']);
+				const id = user.getNumber("id")!;
+				routeGoto('/pages/user/edit?user_id=' + id);
 			}
 		}
 	}

@@ -51,13 +51,44 @@
 			<text class="t">{{$t('device.Power')}}</text>
 		</view>
 		
-
+		<view class="list-box">
+			<list-view class="uc-menus end">
+				<list-item class="uc-menus-item">
+					<view class="uc-menus-item-title">
+						<text>{{$t('device.BrightnessAdjustment')}}</text>
+					</view>
+					<view class="input-box">
+						<text class="t">{{value_input}}%</text>
+					</view>
+				</list-item>
+				<list-item class="uc-menus-item-2">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeZero.png" mode="widthFix"></image>
+					</view>
+					<!-- <slider 
+						:value="value_input" 
+						@changing="changing"
+						@change="changed"
+						foreColor="#007aff"
+						style="width: 76%"></slider>
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeHigh.png" mode="widthFix"></image>
+					</view> -->
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>		
+		</view>
+		<view class="add shadow" @click="handleCreate()">
+			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
+		</view>
 	</scroll-view>
 </template>
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
+	import { useState } from '@/store/index.uts'
+	import { request } from '@/utils/http/index'
 	
 	export default {
 		data() {
@@ -78,45 +109,14 @@
 		},
 		onShow() {
 			let that = this
-			//获取当前有没有用户登录
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log('token res', res)
-				  const token = res.data ?? '';
-				  if(token !== ''){
-					  that.token = token as String;
-					  console.log('this.token =', that.token)
-					  // this.getDeviceListPage();
-					  that.getDeviceInfo();
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log(r)
-							const userInfo = r.data ?? {};
-					  		this.userInfo = userInfo as UTSJSONObject;
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				  }
-			  },
-			  fail: function(err) {
-			    console.log('读取失败token或不存在，请先登录', err);
-				this.deviceInfo =  {} as UTSJSONObject;
-				uni.showModal({
-					title: "尚未登录，请您先登录?",
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							uni.switchTab({
-								url: '/pages/user/index'
-							});
-						}
-					}
-				})
-			  }
-			});
+			const { state } = useState();
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				that.userInfo = state.loginUser;
+				that.getDeviceInfo();
+			}
+			else {
+				console.log('读取失败userInfo或不存在');
+			}
 		},
 		methods: {
 			handleRouteGoto(url: string){
@@ -127,245 +127,28 @@
 					uni.showLoading({
 						title: ''
 					});
-					uni.request({
-						url: APIS.deviceInfo as string +  this.deviceId,
-						method: "GET",
-						header: {
-							'Authorization': "Bearer " + this.token
-						},
-						data:{},
-						success: (res) => {
-							console.log('获取设备详情res', res)
-							if(res.statusCode == 200){
-								const result = res.data as UTSJSONObject
-								if(result.hasOwnProperty('data')){
-									this.deviceInfo = result['data'] as UTSJSONObject;
-									if(this.deviceInfo['volume'] == null){
-										this.value_input = 0;
-									}else{
-										this.value_input = this.deviceInfo['volume'] as number;
-									}
-									
-									const currentDate = new Date().getTime()
-									const day = this.deviceInfo['validEnd'] as string;
-									const daynum = new Date(day).getTime() as number;
-									if(currentDate > daynum){
-										this.deviceInfo['isvalidEnd'] = true;
-									}else{
-										this.deviceInfo['isvalidEnd'] = false;
-									}
-								}
-							}
-							uni.hideLoading();
-						},
-						fail: () => {
-							
-						}
-					});
-				} catch (err){
-					console.log(err)
-				}
-			},
-			async handleDelete(device: UTSJSONObject){
-				let that = this
-				uni.showModal({
-					title: "确定要删除该设备吗?",
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							
-							try {
-								uni.showLoading({
-									title: ''
-								});
-								uni.request({
-									url: APIS.deleteDevice as string + '/' + device.id,
-									method: "DELETE",
-									header: {
-										'Authorization': "Bearer " + this.token
-									},
-									data:{
-										
-									},
-									success: (res) => {
-										console.log('delete res', res)
-										uni.hideLoading();
-										uni.navigateBack();
-									},
-									fail: () => {
-										
-									}
-								});
-							} catch (err){
-								console.log(err)
-							}
-							
-							
-						}
+					
+					const person: UTSJSONObject = {}
+					const param = this.deviceId;
+					const result = await request('GET', APIS.deviceInfo as string + param, person) 
+					this.deviceInfo = result as UTSJSONObject;
+					const currentDate = new Date().getTime()
+					const day = this.deviceInfo['validEnd'] as string;
+					const daynum = new Date(day).getTime() as number;
+					if(currentDate > daynum){
+						this.deviceInfo['isvalidEnd'] = true;
+					}else {
+						this.deviceInfo['isvalidEnd'] = false;
 					}
-				})
-			},
-			volumeChanging(event: UniSliderChangeEvent){
-				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
-				this.value_input = event.detail.value
-			},
-			volumeChanged(event: UniSliderChangeEvent){
-				this.value_input = event.detail.value
-				//修改设备音量
-				try {
-					uni.showLoading({
-						title: ''
-					});
-					uni.request({
-						url: APIS.updateDevice as string,
-						method: "PUT",
-						header: {
-							'Authorization': "Bearer " + this.token
-						},
-						data:{
-							id: this.deviceId,
-							volume: this.value_input
-						},
-						success: (res) => {
-							console.log('updateDevice res', res)
-							const result = res.data as UTSJSONObject
-							uni.showToast({
-								icon: 'none',
-								title: result['msg'] as string,
-								duration: 2000,
-								success: () => {
-									
-								}
-							})
-							uni.hideLoading();
-						},
-						fail: () => {
-							
-						}
-					});
+					uni.hideLoading();
 				} catch (err){
+					uni.hideLoading();
 					console.log(err)
 				}
 			},
-			handleUpgrade(device: UTSJSONObject){
-				let that = this
-				if(device['connectStatus'] != 1){
-					uni.showToast({
-						icon: 'none',
-						title: '设备未连接，不可操作',
-						duration: 2000,
-						success: () => {
-							
-						}
-					})
-				}else{
-					console.log('Can do this.')
-					uni.showModal({
-						title: "确定要激活/升级该设备吗?",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								
-								try {
-									uni.showLoading({
-										title: ''
-									});
-									uni.request({
-										url: APIS.updateDevice as string,
-										method: "PUT",
-										header: {
-											'Authorization': "Bearer " + this.token
-										},
-										data:{
-											id: this.deviceId,
-											status: 1
-										},
-										success: (res) => {
-											console.log('updateDevice res', res)
-											const result = res.data as UTSJSONObject
-											uni.showToast({
-												icon: 'none',
-												title: result['msg'] as string,
-												duration: 2000,
-												success: () => {
-													
-												}
-											})
-											uni.hideLoading();
-										},
-										fail: () => {
-											
-										}
-									});
-									
-								} catch (err){
-									console.log(err)
-								}
-								
-								
-							}
-						}
-					})
-				}
+			handleCreate(){
+				routeGoto('/pages/devices/timercontrol');
 			},
-			handleStop(device: UTSJSONObject){
-				let that = this
-				if(device['connectStatus'] != 1){
-					uni.showToast({
-						icon: 'none',
-						title: '设备未连接，不可操作',
-						duration: 2000,
-						success: () => {
-							
-						}
-					})
-				}else{
-					console.log('Can do this.')
-					uni.showModal({
-						title: "确定要停用该设备吗?",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								
-								try {
-									uni.showLoading({
-										title: ''
-									});
-									uni.request({
-										url: APIS.updateDevice as string,
-										method: "PUT",
-										header: {
-											'Authorization': "Bearer " + this.token
-										},
-										data:{
-											id: this.deviceId,
-											enabled: 0
-										},
-										success: (res) => {
-											console.log('updateDevice res', res)
-											const result = res.data as UTSJSONObject
-											uni.showToast({
-												icon: 'none',
-												title: result['msg'] as string,
-												duration: 2000,
-												success: () => {
-													
-												}
-											})
-											uni.hideLoading();
-										},
-										fail: () => {
-											
-										}
-									});
-									
-								} catch (err){
-									console.log(err)
-								}
-								
-								
-							}
-						}
-					})
-				}
-			}
 		}
 	}
 </script>

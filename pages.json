@@ -157,6 +157,20 @@
 				"navigationBarTitleText" : "%pages.languageSwitch%",
 				"enablePullDownRefresh": false
 			}
+		},
+		{
+			"path" : "pages/user/edit",
+			"style" : 
+			{
+				"navigationBarTitleText" : "用户管理"
+			}
+		},
+		{
+			"path" : "pages/devices/timercontrol",
+			"style" : 
+			{
+				"navigationBarTitleText" : "定时控制"
+			}
 		}
 	],
 	"globalStyle": {

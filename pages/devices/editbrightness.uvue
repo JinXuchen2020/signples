@@ -85,6 +85,8 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
+	import { useState } from '@/store/index.uts'
+	import { request } from '@/utils/http/index'
 	
 	export default {
 		data() {
@@ -105,45 +107,14 @@
 		},
 		onShow() {
 			let that = this
-			//获取当前有没有用户登录
-			uni.getStorage({
-			  key: 'token',
-			  success: function(res) {
-				  console.log('token res', res)
-				  const token = res.data ?? '';
-				  if(token !== ''){
-					  that.token = token as String;
-					  console.log('this.token =', that.token)
-					  // this.getDeviceListPage();
-					  that.getDeviceInfo();
-					  uni.getStorage({
-					    key: 'userInfo',
-					    success: function(r) {
-							console.log(r)
-							const userInfo = r.data ?? {};
-					  		this.userInfo = userInfo as UTSJSONObject;
-					    },
-					    fail: function(err) {
-					      console.log('读取失败userInfo或不存在', err);
-					    }
-					  });
-				  }
-			  },
-			  fail: function(err) {
-			    console.log('读取失败token或不存在，请先登录', err);
-				this.deviceInfo =  {} as UTSJSONObject;
-				uni.showModal({
-					title: "尚未登录，请您先登录?",
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							uni.switchTab({
-								url: '/pages/user/index'
-							});
-						}
-					}
-				})
-			  }
-			});
+			const { state } = useState();
+			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+				that.userInfo = state.loginUser;
+				that.getDeviceInfo();
+			}
+			else {
+				console.log('读取失败userInfo或不存在');
+			}
 		},
 		methods: {
 			handleRouteGoto(url: string){
@@ -154,42 +125,29 @@
 					uni.showLoading({
 						title: ''
 					});
-					uni.request({
-						url: APIS.deviceInfo as string +  this.deviceId,
-						method: "GET",
-						header: {
-							'Authorization': "Bearer " + this.token
-						},
-						data:{},
-						success: (res) => {
-							console.log('获取设备详情res', res)
-							if(res.statusCode == 200){
-								const result = res.data as UTSJSONObject
-								if(result.hasOwnProperty('data')){
-									this.deviceInfo = result['data'] as UTSJSONObject;
-									if(this.deviceInfo['brightness'] == null){
-										this.value_input = 0;
-									}else{
-										this.value_input = this.deviceInfo['brightness'] as number;
-									}
-									
-									const currentDate = new Date().getTime()
-									const day = this.deviceInfo['validEnd'] as String;
-									const daynum = new Date(day).getTime() as number;
-									if(currentDate > daynum){
-										this.deviceInfo['isvalidEnd'] = true;
-									}else{
-										this.deviceInfo['isvalidEnd'] = false;
-									}
-								}
-							}
-							uni.hideLoading();
-						},
-						fail: () => {
-							
-						}
-					});
+					
+					const person: UTSJSONObject = {}
+					const param = this.deviceId;
+					const result = await request('GET', APIS.deviceInfo as string + param, person) 
+					this.deviceInfo = result as UTSJSONObject;
+					if(this.deviceInfo['brightness'] == null){
+						this.value_input = 0;
+					}else{
+						this.value_input = this.deviceInfo['brightness'] as number;
+					}
+					
+					const currentDate = new Date().getTime()
+					const day = this.deviceInfo['validEnd'] as String;
+					const daynum = new Date(day).getTime() as number;
+					if(currentDate > daynum){
+						this.deviceInfo['isvalidEnd'] = true;
+					}else{
+						this.deviceInfo['isvalidEnd'] = false;
+					}
+					
+					uni.hideLoading();
 				} catch (err){
+					uni.hideLoading();
 					console.log(err)
 				}
 			},
@@ -198,73 +156,53 @@
 				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
 				this.value_input = event.detail.value
 			},
-			changed(event: UniSliderChangeEvent){
+			async changed(event: UniSliderChangeEvent){
 				this.value_input = event.detail.value
 				//修改设备音量
 				try {
 					uni.showLoading({
 						title: ''
 					});
-					const cmd = JSON.stringify([{
+					const controlData = JSON.stringify([{
 						"controlType": "Brightness",
 						"deviceId": this.deviceInfo['snCode'],
-						"execution": "00:00;00",
+						"execution": "00:00:00",
 						"executionType": "REAL_TIME",
 						"isEnabled": 0,
 						"repeatMode": "",
 						"userAccount": this.deviceInfo['userAccount'],
-						"validDateEnd": "2025/7/15 星期二",
-						"validDateStart": "2025/7/15 星期二",
+						"validDateEnd": new Date().toISOString(),
+						"validDateStart": new Date().toISOString(),
 						"value": this.value_input,
 						"id": 0
 						}]);
-					uni.request({
-						url: APIS.sendCMD as string,
-						method: "POST",
-						header: {
-							'Authorization': "Bearer " + this.token
-						},
-						data:{
-							cmd: "CMD|Brightness|" + cmd,
-							deviceSnCode: this.deviceInfo['snCode']
-						},
-						success: (ress) => {
-							console.log('sendCMD Brightness res', ress)
-							const result = ress.data as UTSJSONObject
-							uni.request({
-								url: APIS.updateDevice as string,
-								method: "PUT",
-								header: {
-									'Authorization': "Bearer " + this.token
-								},
-								data:{
-									id: this.deviceId,
-									brightness: this.value_input
-								},
-								success: (res) => {
-									console.log('updateDevice Brightness res', res)
-									// const result = res.data as UTSJSONObject
-									uni.showToast({
-										icon: 'none',
-										title: result['msg'] as string,
-										duration: 2000,
-										success: () => {
-											
-										}
-									})
-									uni.hideLoading();
-								},
-								fail: () => {
-									
-								}
-							});
-							
-						},
-						fail: () => {
-							
-						}
+						
+					const dataObj = {
+						cmd: 'CMD|Brightness|',
+						data: controlData,
+						deviceSnCode: this.deviceInfo['snCode']
+					} as UTSJSONObject
+					
+					const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
+					if(!res) {
+						uni.showToast({
+							icon: 'none',
+							title: `设备：${this.deviceInfo['snCode']} 亮度调节命令执行失败`,
+							duration: 3000,
+							success: () => { 
+							}
+						})
+						return;
+					}
+					
+					await request("PUT", APIS.updateDevice as string, {
+						id: this.deviceId,
+						brightness: this.value_input
 					});
+					
+					uni.hideLoading();
 				} catch (err){
+					uni.hideLoading();
 					console.log(err)
 				}
 			}
