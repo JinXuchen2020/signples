@@ -28,102 +28,26 @@
 			</view>
 		</view>
 		<view class="options">
-			<view class="options-tab">
-				<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
-				<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+			<view class="options-tab">				
+				<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
+				<view class="item" v-else @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
+				<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+				<view class="item" v-else @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
 			</view>
-			<scroll-view class="option-body" style="height: 360px;">
-				<view class="option-a" :class="{active: activeTab == 0}">
+			<view class="option-body">
+				<scroll-view class="option-a" :class="{active: activeTab == 0}">
 					<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<ImageForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<WebForm :item="activeComponent" @refresh="updateComponent" />
 					<WordForm :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
 					<TextForm :item="activeComponent" @refresh="updateComponent" />
-				</view>
-				<view class="option-b" :class="{active: activeTab == 1}">
-					<view class="page-option-form">
-						<view class="item">
-							<view class="item-key">
-								<text class="t">名称</text>
-							</view>
-							<view class="item-value">
-								<input type="text" :value="activePage?.name" class="uni-input" />
-							</view>
-						</view>
-						<view class="item">
-							<view class="item-key">
-								<text class="t">类型</text>
-							</view>
-							<view class="item-value">
-								<radio-group name="type" @change="handleTypeChange">
-									<view class="radio-group" >
-										<radio class="radio" value="normal" :checked="activePage?.type == 'normal'" >常规</radio>
-										<radio value="ad" :checked="activePage?.type == 'ad'">广告</radio>
-									</view>
-								</radio-group>
-							</view>
-						</view>
-						<view class="item">
-							<view class="item-key">
-								<text class="t">有效期</text>
-							</view>
-							<view class="item-value">
-								<checkbox :checked="activePage?.isHasValidity == true" @click="handleIsHasValidityChange"></checkbox>
-							</view>
-						</view>
-						<view class="item" v-show="activePage?.isHasValidity == true">
-							<view class="item-key">
-								<text class="t">开始日期</text>
-							</view>
-							<view class="item-value">
-								<input type="date" :value="activePage?.validStartDate" class="uni-input" />
-							</view>
-						</view>
-						<view class="item" v-if="activePage?.isHasValidity == true">
-							<view class="item-key">
-								<text class="t">结束日期</text>
-							</view>
-							<view class="item-value">
-								<input type="date" :value="activePage?.validEndDate" class="uni-input" />
-							</view>
-						</view>
-						<view class="item">
-							<view class="item-key">
-								<text class="t">播放次数</text>
-							</view>
-							<view class="item-value">
-								<input type="number" :value="activePage?.playCount" class="uni-input" />
-							</view>
-						</view>
-						<view class="item">
-							<view class="item-key">
-								<text class="t">时间计划表</text>
-							</view>
-							<view class="item-value">
-								<view class="sub-list" style="width: 100%;">
-									<view class="sub-item" v-for="item in activePage?.schedulers" :key="item.id">
-										<view class="sub-value">
-											<checkbox-group class="radio-group" @change="handleScheduleDayChange">
-												<checkbox v-for="scheduleDay in item.scheduleDays" :key="scheduleDay.day"
-													:value="scheduleDay.day" :checked="scheduleDay.selected">
-													{{ scheduleDay.label }}
-												</checkbox>
-											</checkbox-group>
-										</view>
-										<view class="sub-value">
-											<input type="text" :value="item.startTime" class="uni-input" />
-											<text>至</text>
-											<input type="text" :value="item.endTime" class="uni-input" />
-										</view>
-									</view>
-								</view>
-							</view>
-						</view>
-					</view>
-				</view>
-			</scroll-view>
+				</scroll-view>
+				<scroll-view class="option-b" :class="{active: activeTab == 1}">
+					<PageForm :item="activePage" @refresh="updatePage" />
+				</scroll-view>
+			</view>
 		</view>
-		<view class="tools">
+		<view class="tools">			
 			<view class="pages">
 				<swiper id="swiper-view" class="swiper">
 					<swiper-item v-if="activeTab == 1" class="swiper-item" item-id="1">
@@ -241,6 +165,7 @@
 	import WebForm from './webForm.uvue'
 	import WordForm from './wordForm.uvue'
 	import TextForm from './textForm.uvue'
+	import PageForm from './pageForm.uvue'
 	
 	import i18n from '@/locale'
 	
@@ -322,6 +247,10 @@
 		mediaConfig.value!.pages.push(page)
 		activePage.value = page;
 		activeComponent.value = null;
+	}
+	
+	const updatePage = (newData: UTSJSONObject) => {
+		activePage.value = new MediaPage(newData);
 	}
 	
 	const selectPage = async (item: MediaPage) =>{
@@ -689,17 +618,6 @@
 			background: #f0f0f0;
 		}
     }
-	
-	.radio-group {
-		display: flex; /* 横向排列 */
-		flex-direction: row; /* 行排列 */
-		align-items: center; /* 垂直居中 */
-		flex-wrap: wrap;
-		
-		.radio {
-			margin-right: 20rpx;
-		}
-	}
 	.tools{
 		position: fixed;
 		width: 100%;
@@ -708,6 +626,7 @@
 		z-index: 999;
 		background-color: $uni-bg-color;
 		padding: 24rpx;
+		
 		.pages{
 			padding: 0 0 24rpx 0;
 			.swiper-item{
@@ -717,14 +636,14 @@
 				width: 100%;
 				.item{
 					// width: 21%;
-					height: 96rpx;
+					height: 48rpx;
 					flex: 1;
 					background-color: #000000;
 					flex-direction: row;
 					align-items: center;
 					justify-content: center;
 					border-radius: $uni-border-radius-lg;
-					margin: 0 2%;
+					margin: 0 1%;
 					.t{
 						color: $uni-text-color-inverse;
 						font-size: $uni-font-size-sm;
@@ -735,6 +654,7 @@
 				}
 			}
 		}
+		
 		.component{
 			padding: 0 0 24rpx 0;
 			flex-direction: row;
@@ -804,51 +724,7 @@
 			.option-a.active,
 			.option-b.active {
 				display: flex;
-			}
-			
-			.page-option-form{
-				background: #ffffff;
-				border-radius: 24rpx;
-				box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
-				padding: 12rpx 0;
-				.item{
-					padding: 18rpx 24rpx;
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-					justify-content: space-between;
-					
-					.item-key{
-						width: 20%;
-						.t{
-							font-size: 14px;
-							color: #999999;
-						}
-					}
-					.item-value{
-						width: 80%;
-						display: flex;
-						flex-direction: row;
-						.sub-list{
-							width: 100%;
-							
-							.sub-item{
-								width: 100%;
-								
-								.sub-value{
-									flex-direction: row;
-									align-items: center;
-									justify-content: space-between;
-									margin-bottom: 10rpx;
-								}
-							}
-						}
-						.uni-input{
-							border: 1px solid #ccc;
-							border-radius: 12rpx;
-						}
-					}
-				}
+				height: 720rpx;
 			}
 		}
 	}

@@ -16,6 +16,8 @@ export type ApiEndpoints = {
   playbackRecord: UTSJSONObject;
   user:UTSJSONObject;
   deviceControl:UTSJSONObject; 
+  timeSyncConfig:UTSJSONObject;
+  monitor:UTSJSONObject; 
 };
 
 export const APIS: ApiEndpoints = {
@@ -40,8 +42,22 @@ export const APIS: ApiEndpoints = {
 	  getById: BASE_URL + '/user/{id}',
   	  save: BASE_URL + '/user/save',
   },
+  monitor: {
+  	  getAll: BASE_URL + '/monitor/all',
+  	  getById: BASE_URL + '/monitor/{id}',
+  	  save: BASE_URL + '/monitor/save',
+  },
   deviceControl: {
 	  getById: BASE_URL + '/deviceControl/{id}',
+	  save: BASE_URL + '/deviceControl/save',
+	  getAll: BASE_URL + '/deviceControl/all',
+	  deleteById: BASE_URL + '/deviceControl/{id}',
+  },
+  timeSyncConfig: {
+  	  getById: BASE_URL + '/timeSyncConfig/{id}',
+  	  save: BASE_URL + '/timeSyncConfig/save',
+  	  getAll: BASE_URL + '/timeSyncConfig/all',
+  	  deleteById: BASE_URL + '/timeSyncConfig/{id}',
   }
 };
 

@@ -1,0 +1,221 @@
+<template>
+	<view>
+		<view class="active-user">
+			<text class="t">-- {{ $t('device.TimerControl') }} --</text>
+			<view class="wifi-btns">
+				<button class="btn" size="mini" @click="handlePublish()">
+					{{$t('device.Publish') }}
+				</button>
+				<button class="btn del" size="mini" @click="handleDelete()">
+					{{$t('device.Delete') }}
+				</button>
+			</view>
+		</view>
+		<view class="wifi-list">
+			<view v-if="items.length > 0" class="item shadow" v-for="(item, index) in items" :key="index">
+				<view class="c" style="padding-bottom: 24rpx;justify-content: space-between;">
+					<view v-if="item['isEnabled'] == 1" class="icon-box icon-box-big wi2">
+						<image class="icon" src="/static/icon/2-w.png" mode="widthFix"></image>
+					</view>
+					<view v-else class="icon-box icon-box-big wi">
+						<image class="icon" src="/static/icon/2.png" mode="widthFix"></image>
+					</view>
+					<view>
+						<view class="text-box" v-if="item['controlType'] == 'Brightness'">
+							<text class="key">{{ $t('device.BrightnessValue') }}</text>
+							<text class="wifi-t1">{{item['value']}}%</text>
+						</view>
+						<view class="text-box" v-if="item['controlType'] == 'Volume'">
+							<text class="key">{{ $t('device.VolumeValue') }}</text>
+							<text class="wifi-t1">{{item['value']}}%</text>
+						</view>
+						<view class="text-box">
+							<text class="key">{{ $t('device.ScheduleTime') }}</text>
+							<text class="wifi-t1">{{item.getString('execution')?.split("|")[item.getString('execution')!.split("|").length - 1]}}</text>
+						</view>
+						<view class="text-box">
+							<text class="key">{{ $t('device.RepeatMode') }}</text>
+							<text class="value">{{item['repeatMode']}}</text>
+						</view>
+						<view class="text-box" v-if="item['repeatMode'] != 'day'">
+							<text class="value">{{item.getString('execution')?.split("|")[0]}}</text>
+						</view>
+					</view>
+					<view style="margin-left: 20rpx;">
+						<checkbox :checked="item.isSelect" @tap="selectControl(item)" ></checkbox>
+					</view>
+				</view>
+				<view class="c" style="background-color: #f9f9f9;border-radius: 12rpx;padding: 24rpx;">
+					<view class="text-box-v">
+						<text class="key">{{ $t('index.Status') }}</text> 
+						<text class="value" :class="{active: item['isEnabled'] == '1'}">{{item['isEnabled'] == '0' ? $t('index.Inactive') : $t('index.Activate')}}</text>
+					</view>
+				</view>
+				<view class="c" style="padding-top: 24rpx;">
+					<view  class="text-box">
+						<text class="key">{{$t('device.ValidityPeriod') }}:</text>
+						<text class="value">{{item['validDateEnd']}}</text>
+						<text class="value vend" v-if="item['isvalidEnd']">({{$t('index.Expired') }})</text>
+					</view>
+					<view class="wifi-btns">
+						<button class="btn" size="mini" @click="handleEdit(item)">
+							{{$t('index.Manage') }}
+						</button>
+					</view>
+				</view>
+			</view>
+			<view class="no-more" v-else>
+				<text class="t">{{$t('index.NoMore') }}</text>
+			</view>
+		</view>		
+	</view>
+</template>
+
+<script>
+	import { APIS } from '@/api/config.uts'
+	import { routeGoto } from '@/common/router.uts'
+	import { request } from '@/utils/http/index'
+	export default {
+		name:"timer-controls",
+		props: {
+			items: {
+				type: Array<UTSJSONObject>,
+				default: [] as UTSJSONObject[]
+			},
+			pageType: {
+				type: String,
+				default:''
+			},
+		},
+		data() {
+			return {
+				
+			};
+		},
+		emits: ['refresh'],
+		methods: {
+			selectControl(item: UTSJSONObject) {
+				item['isSelect'] = item['isSelect'] == true? false : true;
+			},
+			handleEdit(item: UTSJSONObject) {
+				routeGoto(`/pages/devices/timercontrol?control_id=${item.id}&control_type=${this.pageType}`);
+			},
+			async handlePublish() {
+				const selectedItems = this.items.filter(c => c['isSelect'] == true);
+				if(selectedItems.length ==0) return;
+				const snCode = selectedItems[0].deviceId;
+				const controlType = selectedItems[0].controlType;
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					
+					for(const item of selectedItems) {
+						item['isEnabled'] = 1;
+					}
+					
+					console.log(selectedItems);
+					const controlData = JSON.stringify(selectedItems);
+						
+					const dataObj = {
+						cmd: 'CMD|Brightness|',
+						data: controlData,
+						deviceSnCode: snCode
+					} as UTSJSONObject
+					
+					switch(controlType){
+						case "Power":
+							dataObj.cmd = "CMD|Screen|"
+							break;
+						case "Brightness":
+							dataObj.cmd = "CMD|Brightness|"
+							break;
+						case "Volume":
+							dataObj.cmd = "CMD|Volume|"
+							break;
+						case "Restart":
+							dataObj.cmd = "CMD|ReStart|"
+							break;
+					}
+					
+					const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
+					if(!res) {
+						uni.showToast({
+							icon: 'none',
+							title: `设备：${snCode} 发布定时任务执行失败`,
+							duration: 3000,
+							success: () => { 
+							}
+						})
+						return;
+					}
+					
+					const apiUrl = APIS.deviceControl.getString('save')!;
+					for(const controlData of selectedItems) {
+						await request("POST", apiUrl, controlData);
+					}					
+					
+					this.$emit("refresh");
+					uni.hideLoading();
+				} catch (err){
+					console.log(err);
+					uni.hideLoading();
+				}
+			},
+			async handleDelete() {
+				const selectedItems = this.items.filter(c => c['isSelect'] == true);
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					
+					for(const item of selectedItems) {
+						console.log(item);
+						const person: UTSJSONObject = {}
+						let apiUrl = APIS.deviceControl.getString('deleteById')!;
+						const id = item['id'].toString();
+						apiUrl = apiUrl.replace("{id}", id);
+						console.log(apiUrl);
+						await request('DELETE', apiUrl, person);
+					}
+					
+					this.$emit("refresh");
+					uni.hideLoading();
+				} catch (err){
+					console.log(err);
+					uni.hideLoading();
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.active-user{
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 5rpx 36rpx;		
+		
+		.t{
+			font-weight: bold;
+			font-size: 28rpx;
+		}
+	}
+	.wifi-btns{
+		flex-direction: row;
+		.btn{
+			// border-radius: 120rpx;
+			border: none;
+			color: $uni-text-color-inverse;
+			font-size: 28rpx;
+			background-color: $uni-bg-color-blue;
+		}
+		.btn.del{
+			color: $uni-color-error;
+			background-color: $uni-text-color-inverse;
+			border: 1px solid #f9f9f9;
+		}
+	}
+
+</style>

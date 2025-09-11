@@ -1,0 +1,142 @@
+<template>
+	<view style="flex: 1;">
+		<input
+			class="uni-input shadow" 
+			:disabled="true" 
+			name="validStart" 
+			:value="value" 
+			:placeholder="placeholder" 
+			maxlength="-1" 
+			@click="showDatePopup" />
+		<!-- popup -->
+		<popup-default
+			v-model:visible="popupTime"
+			:title="$t('device.PleaseSelectTime')"
+			show-icon
+			icon-src=""
+			@confirm="handleValidDate()"
+			>
+			<view class="form">
+				<view class="selected-day">
+					<text class="t">{{$t('device.SelectedTime')}}：</text>
+					<text class="t">{{hour >= 10 ? hour : `0${hour}`}}:{{minute >= 10 ? minute : `0${minute}`}}:{{second >= 10 ? second : `0${second}`}}</text>
+				</view>
+				<view class="space-box"></view>
+				 <picker-view class="picker-view" :value="timeValue" @change="bindChange" :indicator-style="indicatorStyle"
+				      :indicator-class="indicatorClass" :mask-style="maskStyle" :mask-class="maskClass" :mask-top-style="maskTopStyle"
+				      :mask-bottom-style="maskBottomStyle">
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in hours" :key="index"><text class="text">{{item >= 10 ? item : `0${item}`}}</text></view>
+				      </picker-view-column>
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in minutes" :key="index"><text class="text">{{item >= 10 ? item : `0${item}`}}</text>
+				        </view>
+				      </picker-view-column>
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in seconds" :key="index"><text class="text">{{item >= 10 ? item : `0${item}`}}</text></view>
+				      </picker-view-column>
+				    </picker-view>
+			</view>
+		</popup-default>
+		<!-- popup -->
+	</view>
+</template>
+
+<script>
+	export default {
+		name:"picker-time",
+		props: {
+			value: {
+				type: String,
+				default: ''
+			},
+			placeholder: {
+				type: String,
+				default: ''
+			},
+		},
+		data() {
+			const _hours : number[] = []
+			const _hour = 1
+			const _minutes : number[] = []
+			const _minute : number = 1
+			const _seconds : number[] = []
+			const _second = 1
+			for (let i = 0; i < 24; i++) {
+				_hours.push(i)
+			}
+			for (let i = 0; i < 60; i++) {
+				_minutes.push(i)
+			}
+			for (let i = 0; i < 60; i++) {
+				_seconds.push(i)
+			}
+			return {
+				popupTime: false,
+				hours: _hours as number[],
+				hour: _hour as number,
+				minutes: _minutes as number[],
+				minute: _minute as number,
+				seconds: _seconds as number[],
+				second: _second as number,
+				timeValue: [] as number[],
+				indicatorStyle: 'height: 50px;',
+				indicatorClass: '',
+				maskStyle: '',
+				maskClass: '',
+				maskTopStyle: '',
+				maskBottomStyle: '',				
+			};
+		},
+		emits: ['refresh'],
+		onLoad(){
+			
+		},
+		methods: {
+			showDatePopup() {
+				this.popupTime = true;				
+				let dateObj = new Date(`1970-01-01T`+ this.value);
+				this.hour = dateObj.getHours();
+				this.minute = dateObj.getMinutes();
+				this.second = dateObj.getSeconds();
+				this.timeValue = [this.hour, this.minute , this.second]
+			},
+			bindChange(e : UniPickerViewChangeEvent) {
+				const val = e.detail.value
+				
+				this.hour = this.hours[val[0]]
+				this.minute = this.minutes[val[1]]
+				this.second = this.seconds[val[2]]
+			},
+			handleValidDate(){
+				const newValue = (this.hour >= 10 ? `${this.hour}` : `0${this.hour}`) + ':' + (this.minute >= 10 ? `${this.minute}` : `0${this.minute}`) + ':' + (this.second >= 10 ? `${this.second}` : `0${this.second}`)
+				this.$emit('refresh', newValue);
+				this.popupTime = false
+			},
+		}
+	}
+</script>
+
+<style lang="scss">
+	.form{
+		.selected-day{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			.t{
+				font-size: $uni-font-size-base;
+			}
+		}
+		.picker-view {
+		    width: 100%;
+		    height: 220px;
+			.item {
+				height: 50px;
+				.text {
+					line-height: 50px;
+					text-align: center;
+				}
+			}
+		}
+	}
+</style>

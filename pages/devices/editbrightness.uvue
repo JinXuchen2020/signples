@@ -50,9 +50,12 @@
 			<text class="t2">&#8594;</text>
 			<text class="t">{{$t('device.BrightnessAdjustment')}}</text>
 		</view>
-		<view class="list-box">
+		<view>
+			<view class="active-user">
+				<text class="t">-- {{ $t('device.RealTimerControl') }} --</text>
+			</view>
 			<list-view class="uc-menus end">
-				<list-item class="uc-menus-item" @click="handleRouteGoto('/pages/devices/editbrightness?device_id=' + deviceId);">
+				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
 						<text>{{$t('device.BrightnessAdjustment')}}</text>
 					</view>
@@ -75,10 +78,12 @@
 					</view>
 				</list-item>
 			</list-view>
-			<view class="space-box"></view>
-
+			<view class="space-box"></view>					
 		</view>
-
+		<timer-controls :items="deviceControls" :pageType="pageType" @refresh="getDeviceControls"></timer-controls>
+		<view class="add shadow" @click="handleCreate()">
+			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
+		</view>
 	</scroll-view>
 </template>
 
@@ -92,66 +97,84 @@
 		data() {
 			return {
 				userInfo: {} as UTSJSONObject,
-				token: '' as String,
 				deviceInfo: {} as UTSJSONObject,
-				deviceId: "",
-				value_input: 0
+				deviceControls: [] as UTSJSONObject[],
+				value_input: 0,
+				pageType: "Brightness"
 			}
 		},
-		onLoad(e: OnLoadOptions): void {
-		  console.log('edit device', e);
-		    this.deviceId = e['device_id'] as string;
+		onLoad(): void {
+			let that = this
+			const { state } = useState();
+			if (state.token != '' && state.activeUser['id'] != null) {
+				that.userInfo = state.activeUser;
+				that.deviceInfo = state.activeDevice;
+				console.log(that.deviceInfo);
+				const currentDate = new Date().getTime()
+				const day = this.deviceInfo['validEnd'] as string;
+				const daynum = new Date(day).getTime() as number;
+				if(currentDate > daynum){
+					that.deviceInfo['isvalidEnd'] = true;
+				}else {
+					that.deviceInfo['isvalidEnd'] = false;
+				}
+				
+				if(this.deviceInfo['brightness'] == null){
+					this.value_input = 0;
+				}else{
+					this.value_input = this.deviceInfo['brightness'] as number;
+				}
+			}
+			else {
+				uni.showToast({
+					icon: 'none',
+					title: `请先选择设备`,
+				})
+			}
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.brightnessAdjustment')
 			});
 		},
-		onShow() {
-			let that = this
-			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
-				that.userInfo = state.loginUser;
-				that.getDeviceInfo();
-			}
-			else {
-				console.log('读取失败userInfo或不存在');
-			}
+		onShow() {			
+			this.getDeviceControls();
 		},
 		methods: {
 			handleRouteGoto(url: string){
 				routeGoto(url)
 			},
-			async getDeviceInfo() {
+			async getDeviceControls() {
 				try {
 					uni.showLoading({
 						title: ''
 					});
 					
 					const person: UTSJSONObject = {}
-					const param = this.deviceId;
-					const result = await request('GET', APIS.deviceInfo as string + param, person) 
-					this.deviceInfo = result as UTSJSONObject;
-					if(this.deviceInfo['brightness'] == null){
-						this.value_input = 0;
-					}else{
-						this.value_input = this.deviceInfo['brightness'] as number;
-					}
-					
-					const currentDate = new Date().getTime()
-					const day = this.deviceInfo['validEnd'] as String;
-					const daynum = new Date(day).getTime() as number;
-					if(currentDate > daynum){
-						this.deviceInfo['isvalidEnd'] = true;
-					}else{
-						this.deviceInfo['isvalidEnd'] = false;
-					}
-					
+					const currentDate = Date.now();
+					const apiUrl = APIS.deviceControl.getString('getAll')!;
+					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
+					const result = await request('GET', apiUrl + param, person) 
+					this.deviceControls = result as UTSJSONObject[];
+					console.log(result);
+					this.deviceControls.forEach((item: UTSJSONObject) => {
+						const nitem = item as UTSJSONObject;
+						const day = item['validDateEnd'] as string;
+						const daynum = new Date(day).getTime();
+						if(currentDate > daynum){
+							nitem['isvalidEnd'] = true;
+						}else{
+							nitem['isvalidEnd'] = false;
+						}
+						nitem['isSelect'] = false;
+					});
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
 					console.log(err)
 				}
 			},
-			
+			handleCreate(){
+				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
+			},			
 			changing(event: UniSliderChangeEvent){
 				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
 				this.value_input = event.detail.value
@@ -163,8 +186,8 @@
 					uni.showLoading({
 						title: ''
 					});
-					const controlData = JSON.stringify([{
-						"controlType": "Brightness",
+					const controlData = {
+						"controlType": this.pageType,
 						"deviceId": this.deviceInfo['snCode'],
 						"execution": "00:00:00",
 						"executionType": "REAL_TIME",
@@ -175,11 +198,11 @@
 						"validDateStart": new Date().toISOString(),
 						"value": this.value_input,
 						"id": 0
-						}]);
+					};
 						
 					const dataObj = {
 						cmd: 'CMD|Brightness|',
-						data: controlData,
+						data: JSON.stringify([controlData]),
 						deviceSnCode: this.deviceInfo['snCode']
 					} as UTSJSONObject
 					
@@ -196,14 +219,25 @@
 					}
 					
 					await request("PUT", APIS.updateDevice as string, {
-						id: this.deviceId,
+						id: this.deviceInfo['id'],
 						brightness: this.value_input
 					});
+					
+					const apiUrl = APIS.deviceControl.getString('save')!;
+					await request("POST", apiUrl, controlData);
+					uni.showToast({
+						icon: 'none',
+						title: `设备：${this.deviceInfo['snCode']} 亮度更新成功`,
+					})
 					
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					console.log(err);
+					uni.showToast({
+						icon: 'none',
+						title: `${err.message}`,
+					})
 				}
 			}
 		}

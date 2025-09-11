@@ -1,28 +1,30 @@
 <template>
 	<scroll-view class="app">
 		<form class="defalut-form" @submit="onFormSubmit">
-			<list-view class="uc-menus end">
-				<list-item class="uc-menus-item" @click="handleRouteGoto('/pages/devices/editbrightness?device_id=' + deviceId);">
-					<view class="uc-menus-item-title">
-						<text>{{$t('device.BrightnessAdjustment')}}</text>
-					</view>
-					<view class="input-box">
-						<text class="t">{{formData.value}}%</text>
-					</view>
-				</list-item>
-				<list-item class="uc-menus-item-2">
-					<view class="icon-box no-margin">
-						<image class="icon" src="/static/svg/24gf-volumeZero.png" mode="widthFix"></image>
-					</view>
-					<slider 
-						v-model="formData.value" 
+			<view class="item" v-if="formData.controlType == 'Brightness'" >
+				<view class="label"><text class="t">{{$t('device.BrightnessValue')}}</text></view>
+				<view class="input-box">
+					<slider
+						:value="formData.value" 
+						:show-value="true"
+						@changing="changing"
+						@change="changed"
 						foreColor="#007aff"
-						style="width: 76%"></slider>
-					<view class="icon-box no-margin">
-						<image class="icon" src="/static/svg/24gf-volumeHigh.png" mode="widthFix"></image>
-					</view>
-				</list-item>
-			</list-view>
+						></slider>
+				</view>
+			</view>
+			<view class="item" v-if="formData.controlType == 'Volume'" >
+				<view class="label"><text class="t">{{$t('device.VolumeValue')}}</text></view>
+				<view class="input-box">
+					<slider
+						:value="formData.value" 
+						:show-value="true"
+						@changing="changing"
+						@change="changed"
+						foreColor="#007aff"
+						></slider>
+				</view>
+			</view>
 			<view class="item">
 				<view class="label"><text class="t">{{ $t('device.RepeatMode') }}</text></view>
 				<view class="input-box">
@@ -32,7 +34,7 @@
 					<checkbox 
 						style="margin: 6px;"
 						v-for="(item, index) in weekList" 
-						:checked="repeatString.includes(item.key)"
+						:checked="repeatString.includes(item.key as string)"
 						:key="index" 
 						:value="item.key">
 							<text>{{item.name}}</text>
@@ -42,7 +44,7 @@
 					<checkbox 
 						style="margin: 6px;"
 						v-for="(item, index) in dayList" 
-						:checked="repeatString.includes(item.key)"
+						:checked="repeatString.includes(item.key as string)"
 						:key="index" 
 						:value="item.key">
 							<text>{{item.name}}</text>
@@ -52,25 +54,33 @@
 					<checkbox 
 						style="margin: 6px;"
 						v-for="(item, index) in monthList" 
-						:checked="repeatString.includes(item.key)"
+						:checked="repeatString.includes(item.key as string)"
 						:key="index" 
 						:value="item.key">
 							<text>{{item.name}}</text>
 					</checkbox>
 				</checkbox-group>
 			</view>
-			<view class="item">
+			<view class="item" v-if="formData.controlType == 'Power'">
+				<view class="label"><text class="t">{{$t('device.ScheduleTime')}}</text></view>
+				<view class="input-box input-box-row">
+					<picker-time :value="powerOnTime" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('powerOnTime', value)"></picker-time>
+					<view style="width: 24rpx;"></view>
+					<picker-time :value="powerOffTime" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('powerOffTime', value)"></picker-time>
+				</view>
+			</view>
+			<view class="item" v-else>
 				<view class="label"><text class="t">{{$t('device.ScheduleTime')}}</text></view>
 				<view class="input-box">
-					<input v-model="executeTime" class="uni-input" />
+					<picker-time :value="executeTime" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('executeTime', value)"></picker-time>
 				</view>
 			</view>
 			<view class="item">
 				<view class="label"><text class="t">{{$t('device.ValidTime')}}</text></view>
-				<view class="input-box">
-					<input type="text" v-model="formData.validDateStart" class="uni-input" />
-					<text>至</text>
-					<input type="text" v-model="formData.validDateEnd" class="uni-input" />
+				<view class="input-box input-box-row">
+					<picker-date :value="formData.validDateStart" :placeholder="$t('device.PleaseSelectStartDate')" @refresh="(value: string)=> updateProperty('validDateStart', value)" ></picker-date>
+					<view style="width: 24rpx;"></view>
+					<picker-date :value="formData.validDateEnd" :placeholder="$t('device.PleaseSelectEndDate')" @refresh="(value: string)=> updateProperty('validDateEnd', value)"></picker-date>
 				</view>
 			</view>
 			<view class="item">
@@ -89,6 +99,8 @@
 		data() {
 			return {
 				controlId: '',
+				controlType: '',
+				deviceInfo:{} as UTSJSONObject,
 				formData: {} as UTSJSONObject,
 				repeatModes: [
 					{
@@ -179,15 +191,36 @@
 				] as UTSJSONObject[],
 				currentRepeatMode:'',
 				repeatString:'',
-				executeTime: ''
+				executeTime: '00:00:00',
+				powerOnTime: '00:00:00',
+				powerOffTime: '00:00:00',
 			};
 		},
 		onLoad(e: OnLoadOptions) {
 			this.controlId = e['control_id'] as string;
-			if(this.controlId != null && this.controlId != "-1") {
+			this.controlType = e['control_type'] as string;
+			const { state } = useState();
+			this.deviceInfo = state.activeDevice;
+			if(this.controlId != "-1") {
 				this.getDeviceControlInfo();
 			}
-			this.currentRepeatMode = this.repeatModes[0].getString('name')!;
+			else {
+				this.formData = {
+					controlType: this.controlType,
+					repeatMode: 'day',
+					validDateStart: new Date().toISOString().split("T")[0],
+					validDateEnd:new Date().toISOString().split("T")[0],
+					value: 0,
+					deviceId: this.deviceInfo['snCode'],
+					executionType: "SCHEDULED",
+					isEnabled: 0,
+					userAccount: this.deviceInfo['userAccount']					
+				}
+				
+				this.currentRepeatMode = this.repeatModes.find(c => c.getString('key') == this.formData.getString('repeatMode'))?.getString('name')!;
+			}
+			
+			console.log(this.formData);
 			this.dayList = [] as UTSJSONObject[]
 			for (let i = 0; i < 30; i++) {
 				this.dayList.push({
@@ -195,8 +228,6 @@
 					name: (i+1).toString()
 				} as UTSJSONObject)
 			}
-			
-			
 		},
 		methods: {
 			async getDeviceControlInfo() {
@@ -206,29 +237,23 @@
 					});
 					const apiUrl = APIS.deviceControl.getString('getById')!;
 					const result = await request('GET', apiUrl.replace("{id}", `${this.controlId}`), {}) as UTSJSONObject;
+					console.log(result);
 					this.formData = result as UTSJSONObject;
-					const executionString = result.getString('Execution')!;
+					const executionString = result.getString('execution')!;
 					if (executionString.includes("|")) {						
-						this.executeTime = result.getString('Execution')!.split('|')[1];
-						this.repeatString = result.getString('Execution')!.split('|')[0];
+						this.executeTime = result.getString('execution')!.split('|')[1];
+						this.repeatString = result.getString('execution')!.split('|')[0];
 					}else {						
 						this.executeTime = executionString;
 						this.repeatString = '';
 					}
-					if(this.deviceInfo['volume'] == null){
-						this.value_input = 0;
-					}else{
-						this.value_input = this.deviceInfo['volume'] as number;
-					}
 					
-					const currentDate = new Date().getTime()
-					const day = this.deviceInfo['validEnd'] as String;
-					const daynum = new Date(day).getTime() as number;
-					if(currentDate > daynum){
-						this.deviceInfo['isvalidEnd'] = true;
-					}else{
-						this.deviceInfo['isvalidEnd'] = false;
+					if(this.formData.controlType == "Power") {
+						this.powerOnTime = this.executeTime.split('-')[0];
+						this.powerOffTime = this.executeTime.split('-')[1];
 					}
+										
+					this.currentRepeatMode = this.repeatModes.find(c => c.getString('key') == this.formData.getString('repeatMode'))?.getString('name')!;
 					
 					uni.hideLoading();
 				} catch (err){
@@ -240,69 +265,63 @@
 				this.repeatString = e.detail.value.map(c => `${c}#`).join('');
 				console.log(this.repeatString);
 			},
-			onFormSubmit(){
-				// if(this.name == '' || this.snCode == '' || this.width == '' || this.height == '' || this.validStart == '' || this.validEnd == '' || this.contactName == '' || this.contactPhone == ''){
-				// 	uni.showToast({
-				// 		icon: 'none',
-				// 		title: '字段不能为空',
-				// 		duration: 3000,
-				// 		success: () => {
-				// 		}
-				// 	})
-				// }else{
-				// 	try {
-				// 		uni.showLoading({
-				// 			title: ''
-				// 		});
-				// 		uni.request({
-				// 			url: APIS.createDevice as string,
-				// 			method: "POST",
-				// 			header: {
-				// 				'Authorization': "Bearer " + this.token
-				// 			},
-				// 			data:{
-				// 				name: this.name,
-				// 				snCode: this.snCode,
-				// 				width: this.width,
-				// 				height: this.height,
-				// 				validStart: this.validStart,
-				// 				validEnd: this.validEnd,
-				// 				contactName: this.contactName,
-				// 				contactPhone: this.contactPhone,
-				// 				userAccount: this.userInfo.account,
-				// 				brightness: 10,
-				// 				volume: 10,
-				// 				status: 0
-				// 			},
-				// 			success: (res) => {
-				// 				console.log('createDevice res', res)
-				// 				const result = res.data as UTSJSONObject
-				// 				uni.showToast({
-				// 					icon: 'none',
-				// 					title: result['msg'] as string,
-				// 					duration: 2000,
-				// 					success: () => {
-				// 						this.name = '' as string
-				// 						this.snCode = '' as string
-				// 						this.width = '' as string
-				// 						this.height = '' as string
-				// 						this.validStart = '' as string
-				// 						this.validEnd = '' as string
-				// 						this.contactName =  '' as string
-				// 						this.contactPhone = '' as string
-				// 					}
-				// 				})
-				// 				uni.hideLoading();
-				// 			},
-				// 			fail: () => {
-								
-				// 			}
-				// 		});
+			changing(event: UniSliderChangeEvent){
+				this.formData.value = event.detail.value
+			},
+			changed(event: UniSliderChangeEvent){
+				this.formData.value = event.detail.value
+			},
+			updateProperty(propertyName: string, proValue: string){
+				if(this.formData.hasOwnProperty(propertyName)){					
+					this.formData[propertyName] = proValue;
+				}
+				else {
+					this.$data[propertyName] = proValue;
+				}
+			},
+			async onFormSubmit(){
+				if(this.formData.repeatMode == '' || this.formData.executeTime == '' || this.executeTime == '' || this.formData.validDateStart == '' || this.formData.validDateEnd == ''){
+					uni.showToast({
+						icon: 'none',
+						title: '字段不能为空',
+						duration: 3000,
+						success: () => {
+						}
+					})
+				}else{
+					try {
+						uni.showLoading({
+							title: ''
+						});
 						
-				// 	} catch (err){
-				// 		console.log(err)
-				// 	}
-				// }
+						const controlData = {
+							...this.formData,
+							execution: this.getExecuteTime(),
+						};
+						
+						console.log(controlData);
+						
+						const apiUrl = APIS.deviceControl.getString('save')!;
+						await request("POST", apiUrl, controlData);
+						
+						uni.showToast({
+							icon: 'none',
+							title: '保存成功',
+							duration: 2000,
+						})
+						
+						uni.hideLoading();
+						uni.navigateBack();
+					} catch (err : Error){
+						uni.hideLoading();
+						uni.showToast({
+							icon: 'none',
+							title: `${err.message}`,
+							duration: 2000,
+						})
+						console.log(err)
+					}
+				}
 			},
 			showEffectActionSheet() {
 				const options: ShowActionSheetOptions = {
@@ -320,6 +339,21 @@
 				}
 				uni.showActionSheet(options)
 			},
+			getExecuteTime(){
+				if(this.formData.controlType == "Power") {
+					this.executeTime = `${this.powerOnTime}-${this.powerOffTime}`;
+				}
+				
+			    switch (this.formData.repeatMode)
+			    {
+			        case "week":
+			        case "month":
+			        case "year":
+			            return `${this.repeatString}|${this.executeTime}`;
+			        default:
+			            return this.executeTime;
+			    }
+			}
 		}
 	}
 </script>

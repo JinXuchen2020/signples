@@ -1,5 +1,5 @@
 <template>
-	<view class="app">
+	<scroll-view class="app">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
@@ -22,15 +22,15 @@
 				</view>
 				<view class="c" style="background-color: #f9f9f9;border-radius: 12rpx;padding: 24rpx;">
 					<view class="text-box-v">
-						<text class="key">{{$t("index.Resolution")}}</text><text class="value">{{deviceInfo['width']}}*{{deviceInfo['height']}}</text>
+						<text class="key">{{$t('index.Resolution')}}</text><text class="value">{{deviceInfo['width']}}*{{deviceInfo['height']}}</text>
 					</view>
 					<view class="text-box-v">
-						<text class="key">{{$t("index.Status")}}</text> 
-						<text class="value" :class="{active: deviceInfo['status'] == '1'}">{{deviceInfo['status'] == '0' ? $t("index.Inactive") : $t("index.Activate")}}</text>
+						<text class="key">{{$t('index.Status')}}</text> 
+						<text class="value" :class="{active: deviceInfo['status'] == '1'}">{{deviceInfo['status'] == '0' ? $t('index.Inactive') : $t('index.Activate')}}</text>
 					</view>
 					<view class="text-box-v">
-						<text class="key">{{$t("index.ConnectionStatus")}}</text> 
-						<text class="value" :class="{active: deviceInfo['connectStatus'] == 1}">{{deviceInfo['connectStatus'] == 0 ? $t("index.NotConnected") :  $t("index.Connected")}}</text>
+						<text class="key">{{$t('index.ConnectionStatus')}}</text> 
+						<text class="value" :class="{active: deviceInfo['connectStatus'] == 1}">{{deviceInfo['connectStatus'] == 0 ? $t('index.NotConnected') : $t('index.Connected')}}</text>
 					</view>
 				</view>
 				<view class="c" style="padding-top: 24rpx;">
@@ -47,86 +47,63 @@
 		</view>
 		<view class="device-option-title">
 			<text class="t">{{$t('index.DeviceControl')}}</text>
+			<text class="t2">&#8594;</text>
+			<text class="t">{{$t('device.VolumeAdjustment')}}</text>
 		</view>
-		<view class="list-box">
-			<view class="uc-menus">
-				<view class="uc-menus-item" @click="handleRouteGoto('/pages/devices/editbrightness');">
-					<view class="uc-menus-item-title">
-						<text>{{$t('device.BrightnessAdjustment')}}</text>
-					</view>
-					<view class="icon-box">
-						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
-					</view>
-				</view>
-				<view class="uc-menus-item" @click="handleRouteGoto('/pages/devices/volume');">
+		<view>
+			<view class="active-user">
+				<text class="t">-- {{ $t('device.RealTimerControl') }} --</text>
+			</view>
+			<list-view class="uc-menus end">
+				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
 						<text>{{$t('device.VolumeAdjustment')}}</text>
 					</view>
-					<view class="icon-box">
-						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					<view class="input-box">
+						<text class="t">{{value_input}}%</text>
 					</view>
-				</view>
-				<view class="uc-menus-item" @click="handleRouteGoto('/pages/devices/edittime');">
-					<view class="uc-menus-item-title">
-						<text>{{$t('device.TimeSynchronizationConfiguration')}} </text>
+				</list-item>
+				<list-item class="uc-menus-item-2">
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeZero.png" mode="widthFix"></image>
 					</view>
-					<view class="icon-box">
-						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
+					<slider 
+						:value="value_input" 
+						@changing="changing"
+						@change="changed"
+						foreColor="#007aff"
+						style="width: 76%"></slider>
+					<view class="icon-box no-margin">
+						<image class="icon" src="/static/svg/24gf-volumeHigh.png" mode="widthFix"></image>
 					</view>
-				</view>
-				<view class="uc-menus-item" @click="handleRouteGoto('/pages/devices/restart');">
-					<view class="uc-menus-item-title">
-						<text>{{$t('device.Restart')}}</text>
-					</view>
-					<view class="icon-box">
-						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
-					</view>
-				</view>
-				<view class="uc-menus-item" @click="handleRouteGoto('/pages/devices/poweroffon');">
-					<view class="uc-menus-item-title">
-						<text> {{$t('device.Power')}}</text>
-					</view>
-					<view class="icon-box">
-						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
-					</view>
-				</view>
-			</view>			
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>					
 		</view>
-		
-		<view class="cg-btns-box">
-			<button class="btn defaultyle" :class="{upgrade: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleUpgrade(deviceInfo)">
-				{{deviceInfo['status'] == 0 ? $t('index.Activate') : $t('device.Upgrade')}}
-			</button>
-			<button class="btn defaultyle" :class="{stopdevice: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleStop(deviceInfo)">
-				{{$t('device.Deactivate')}}
-			</button>
-			<button v-if="deviceInfo['status'] == 1" class="btn defaultyle" size="mini" @click="handleDelete(deviceInfo)">
-				{{$t('device.Delete')}}
-			</button>
+		<timer-controls :items="deviceControls" :pageType="pageType" @refresh="getDeviceControls"></timer-controls>
+		<view class="add shadow" @click="handleCreate()">
+			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
 		</view>
-	</view>
+	</scroll-view>
 </template>
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
-	import { request } from '@/utils/http/index'
 	import { useState } from '@/store/index.uts'
+	import { request } from '@/utils/http/index'
 	
 	export default {
 		data() {
 			return {
 				userInfo: {} as UTSJSONObject,
 				deviceInfo: {} as UTSJSONObject,
-				deviceId: 0
+				deviceControls: [] as UTSJSONObject[],
+				value_input: 0,
+				pageType: "Volume"
 			}
 		},
 		onLoad(): void {
-			uni.setNavigationBarTitle({
-				title: this.$t('pages.deviceManagement')
-			});
-		},
-		onShow() {
 			let that = this
 			const { state } = useState();
 			if (state.token != '' && state.activeUser['id'] != null) {
@@ -141,7 +118,11 @@
 					that.deviceInfo['isvalidEnd'] = false;
 				}
 				
-				that.deviceId = that.deviceInfo['id'] as number;
+				if(this.deviceInfo['volume'] == null){
+					this.value_input = 0;
+				}else{
+					this.value_input = this.deviceInfo['volume'] as number;
+				}
 			}
 			else {
 				uni.showToast({
@@ -149,119 +130,112 @@
 					title: `请先选择设备`,
 				})
 			}
+			uni.setNavigationBarTitle({
+				title: this.$t('device.VolumeAdjustment')
+			});
+		},
+		onShow() {			
+			this.getDeviceControls();
 		},
 		methods: {
 			handleRouteGoto(url: string){
 				routeGoto(url)
 			},
-			async handleDelete(device: UTSJSONObject){
-				uni.showModal({
-					title: "确定要删除该设备吗?",
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							
-							try {
-								uni.showLoading({
-									title: ''
-								});
-								
-								const person: UTSJSONObject = {}
-								const param = device.id;
-								request('DELETE', APIS.deleteDevice as string + param, person).then(()=> {									
-									uni.hideLoading();
-									uni.navigateBack();
-								})
-							} catch (err){
-								console.log(err)
-							}
-						}
-					}
-				})
-			},
-			handleUpgrade(device: UTSJSONObject){
-				if(device['connectStatus'] != 1){
-					uni.showToast({
-						icon: 'none',
-						title: '设备未连接，不可操作',
-						duration: 2000,
-						success: () => {
-							
-						}
-					})
-				}else {
-					console.log('Can do this.')
-					if(this.deviceInfo['status'] == 0) 
-					{
-						uni.showModal({
-							title: "确定要激活该设备吗?",
-							success: (res: UniShowModalResult) => {
-								if(res.confirm){								
-									try {
-										uni.showLoading({
-											title: ''
-										});
-										
-										request("PUT", APIS.updateDevice as string, {
-												id: this.deviceId,
-												status: 1
-											}).then(() => {
-												uni.showToast({
-													icon: 'none',
-													title: `设备：${this.deviceInfo['snCode']} 激活成功`,
-													duration: 3000,
-												})
-											});
-										
-									} catch (err){
-										console.log(err)
-									}
-								}
-							}
-						})
-					}
-					else {
-						routeGoto('/pages/devices/create?device_id=' + this.deviceId);
-					}
+			async getDeviceControls() {
+				try {
+					uni.showLoading({
+						title: ''
+					});
 					
+					const person: UTSJSONObject = {}
+					const currentDate = Date.now();
+					const apiUrl = APIS.deviceControl.getString('getAll')!;
+					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
+					const result = await request('GET', apiUrl + param, person) 
+					this.deviceControls = result as UTSJSONObject[];
+					console.log(result);
+					this.deviceControls.forEach((item: UTSJSONObject) => {
+						const nitem = item as UTSJSONObject;
+						const day = item['validDateEnd'] as string;
+						const daynum = new Date(day).getTime();
+						if(currentDate > daynum){
+							nitem['isvalidEnd'] = true;
+						}else{
+							nitem['isvalidEnd'] = false;
+						}
+						nitem['isSelect'] = false;
+					});
+					uni.hideLoading();
+				} catch (err){
+					uni.hideLoading();
+					console.log(err)
 				}
 			},
-			handleStop(device: UTSJSONObject){
-				if(device['connectStatus'] != 1){
+			handleCreate(){
+				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
+			},			
+			changing(event: UniSliderChangeEvent){
+				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
+				this.value_input = event.detail.value
+			},
+			async changed(event: UniSliderChangeEvent){
+				this.value_input = event.detail.value
+				//修改设备音量
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					const controlData = {
+						"controlType": this.pageType,
+						"deviceId": this.deviceInfo['snCode'],
+						"execution": "00:00:00",
+						"executionType": "REAL_TIME",
+						"isEnabled": 0,
+						"repeatMode": "",
+						"userAccount": this.deviceInfo['userAccount'],
+						"validDateEnd": new Date().toISOString(),
+						"validDateStart": new Date().toISOString(),
+						"value": this.value_input,
+						"id": 0
+					};
+						
+					const dataObj = {
+						cmd: 'CMD|Volume|',
+						data: JSON.stringify([controlData]),
+						deviceSnCode: this.deviceInfo['snCode']
+					} as UTSJSONObject
+					
+					const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
+					if(!res) {
+						uni.showToast({
+							icon: 'none',
+							title: `设备：${this.deviceInfo['snCode']} 音量调节命令执行失败`,
+							duration: 3000,
+							success: () => { 
+							}
+						})
+						return;
+					}
+					
+					await request("PUT", APIS.updateDevice as string, {
+						id: this.deviceInfo['id'],
+						volume: this.value_input
+					});
+					
+					const apiUrl = APIS.deviceControl.getString('save')!;
+					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: '设备未连接，不可操作',
-						duration: 2000,
-						success: () => {
-							
-						}
+						title: `设备：${this.deviceInfo['snCode']} 音量更新成功`,
 					})
-				}else{
-					console.log('Can do this.')
-					uni.showModal({
-						title: "确定要停用该设备吗?",
-						success: (res: UniShowModalResult) => {
-							if(res.confirm){
-								
-								try {
-									uni.showLoading({
-										title: ''
-									});
-									request("PUT", APIS.updateDevice as string, {
-											id: this.deviceId,
-											enabled: 0
-										}).then(() => {
-											uni.showToast({
-												icon: 'none',
-												title: `设备：${this.deviceInfo['snCode']} 停用成功`,
-												duration: 3000,
-											})
-										});
-									
-								} catch (err){
-									console.log(err)
-								}
-							}
-						}
+					
+					uni.hideLoading();
+				} catch (err){
+					uni.hideLoading();
+					console.log(err);
+					uni.showToast({
+						icon: 'none',
+						title: `${err.message}`,
 					})
 				}
 			}
@@ -403,14 +377,13 @@
 			}
 		}
 	}
-	.cg-btns-box{
+	.btns-box{
 		width: 100%;
 		padding: 24rpx 36rpx;
 		flex-direction: row;
 		align-items: center;
 		justify-content: space-between;
 		background-color: $uni-bg-color;
-		border-top: 1px solid #eeeeee;
 		position: fixed;
 		bottom: 0;
 		left: 0;
@@ -421,13 +394,13 @@
 			background-color: $uni-color-primary;
 			border: 1px solid $uni-color-primary;
 		}
-		.stopdevice{
+		.stop{
 			width: 31.4%;
 			color: $uni-text-color-inverse;
 			background-color: $uni-color-error;
 			border: 1px solid $uni-color-error;
 		}
-		.defaultyle{
+		.default{
 			width: 31.4%;
 			color: $uni-text-color-placeholder;
 			background-color: $uni-bg-color;

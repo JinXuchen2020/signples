@@ -15,6 +15,9 @@ let defaultLang =  'zh-CN'
 if(defl != ''){
 	defaultLang = defl
 }
+else {	
+	uni.setStorageSync('language', defaultLang)
+}
 
 const tabBars = new UTSJSONObject({
 	'en': ['HOME','USER CENTER'],

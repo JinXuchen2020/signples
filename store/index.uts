@@ -63,10 +63,10 @@ export function useState() {
 	    try {
 	        state.token = uni.getStorageSync('token') as string;
 	        state.loginUser = uni.getStorageSync('userInfo') as UTSJSONObject;
-	        state.program = uni.getStorageSync('program') as UTSJSONObject;
-	        state.programFolder = uni.getStorageSync('program-folder') as string;
 	        state.activeDevice = uni.getStorageSync('active-device') as UTSJSONObject;
 	        state.activeUser = uni.getStorageSync('active-user') as UTSJSONObject;
+	        state.programFolder = uni.getStorageSync('program-folder') as string;
+	        // state.program = uni.getStorageSync('program') as UTSJSONObject;
 	    } catch (e) {
 	        console.error('Failed to load state from storage', e);
 	    }

@@ -1,0 +1,226 @@
+<template>
+	<view class="page-option-form" v-if="formData != null">
+		<view class="item">
+			<view class="item-key">
+				<text class="t">名称</text>
+			</view>
+			<view class="item-value">
+				<input type="text" :value="formData?.name" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('name', e.detail.value)" />
+			</view>
+		</view>
+		<view class="item">
+			<view class="item-key">
+				<text class="t">类型</text>
+			</view>
+			<view class="item-value">
+				<radio-group name="type" @change="handleTypeChange">
+					<view class="radio-group" >
+						<radio class="radio" value="normal" :checked="formData?.type == 'normal'" >常规</radio>
+						<radio value="ad" :checked="formData?.type == 'ad'">广告</radio>
+					</view>
+				</radio-group>
+			</view>
+		</view>
+		<view class="item">
+			<view class="item-key">
+				<text class="t">有效期</text>
+			</view>
+			<view class="item-value">
+				<checkbox :checked="formData?.isHasValidity == true" @tap="handleIsHasValidityChange"></checkbox>
+			</view>
+		</view>
+		<view class="item" v-if="formData?.isHasValidity == true">
+			<view class="item-key">
+				<text class="t">开始日期</text>
+			</view>
+			<view class="item-value">
+				<picker-date :value="formData.validStartDate?.toISOString()" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validStartDate', value)"></picker-date>
+			</view>
+		</view>
+		<view class="item" v-if="formData?.isHasValidity == true">
+			<view class="item-key">
+				<text class="t">结束日期</text>
+			</view>
+			<view class="item-value">
+				<picker-date :value="formData.validEndDate?.toISOString()" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validEndDate', value)"></picker-date>
+			</view>
+		</view>
+		<view class="item">
+			<view class="item-key">
+				<text class="t">播放次数</text>
+			</view>
+			<view class="item-value">
+				<input type="number" :value="formData?.playCount" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('playCount', e.detail.value)" />
+			</view>
+		</view>
+		<view class="item">
+			<view class="item-key">
+				<text class="t">时间计划表</text>
+			</view>
+			<view class="item-value">
+				<view class="sub-list" style="width: 100%;">
+					<view class="sub-item" v-for="item in formData?.schedulers" :key="item.id">
+						<view class="sub-value">
+							<checkbox-group class="radio-group" @change="(event: UniCheckboxGroupChangeEvent) => handleScheduleDayChange(item, event.detail.value)">
+								<checkbox v-for="scheduleDay in item.scheduleDays" :key="scheduleDay.day"
+									:value="scheduleDay.day" :checked="scheduleDay.selected">
+									{{ scheduleDay.label }}
+								</checkbox>
+							</checkbox-group>
+						</view>
+						<view class="input-box input-box-row">
+							<picker-time :value="item.startTime" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateScheduler('startTime', item, value)"></picker-time>
+							<view style="width: 24rpx;"></view>
+							<picker-time :value="item.endTime" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateScheduler('endTime', item, value)"></picker-time>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
+	export default {
+		props: {
+			item: {
+				type: MediaPage,
+				default: null
+			},
+		},
+		emits: ['refresh'],
+		data() {
+			return {
+				formData: null as MediaPage | null,				
+			}
+		},
+		watch: {
+			item(newValue?: MediaPage) {
+				if (newValue instanceof MediaPage) {	
+					this.formData = newValue as MediaPage;
+				}
+				else {
+					this.formData = null;
+				}
+			}
+		},
+		methods: {
+			updateProperty(propertyName: string, proValue: string){
+				if(propertyName == 'name') {
+					this.formData!.name = proValue;
+				}
+				
+				if(propertyName == 'validStartDate') {
+					this.formData!.validStartDate = new Date(proValue) ;
+				}
+				
+				if(propertyName == 'validEndDate') {
+					this.formData!.validEndDate = new Date(proValue);
+				}
+				
+				if(propertyName == 'playCount') {
+					this.formData!.playCount = parseInt(proValue);
+				}
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			},
+			handleIsHasValidityChange(){
+				this.formData!.isHasValidity = !this.formData!.isHasValidity;
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			},
+			handleTypeChange(event: UniRadioGroupChangeEvent){
+				this.formData!.type = event.detail.value;
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			},
+			handleScheduleDayChange (item: Scheduler, newValues: string[]){
+				const selectedValues = newValues;
+				const scheduler = item.toModel();
+				const newScheduler = new Scheduler({
+					...scheduler,
+					ScheduleDays: selectedValues.map(c=> parseInt(c))
+				});
+				
+				this.formData!.schedulers.splice(0, 1, newScheduler);
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			},
+			updateScheduler(propertyName: string, item: Scheduler, newValue: string) {				
+				if(propertyName == 'startTime') {
+					item.startTime = newValue;
+				}
+				if(propertyName == 'endTime') {
+					item.endTime = newValue;
+				}
+				
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.page-option-form{
+		background: #ffffff;
+		border-radius: 24rpx;
+		box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
+		padding: 12rpx 0;
+		.item {
+			padding: 18rpx 24rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			
+			.item-key{
+				width: 20%;
+				.t{
+					font-size: 14px;
+					color: #999999;
+				}
+			}
+			.item-value{
+				width: 80%;
+				display: flex;
+				flex-direction: row;
+				.sub-list{
+					width: 100%;
+					
+					.sub-item{
+						width: 100%;
+						
+						.sub-value{
+							flex-direction: row;
+							align-items: center;
+							justify-content: space-between;
+							margin-bottom: 10rpx;
+						}
+					}
+				}
+				.uni-input{
+					border: 1px solid #ccc;
+					border-radius: 12rpx;
+				}
+			}
+		}
+	}
+	
+	.input-box{
+		padding-top: 18rpx;
+		.uni-input{
+			padding: 18rpx;
+			border-radius: $uni-border-radius-lg;
+			border: 1px solid;
+			border-color: $uni-color-grey2;
+		}
+	}
+	
+	.input-box.input-box-row{
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+</style>

@@ -109,6 +109,15 @@
 			}
 		},
 		{
+			"path" : "pages/devices/volume",
+			"style" : 
+			{
+				"navigationBarTitleText" : "%pages.volumeAdjustment%",
+				"backgroundColorContent": "#ffffff",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path" : "pages/devices/edittime",
 			"style" : 
 			{

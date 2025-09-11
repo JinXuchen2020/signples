@@ -50,34 +50,7 @@
 			<text class="t2">&#8594;</text>
 			<text class="t">{{$t('device.Power')}}</text>
 		</view>
-		
-		<view class="list-box">
-			<list-view class="uc-menus end">
-				<list-item class="uc-menus-item">
-					<view class="uc-menus-item-title">
-						<text>{{$t('device.BrightnessAdjustment')}}</text>
-					</view>
-					<view class="input-box">
-						<text class="t">{{value_input}}%</text>
-					</view>
-				</list-item>
-				<list-item class="uc-menus-item-2">
-					<view class="icon-box no-margin">
-						<image class="icon" src="/static/svg/24gf-volumeZero.png" mode="widthFix"></image>
-					</view>
-					<!-- <slider 
-						:value="value_input" 
-						@changing="changing"
-						@change="changed"
-						foreColor="#007aff"
-						style="width: 76%"></slider>
-					<view class="icon-box no-margin">
-						<image class="icon" src="/static/svg/24gf-volumeHigh.png" mode="widthFix"></image>
-					</view> -->
-				</list-item>
-			</list-view>
-			<view class="space-box"></view>		
-		</view>
+		<timer-controls :items="deviceControls" :pageType="pageType" @refresh="getDeviceControls"></timer-controls>
 		<view class="add shadow" @click="handleCreate()">
 			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
 		</view>
@@ -96,13 +69,13 @@
 				userInfo: {} as UTSJSONObject,
 				token: '' as String,
 				deviceInfo: {} as UTSJSONObject,
+				deviceControls: [] as UTSJSONObject[],
 				deviceId: "",
-				value_input: 0
+				value_input: 0,
+				pageType: "Power"
 			}
 		},
-		onLoad(e: OnLoadOptions): void {
-		  console.log('edit device', e);
-		    this.deviceId = e['device_id'] as string;
+		onLoad(): void {
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.powerControl')
 			});
@@ -110,36 +83,57 @@
 		onShow() {
 			let that = this
 			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
-				that.userInfo = state.loginUser;
-				that.getDeviceInfo();
+			if (state.token != '' && state.activeUser['id'] != null) {
+				that.userInfo = state.activeUser;
+				that.deviceInfo = state.activeDevice;
+				const currentDate = new Date().getTime()
+				const day = this.deviceInfo['validEnd'] as string;
+				const daynum = new Date(day).getTime() as number;
+				if(currentDate > daynum){
+					that.deviceInfo['isvalidEnd'] = true;
+				}else {
+					that.deviceInfo['isvalidEnd'] = false;
+				}
+				that.getDeviceControls();
 			}
 			else {
-				console.log('读取失败userInfo或不存在');
+				uni.showToast({
+					icon: 'none',
+					title: `请先选择设备`,
+				})
 			}
 		},
 		methods: {
 			handleRouteGoto(url: string){
 				routeGoto(url)
 			},
-			async getDeviceInfo() {
+			selectControl(item: UTSJSONObject) {
+				item['isSelect'] = item['isSelect'] == true? false : true;
+			},
+			async getDeviceControls() {
 				try {
 					uni.showLoading({
 						title: ''
 					});
 					
 					const person: UTSJSONObject = {}
-					const param = this.deviceId;
-					const result = await request('GET', APIS.deviceInfo as string + param, person) 
-					this.deviceInfo = result as UTSJSONObject;
-					const currentDate = new Date().getTime()
-					const day = this.deviceInfo['validEnd'] as string;
-					const daynum = new Date(day).getTime() as number;
-					if(currentDate > daynum){
-						this.deviceInfo['isvalidEnd'] = true;
-					}else {
-						this.deviceInfo['isvalidEnd'] = false;
-					}
+					const currentDate = Date.now();
+					const apiUrl = APIS.deviceControl.getString('getAll')!;
+					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
+					const result = await request('GET', apiUrl + param, person) 
+					this.deviceControls = result as UTSJSONObject[];
+					console.log(result);
+					this.deviceControls.forEach((item: UTSJSONObject) => {
+						const nitem = item as UTSJSONObject;
+						const day = item['validDateEnd'] as string;
+						const daynum = new Date(day).getTime();
+						if(currentDate > daynum){
+							nitem['isvalidEnd'] = true;
+						}else{
+							nitem['isvalidEnd'] = false;
+						}
+						nitem['isSelect'] = false;
+					});
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
@@ -147,8 +141,12 @@
 				}
 			},
 			handleCreate(){
-				routeGoto('/pages/devices/timercontrol');
+				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
 			},
+			handleEdit(item: UTSJSONObject) {
+				console.log(item);
+				routeGoto(`/pages/devices/timercontrol?control_id=${item.id}&control_type=${this.pageType}`);
+			}
 		}
 	}
 </script>

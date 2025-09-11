@@ -47,6 +47,9 @@
 						<text class="value vend" v-if="item['isvalidEnd']">({{$t('index.Expired') }})</text>
 					</view>
 					<view class="wifi-btns">
+						<button v-if="item['connectStatus'] == 1" class="btn" size="mini" @click="handleSelectDevice(item)">
+							{{$t('index.Select') }}
+						</button>
 						<button v-if="item['connectStatus'] == 1" class="btn" size="mini" @click="handleEditDevice(item)">
 							{{$t('index.Manage') }}
 						</button>
@@ -80,6 +83,7 @@
 				rotation: 0,
 				isRotating: true,
 				userInfo: {} as UTSJSONObject,
+				activeUser: {} as UTSJSONObject,
 				deviceList: [] as Array<UTSJSONObject>,
 				token: '' as string,
 				userAccount: '' as string,
@@ -87,10 +91,7 @@
 				
 			}
 		},
-		onLoad(e: OnLoadOptions): void {
-		  // console.log(' device', e);
-		    this.userId = e['user_id'] as string;
-		    this.userAccount = e['user_account'] as string;
+		onLoad(): void {
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.deviceManagement')
 			});
@@ -100,10 +101,15 @@
 			const { state } = useState();
 			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
 				that.userInfo = state.loginUser;
+				that.activeUser = state.activeUser;
+				that.userAccount = that.activeUser['account'] as string;
 				that.getDeviceList();
 			}
 			else {
-				console.log('读取失败userInfo或不存在');
+				uni.showToast({
+					icon: 'none',
+					title: `请先选择用户`,
+				})
 			}
 		},
 		methods: {
@@ -130,7 +136,6 @@
 						  }
 						copyD.push(nitem);
 					  });
-				// console.log('copyD', copyD)
 				this.deviceList = copyD
 				uni.hideLoading();
 			  } catch (error) {
@@ -142,47 +147,43 @@
 				uni.showModal({
 					title: "确定要删除该设备吗?",
 					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							
+						if(res.confirm){							
 							try {
 								uni.showLoading({
 									title: ''
 								});
-								uni.request({
-									url: APIS.deleteDevice as string + '/' + device.id,
-									method: "DELETE",
-									header: {
-										'Authorization': "Bearer " + this.token
-									},
-									data:{
-										
-									},
-									success: (res) => {
-										console.log('delete res', res)
-										uni.hideLoading();
-										that.getDeviceList();
-									},
-									fail: () => {
-										
-									}
-								});
+								
+								const person: UTSJSONObject = {}
+								const param = device.id;
+								request('DELETE', APIS.deleteDevice as string + param, person).then(()=> {
+									uni.hideLoading();
+									that.getDeviceList();
+								})
 							} catch (err){
+								uni.hideLoading();
 								console.log(err)
 							}
-							
-							
 						}
 					}
 				})
 			},
 			handleCreate(){
-				routeGoto('/pages/devices/create');
+				routeGoto('/pages/devices/create?device_id=-1');
+			},
+			handleSelectDevice(device: UTSJSONObject){
+				//写入到缓存，并跳转回首页，从首页的设备控制里跳转到页面
+				const { setActiveDevice } = useState();
+				setActiveDevice(device);
+				uni.switchTab({
+					url: '/pages/index/index'
+				});
+				// routeGoto('/pages/index/index');
 			},
 			handleEditDevice(device: UTSJSONObject){
 				//写入到缓存，并跳转回首页，从首页的设备控制里跳转到页面
 				const { setActiveDevice } = useState();
 				setActiveDevice(device);
-				routeGoto('/pages/devices/edit?device_id=' + device.id);
+				routeGoto('/pages/devices/edit');
 			}
 		}
 	}
@@ -298,12 +299,15 @@
 				}
 				
 				.wifi-btns{
+					display: flex;
+					flex-direction: row;
 					.btn{
 						// border-radius: 120rpx;
 						border: none;
 						color: $uni-text-color-inverse;
 						font-size: 28rpx;
 						background-color: $uni-bg-color-blue;
+						margin-right: 10rpx;
 					}
 					.btn.del{
 						color: $uni-color-error;

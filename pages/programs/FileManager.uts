@@ -10,12 +10,14 @@ export class FileManager {
 	fs: FileSystemManager;
 	token: string;
 	programFolder: string;
+	userAccount: string;
 	
 	constructor(){
 		const { state } = useState();
 		this.fs = uni.getFileSystemManager();
 		this.token = state.token;
 		this.programFolder = state.programFolder;
+		this.userAccount = state.activeUser['account'] as string;
 	}
 	
 	async getProgramList() {
@@ -98,9 +100,9 @@ export class FileManager {
 					"isHasValidity": false,
 					"validStartDate": null,
 					"validEndDate": null,
-					"userAccount": (uni.getStorageSync("userInfo") as UTSJSONObject)['account'] as string,
+					"userAccount": this.userAccount,
 					"id": 1
-				}
+				},
 			}
 			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
 		}

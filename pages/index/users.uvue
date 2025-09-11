@@ -55,8 +55,7 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { UserState, useState } from '@/store/index.uts'
-	import { routeGoto } from '@/common/router.uts'
-	
+	import { routeGoto } from '@/common/router.uts'	
 	import { request } from '@/utils/http/index'
 	export default {
 		data() {
@@ -70,7 +69,6 @@
 			}
 		},
 		onLoad() {
-			console.log('devices.uvue onload.')
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.userManagement')
 			});
@@ -78,7 +76,7 @@
 		onShow() {
 			let that = this
 			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+			if (state.token != '' && state.loginUser['id'] != null) {
 				that.userInfo = state.loginUser;
 				that.getUserList();
 			}
@@ -150,7 +148,7 @@
 				setActiveUser(user);
 				setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${user['account'] as string}`);
 				// uni.setStorageSync('active-user', user);
-				routeGoto('/pages/index/devices?user_id=' + user['id'] + '&user_account=' + user['account']);
+				routeGoto('/pages/index/devices');
 				
 			},
 			handleEdit(user: UTSJSONObject){

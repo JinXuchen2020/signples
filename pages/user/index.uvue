@@ -225,12 +225,11 @@
 						title: ''
 					});
 					
-					const { setLoginUser, setProgramFolder}  = useState()
+					const { setLoginUser}  = useState()
 					const apiUrl = APIS.user.getString('getById')!;
 					const result = await request('GET', apiUrl.replace("{id}", `${id}`), {}) as UTSJSONObject;
 					this.userInfo = result;
 					setLoginUser(result);
-					setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${result['account'] as string}`);
 					this.popupLogin = false;
 					uni.hideLoading();
 					// uni.request({

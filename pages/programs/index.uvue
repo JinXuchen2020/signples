@@ -132,15 +132,18 @@
 		},
 		onShow(){			
 			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
-				this.userInfo = state.loginUser;
+			if (state.token != '' && state.activeUser['id'] != null) {
+				this.userInfo = state.activeUser;
+			
+				this.init();
+				this.getDevices();
 			}
 			else {
-				console.log('读取失败userInfo或不存在');
-			}	
-			
-			this.init()
-			this.getDevices()
+				uni.showToast({
+					icon: 'none',
+					title: `请先选择用户`,
+				})
+			}
 		},
 		methods: {
 			async init(){

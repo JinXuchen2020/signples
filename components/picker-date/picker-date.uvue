@@ -1,0 +1,176 @@
+<template>
+	<view style="flex: 1;">
+		<input
+			class="uni-input shadow" 
+			:disabled="true"
+			:value="value" 
+			:placeholder="placeholder" 
+			maxlength="-1" 
+			@click="showDatePopup" />
+		<!-- popup -->
+		<popup-default
+			v-model:visible="popupDate"
+			:title="$t('device.PleaseSelectDate')"
+			show-icon
+			icon-src=""
+			@confirm="handleValidDate()"
+		>
+			<view class="form">
+				<view class="selected-day">
+					<text class="t">{{$t('device.SelectedDate')}}：</text>
+					<text class="t">{{year}}{{$t('device.Year')}}{{month}}{{$t('device.Month')}}{{day}}{{$t('device.Day')}}</text>
+				</view>
+				<view class="space-box"></view>
+				 <picker-view class="picker-view" :value="dateValue" @change="bindChange" :indicator-style="indicatorStyle"
+				      :indicator-class="indicatorClass" :mask-style="maskStyle" :mask-class="maskClass" :mask-top-style="maskTopStyle"
+				      :mask-bottom-style="maskBottomStyle">
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in years" :key="index"><text class="text">{{item}}{{$t('device.Year')}}</text></view>
+				      </picker-view-column>
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in months" :key="index"><text class="text">{{item}}{{$t('device.Month')}}</text>
+				        </view>
+				      </picker-view-column>
+				      <picker-view-column class="picker-view-column">
+				        <view class="item" v-for="(item,index) in days" :key="index"><text class="text">{{item}}{{$t('device.Day')}}</text></view>
+				      </picker-view-column>
+				</picker-view>
+			</view>
+		</popup-default>
+		<!-- popup -->
+	</view>
+</template>
+
+<script>
+	export default {
+		name:"picker-date",
+		props: {
+			value: {
+				type: String,
+				default: ''
+			},
+			placeholder: {
+				type: String,
+				default: ''
+			},
+		},
+		data() {
+			const _years : number[] = []
+			const _year = 2030
+			const _months : number[] = []
+			const _month : number = 1
+			const _days : number[] = []
+			const _day = 12
+			for (let i = 2025; i <= _year; i++) {
+				_years.push(i)
+			}
+			for (let i = 1; i <= 12; i++) {
+				_months.push(i)
+			}
+			for (let i = 1; i <= 31; i++) {
+				_days.push(i)
+			}
+			return {
+				popupDate: false,
+				years: _years as number[],
+				year: _year as number,
+				months: _months as number[],
+				month: _month as number,
+				days: _days as number[],
+				day: _day as number,
+				dateValue: [] as number[],
+				indicatorStyle: 'height: 50px;',
+				indicatorClass: '',
+				maskStyle: '',
+				maskClass: '',
+				maskTopStyle: '',
+				maskBottomStyle: '',
+				
+			};
+		},
+		emits: ['refresh'],
+		onLoad(){
+			
+		},
+		methods: {
+			showDatePopup() {
+				this.popupDate = true;
+				const dateObj = new Date(this.value);
+				this.year = dateObj.getFullYear()
+				this.month = dateObj.getMonth() + 1
+				this.day = dateObj.getDate()
+				this.dateValue = [this.year - 2025, this.month - 1, this.day - 1]
+			},
+			bindChange(e : UniPickerViewChangeEvent) {
+				const val = e.detail.value
+				
+				this.year = this.years[val[0]]
+				this.month = this.months[val[1]]
+				this.day = this.days[val[2]]
+			},
+			handleValidDate(){
+				let that = this
+				console.log('this.result=', this.year, this.month, this.day)
+				const maxDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.month - 1];
+				if (this.month == 2 && (this.year % 400 == 0 || (this.year % 100 != 0 && this.year % 4 == 0))) {
+					if(this.day <= 29){
+						//正常
+					}else{
+						console.log('maxDay', maxDay)
+						console.log('2e', this.day)
+						uni.showToast({
+							icon: 'none',
+							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',
+							duration: 3000,
+							success: () => {
+								that.day = maxDay
+							}
+						})
+					}
+				}else{
+					if(this.day <= maxDay){
+						//正常
+					}else{
+						console.log('maxDay', maxDay)
+						console.log(this.day)
+						uni.showToast({
+							icon: 'none',
+							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',
+							duration: 3000,
+							success: () => {
+								that.day = maxDay
+							}
+						})
+					}
+				}
+				const newValue = this.year + '-' + this.month + '-' + this.day
+				this.$emit('refresh', newValue);
+				this.popupDate = false
+			},
+		}
+	}
+</script>
+
+<style lang="scss">
+	.form{
+		.selected-day{
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			.t{
+				font-size: $uni-font-size-base;
+			}
+		}
+		.picker-view {
+		    width: 100%;
+		    height: 220px;
+			.item {
+				height: 50px;
+				.text {
+					line-height: 50px;
+					text-align: center;
+				}
+			}
+		}
+	}
+</style>

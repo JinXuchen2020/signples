@@ -21,7 +21,7 @@
 					<text class="t">名称</text>
 				</view>
 				<view class="item-value">
-					<input type="text" :value="formData?.name" class="uni-input" />
+					<input type="text" :value="formData?.name" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('name', e.detail.value)" />
 				</view>
 			</view>
 			<view class="item">
@@ -29,7 +29,7 @@
 					<text class="t">层级</text>
 				</view>
 				<view class="item-value">
-					<input type="number" :value="formData?.zIndex" class="uni-input" />
+					<input type="number" :value="formData?.zIndex" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('zIndex', e.detail.value)" />
 				</view>
 			</view>
 			<view class="item">
@@ -37,7 +37,7 @@
 					<text class="t">每页时长(s)</text>
 				</view>
 				<view class="item-value">
-					<input type="text" :value="formData?.pageDuration" class="uni-input" />
+					<input type="text" :value="formData?.pageDuration" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('pageDuration', e.detail.value)" />
 				</view>
 			</view>
 			<view class="item">
@@ -45,7 +45,7 @@
 					<text class="t">播放次数</text>
 				</view>
 				<view class="item-value">
-					<input type="number" :value="formData?.playCount" class="uni-input" />
+					<input type="number" :value="formData?.playCount" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('playCount', e.detail.value)" />
 				</view>
 			</view>
 			<view class="item">
@@ -53,17 +53,18 @@
 					<text class="t">播放时长(s)</text>
 				</view>
 				<view class="item-value">
-					<input type="text" :value="formData?.playDuration" class="uni-input" />
+					<picker-time :value="formData?.playDuration" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('playDuration', value)"></picker-time>
 				</view>
 			</view>
 		</view>
 		<view class="item" v-else>
-			<view class="item-key">
+			<!-- <view class="item-key">
 				<text class="t">选择文件</text>
-			</view>
+			</view> -->
 			<view class="options">
 				<view class="options-tab">
-					<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
+					<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
+					<view class="item" v-else @click="handleActiveTab(0)"><text class="t">本地文件</text></view>
 					<!-- <view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">媒体库</text></view> -->
 				</view>
 				<view class="option-body">
@@ -127,7 +128,30 @@
 				this.formData = null;
 			}
 		},
-		methods: {			
+		methods: {
+			updateProperty(propertyName: string, proValue: string){
+				if(propertyName == 'name') {
+					this.formData!.name = proValue;
+				}
+				
+				if(propertyName == 'zIndex') {
+					this.formData!.zIndex = parseInt(proValue);
+				}
+				
+				if(propertyName == 'playDuration') {
+					this.formData!.playDuration = proValue;
+				}
+				
+				if(propertyName == 'playCount') {
+					this.formData!.playCount = parseInt(proValue);
+				}
+				
+				if(propertyName == 'pageDuration') {
+					this.formData!.pageDuration = parseInt(proValue);
+				}
+				const data = this.formData!.toModel();
+				this.$emit("refresh", data);
+			},
 			handleActiveTab(val: number) {
 				this.activeTab = val
 			},
@@ -239,7 +263,7 @@
 			}
 			
 			.options {
-				width: 80%;
+				width: 100%;
 				display: flex;
 				flex-direction: column;
 				.options-tab{
