@@ -46,6 +46,7 @@
 				</view>
 				<view class="item-value">
 					<picker-time :value="formData?.playDuration" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('playDuration', value)"></picker-time>
+				</view>
 			</view>
 		</view>
 		<view class="item" v-else>

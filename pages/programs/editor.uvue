@@ -724,7 +724,7 @@
 			.option-a.active,
 			.option-b.active {
 				display: flex;
-				height: 720rpx;
+				height: 700rpx;
 			}
 		}
 	}

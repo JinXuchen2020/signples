@@ -157,8 +157,8 @@
 					console.log(result);
 					this.deviceControls.forEach((item: UTSJSONObject) => {
 						const nitem = item as UTSJSONObject;
-						const day = item['validDateEnd'] as string;
-						const daynum = new Date(day).getTime();
+						const endDay = item['validDateEnd'] as string;
+						const daynum = new Date(endDay).getTime();
 						if(currentDate > daynum){
 							nitem['isvalidEnd'] = true;
 						}else{
