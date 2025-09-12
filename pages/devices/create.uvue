@@ -109,10 +109,16 @@
 					const apiUrl = APIS.deviceInfo as string;
 					const result = await request('GET', apiUrl + this.deviceId, {}) as UTSJSONObject;
 					this.formData = result;
-					console.log(this.formData);
 					uni.hideLoading();
 				} catch (err){
-					console.log(err)
+					uni.hideLoading();
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
+					uni.showToast({
+						icon: 'none',
+						title: `${errObj.message}`,
+						duration: 3000,
+					})
 				}
 			},
 			async onFormSubmit(){
@@ -140,13 +146,19 @@
 						})
 						
 						uni.hideLoading();
-						uni.navigateBack();						
+						if (this.formData.id != null) {							
+							const { setActiveDevice } = useState();
+							setActiveDevice(this.formData);
+						}
+						uni.navigateBack();
 					} catch (err){
 						uni.hideLoading();
-						console.log(err);
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						console.log(errObj);
 						uni.showToast({
 							icon: 'none',
-							title: `${err.message}`,
+							title: `${errObj.message}`,
+							duration: 3000,
 						})
 					}
 				}

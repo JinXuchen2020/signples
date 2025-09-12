@@ -172,7 +172,14 @@
 									uni.navigateBack();
 								})
 							} catch (err){
-								console.log(err)
+								uni.hideLoading();
+								const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+								console.log(errObj);
+								uni.showToast({
+									icon: 'none',
+									title: `${errObj.message}`,
+									duration: 3000,
+								})
 							}
 						}
 					}
@@ -213,7 +220,14 @@
 											});
 										
 									} catch (err){
-										console.log(err)
+										uni.hideLoading();
+										const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+										console.log(errObj);
+										uni.showToast({
+											icon: 'none',
+											title: `${errObj.message}`,
+											duration: 3000,
+										})
 									}
 								}
 							}

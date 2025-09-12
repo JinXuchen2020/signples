@@ -34,7 +34,7 @@
 				<text class="t">开始日期</text>
 			</view>
 			<view class="item-value">
-				<picker-date :value="formData.validStartDate?.toISOString()" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validStartDate', value)"></picker-date>
+				<picker-date :value="formData.validStartDate" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validStartDate', value)"></picker-date>
 			</view>
 		</view>
 		<view class="item" v-if="formData?.isHasValidity == true">
@@ -42,7 +42,7 @@
 				<text class="t">结束日期</text>
 			</view>
 			<view class="item-value">
-				<picker-date :value="formData.validEndDate?.toISOString()" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validEndDate', value)"></picker-date>
+				<picker-date :value="formData.validEndDate" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validEndDate', value)"></picker-date>
 			</view>
 		</view>
 		<view class="item">
@@ -112,17 +112,18 @@
 				}
 				
 				if(propertyName == 'validStartDate') {
-					this.formData!.validStartDate = new Date(proValue) ;
+					this.formData!.validStartDate = proValue;
 				}
 				
 				if(propertyName == 'validEndDate') {
-					this.formData!.validEndDate = new Date(proValue);
+					this.formData!.validEndDate = proValue;
 				}
 				
 				if(propertyName == 'playCount') {
 					this.formData!.playCount = parseInt(proValue);
 				}
 				const data = this.formData!.toModel();
+				console.log(data);
 				this.$emit("refresh", data);
 			},
 			handleIsHasValidityChange(){
@@ -203,6 +204,7 @@
 				.uni-input{
 					border: 1px solid #ccc;
 					border-radius: 12rpx;
+					padding: 10rpx;
 				}
 			}
 		}

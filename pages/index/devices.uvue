@@ -99,7 +99,7 @@
 		onShow() {
 			let that = this
 			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+			if (state.token != '' && state.activeUser['id'] != null) {
 				that.userInfo = state.loginUser;
 				that.activeUser = state.activeUser;
 				that.userAccount = that.activeUser['account'] as string;

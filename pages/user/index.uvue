@@ -116,35 +116,9 @@
 		},
 		onShow() {
 			const { state } = useState();
-			if (state.token != '' && state.loginUser.hasOwnProperty('account')) {
+			if (state.token != '' && state.loginUser['id'] != null) {
 				this.userInfo = state.loginUser;
 			}
-			else {
-				console.log('读取失败userInfo或不存在');
-			}
-			// uni.getStorage({
-			//   key: 'token',
-			//   success: function(res) {
-			// 	  console.log('userindex token=', res)
-			// 	  const token = res.data ?? '';
-			// 	  if(token !== ''){
-			// 		  uni.getStorage({
-			// 		    key: 'userInfo',
-			// 		    success: function(r) {
-			// 				console.log('userindex userInfo', r)
-			// 				const userInfo = r.data ?? {};
-			// 		  		that.userInfo = userInfo as UTSJSONObject;
-			// 		    },
-			// 		    fail: function(err) {
-			// 		      console.log('读取失败userInfo或不存在', err);
-			// 		    }
-			// 		  });
-			// 	  }
-			//   },
-			//   fail: function(err) {
-			//     console.log('读取失败token或不存在', err);
-			//   }
-			// });
 		},
 		methods: {
 			//跳转翻译
@@ -382,7 +356,7 @@
 	}
 	.form{
 		.item{
-			border: 1px solid #eeeeee;
+			// border: 1px solid #eeeeee;
 			border-radius: $uni-border-radius-lg;
 			margin: 24rpx 0;
 			padding: 12rpx;

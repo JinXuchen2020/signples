@@ -250,6 +250,7 @@
 	}
 	
 	const updatePage = (newData: UTSJSONObject) => {
+		console.log(newData);
 		activePage.value = new MediaPage(newData);
 	}
 	

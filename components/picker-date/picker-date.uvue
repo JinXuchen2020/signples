@@ -53,6 +53,10 @@
 				type: String,
 				default: ''
 			},
+			delimiter: {
+				type: String,
+				default: '-'
+			}
 		},
 		data() {
 			const _years : number[] = []
@@ -143,7 +147,7 @@
 						})
 					}
 				}
-				const newValue = this.year + '-' + this.month + '-' + this.day
+				const newValue = this.year + this.delimiter + (this.month >= 10 ? `${this.month}` : `0${this.month}`) + this.delimiter + (this.day >= 10 ? `${this.day}` : `0${this.day}`)
 				this.$emit('refresh', newValue);
 				this.popupDate = false
 			},

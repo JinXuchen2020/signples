@@ -222,6 +222,10 @@
 						volume: this.value_input
 					});
 					
+					this.deviceInfo['volume']=this.value_input;
+					const { setActiveDevice } = useState();
+					setActiveDevice(this.deviceInfo);
+					
 					const apiUrl = APIS.deviceControl.getString('save')!;
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
@@ -232,10 +236,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
-						title: `${err.message}`,
+						title: `${errObj.message}`,
+						duration: 3000,
 					})
 				}
 			}

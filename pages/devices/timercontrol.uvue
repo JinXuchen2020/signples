@@ -78,9 +78,9 @@
 			<view class="item">
 				<view class="label"><text class="t">{{$t('device.ValidTime')}}</text></view>
 				<view class="input-box input-box-row">
-					<picker-date :value="formData.validDateStart" :placeholder="$t('device.PleaseSelectStartDate')" @refresh="(value: string)=> updateProperty('validDateStart', value)" ></picker-date>
+					<picker-date :value="formData.validDateStart" :delimiter="'/'" :placeholder="$t('device.PleaseSelectStartDate')" @refresh="(value: string)=> updateProperty('validDateStart', value)" ></picker-date>
 					<view style="width: 24rpx;"></view>
-					<picker-date :value="formData.validDateEnd" :placeholder="$t('device.PleaseSelectEndDate')" @refresh="(value: string)=> updateProperty('validDateEnd', value)"></picker-date>
+					<picker-date :value="formData.validDateEnd" :delimiter="'/'" :placeholder="$t('device.PleaseSelectEndDate')" @refresh="(value: string)=> updateProperty('validDateEnd', value)"></picker-date>
 				</view>
 			</view>
 			<view class="item">
@@ -257,7 +257,14 @@
 					
 					uni.hideLoading();
 				} catch (err){
-					console.log(err)
+					uni.hideLoading();
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
+					uni.showToast({
+						icon: 'none',
+						title: `${errObj.message}`,
+						duration: 3000,
+					})
 				}
 			},
 			async repeatStringChange(e: CheckboxGroupChangeEvent) {
@@ -312,14 +319,15 @@
 						
 						uni.hideLoading();
 						uni.navigateBack();
-					} catch (err : Error){
+					} catch (err){
 						uni.hideLoading();
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						console.log(errObj);
 						uni.showToast({
 							icon: 'none',
-							title: `${err.message}`,
-							duration: 2000,
+							title: `${errObj.message}`,
+							duration: 3000,
 						})
-						console.log(err)
 					}
 				}
 			},

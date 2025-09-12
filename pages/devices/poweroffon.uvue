@@ -137,7 +137,13 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
+					uni.showToast({
+						icon: 'none',
+						title: `${errObj.message}`,
+						duration: 3000,
+					})
 				}
 			},
 			handleCreate(){

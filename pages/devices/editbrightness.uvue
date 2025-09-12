@@ -169,7 +169,13 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
+					uni.showToast({
+						icon: 'none',
+						title: `${errObj.message}`,
+						duration: 3000,
+					})
 				}
 			},
 			handleCreate(){
@@ -198,7 +204,7 @@
 						"validDateStart": new Date().toISOString(),
 						"value": this.value_input,
 						"id": 0
-					};
+					} as UTSJSONObject;
 						
 					const dataObj = {
 						cmd: 'CMD|Brightness|',
@@ -223,20 +229,26 @@
 						brightness: this.value_input
 					});
 					
+					this.deviceInfo['brightness']=this.value_input;
+					const { setActiveDevice } = useState();
+					setActiveDevice(this.deviceInfo);
 					const apiUrl = APIS.deviceControl.getString('save')!;
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
 						title: `设备：${this.deviceInfo['snCode']} 亮度更新成功`,
+						duration: 3000,
 					})
 					
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
-						title: `${err.message}`,
+						title: `${errObj.message}`,
+						duration: 3000,
 					})
 				}
 			}

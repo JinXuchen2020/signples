@@ -80,9 +80,6 @@
 				that.userInfo = state.loginUser;
 				that.getUserList();
 			}
-			else {
-				console.log('读取失败userInfo或不存在');
-			}
 		},
 		methods: {
 			async getUserList() {

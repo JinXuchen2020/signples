@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view class="app" enable-back-to-top="{{false}}">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
@@ -237,12 +237,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
-						title: `${err.message}`,
-						success: () => {
-							
-						}
+						title: `${errObj.message}`,
+						duration: 3000,
 					})
 				}
 			},
@@ -278,7 +278,7 @@
 					let currentDataTime = this.deviceInfo['currentDataTime'];
 					if(currentDataTime == null) {
 						const nowDate = new Date();
-						this.currentDate =`${nowDate.getFullYear()}-${nowDate.getMonth() + 1}-${nowDate.getDate()}`;
+						this.currentDate =`${nowDate.getFullYear()}/${nowDate.getMonth() + 1}/${nowDate.getDate()}`;
 						this.currentTime = (nowDate.getHours() >= 10 ? `${nowDate.getHours()}` : `0${nowDate.getHours()}`) + ':' + (nowDate.getMinutes() >= 10 ? `${nowDate.getMinutes()}` : `0${nowDate.getMinutes()}`) + ':' + (nowDate.getSeconds()>= 10 ? `${nowDate.getSeconds()}` : `0${nowDate.getSeconds()}`)
 					}
 					else{						
@@ -287,11 +287,14 @@
 					}
 					
 					uni.hideLoading();
-				} catch (err){
+				} catch (err : Error){
 					uni.hideLoading();
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
-						title: `${err.message}`,
+						title: `${errObj.message}`,
+						duration: 3000,
 					})
 				}
 			}
