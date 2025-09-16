@@ -1,5 +1,5 @@
 <template>
-	<view class="app">
+	<view class="app flex-space-between">
 		<view class="canvas-component">
 			<canvas 
 				canvas-id="ucanvas" 
@@ -606,6 +606,9 @@
 </script>
 
 <style lang="scss">
+	.flex-space-between {
+		justify-content: space-between;
+	}
     .canvas-component {
         width: 100%;
 		display: flex;
@@ -620,16 +623,16 @@
 		}
     }
 	.tools{
-		position: fixed;
+		// position: fixed;
 		width: 100%;
-		left: 0;
-		bottom: 0;
-		z-index: 999;
+		// left: 0;
+		// bottom: 0;
+		// z-index: 999;
 		background-color: $uni-bg-color;
 		padding: 24rpx;
 		
 		.pages{
-			padding: 0 0 24rpx 0;
+			padding: 0 0 12rpx 0;
 			.swiper-item{
 				flex-direction: row;
 				align-items: center;
@@ -724,8 +727,9 @@
 			}
 			.option-a.active,
 			.option-b.active {
-				display: flex;
+				display: flex;				
 				height: 700rpx;
+				// height: calc(100vh - 60px - 40px);
 			}
 		}
 	}
