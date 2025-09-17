@@ -78,6 +78,7 @@ export class FileManager {
 		const newProgramFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
+		console.log(configFilePath);
 		if (await this.IsExist(configFilePath)) {
 			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
 			configFileContent = JSON.parse(content) as UTSJSONObject;
@@ -107,13 +108,15 @@ export class FileManager {
 			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
 		}
 
+		console.log(configFileContent);
 		return new MediaConfig(configFileContent);
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject) {
 		const programFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
-		
+		console.log(configFilePath);
+		console.log(data);
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	

@@ -103,7 +103,7 @@ export class MediaPage{
 		this.thumbnailFilePath = data['ThumbnailFilePath'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.ThumbnailFilePath}`;
 		this.isHasValidity = data.IsHasValidity as boolean;
 		this.validStartDate = data['ValidStartDate'] == null ? null :  data['ValidStartDate'] as string; 
-		this.validEndDate =  data['ValidEndDate'] == null ? null :  data['ValidStartDate'] as string;
+		this.validEndDate =  data['ValidEndDate'] == null ? null :  data['ValidEndDate'] as string;
 		this.playCount = data.PlayCount as number;
 		this.playGap = data['PlayGap'] == null ? null : data.PlayGap as number;
 		this.adPlayMode = data['AdPlayMode'] == null ? null : data.AdPlayMode as string;		const schedulers = data['Schedulers'] as UTSJSONObject[] | null;
@@ -316,7 +316,7 @@ export class VideoComponent extends BaseComponent {
 		super(data);
 		this.playMode = data['PlayMode'] as string;
 		this.isClip = data['IsClip'] == null ? false : data['IsClip'] as boolean;
-		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
+		this.source = data['Source'] != null && (data['Source'] as string).length > 0 ? `${uni.getStorageSync("program-folder") as string}/${data.Source}` : '';
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.thumbFilePath != null) {
@@ -376,7 +376,7 @@ export class ImageComponent extends BaseComponent {
 		super(data);
 		this.effectDuration = data['EffectDuration'] as number;
 		this.componentEffect = data['ComponentEffect'] as string;
-		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
+		this.source = data['Source'] != null && (data['Source'] as string).length > 0 ? `${uni.getStorageSync("program-folder") as string}/${data.Source}` : '';
 		this.isShowInfo = this.source.length > 0 ? true : false;
 		if (this.source.length > 0) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
@@ -455,6 +455,7 @@ export class TextComponent extends BaseComponent {
 		this.isLoopEnabled = data['IsLoopEnabled'] as boolean;
 		this.letterSpacing = data['LetterSpacing'] as number;
 		this.lineSpacing = data['LineSpacing'] as number;
+		this.source = data['Source'] == null ? '' : data['Source'] as string;
 		this.rtfFilePath = data['RtfFilePath'] == null ? null : data['RtfFilePath'] as string;
 		this.verticalContentAlignment = data['VerticalContentAlignment'] as string;
 		this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.source);
@@ -583,7 +584,7 @@ export class WordComponent extends BaseComponent {
 		super(data);
 		this.pageDuration = data.PageDuration as number;
 		this.isShowInfo = this.source.length > 0 ? true : false;
-		this.source = data['Source'] == null ? '' : `${uni.getStorageSync("program-folder") as string}/${data.Source}`;
+		this.source = data['Source'] != null && (data['Source'] as string).length > 0 ? `${uni.getStorageSync("program-folder") as string}/${data.Source}` : '';
 		this.thumbFilePath = data['ThumbFilePath'] == null ? null : data['ThumbFilePath'] as string;
 		if (this.thumbFilePath != null) {
 			this.element = new DraggableImage(this.left, this.top, this.width, this.height, this.thumbFilePath);

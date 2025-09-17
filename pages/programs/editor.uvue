@@ -159,6 +159,7 @@
 	import { FileManager, MediaStoreFolder } from './fileManager.uts'
 	import { APIS } from '@/api/config.uts'
 	import { request } from '@/utils/http/index'
+	import { useState }  from '@/store/index.uts'
 	
 	import VideoForm from './videoForm.uvue'
 	import ImageForm from './imageForm.uvue'
@@ -466,7 +467,11 @@
 		if(activePage.value == null) return;
 		const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
 		activePage.value!.thumbnailFilePath = thunmbailFilePath;
+		console.log(activePage.value);
+		const index = mediaConfig.value!.pages.findIndex(c=>c.name == activePage.value!.name);
+		mediaConfig.value!.pages.splice(index, 1, activePage.value);
 		const data = mediaConfig.value!.toModel();
+		console.log(data);
 		await fileManager.saveProgram(programName.value, data);
 		uni.showToast({
 			icon: 'none',
@@ -563,9 +568,10 @@
 			uni.showLoading({
 				title: ''
 			});
-			const activeUser = uni.getStorageSync('userInfo') as UTSJSONObject;
+			const { state } = useState();
+			const activeUser = state.activeUser;
 			const person: UTSJSONObject = {}
-			const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount={activeUser.account}&eanbled=1`;
+			const param = `?userAccount=${activeUser.account}&eanbled=1`;
 			const result = await request('GET', APIS.deviceListPage as string + param, person)
 			const d = result as Array<UTSJSONObject>;
 			deviceList.value = d

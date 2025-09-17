@@ -117,65 +117,65 @@ export class DraggableImage {
   		  new Composition({
   		    x: 0,
   		    y: 0,
-  		    children: [  		      
-  		      new Rectangle({
-  		        x: this.x,
-  		        y: this.y,
-  		        w: this.width,
-  		        h: this.height,
-  		        style: {
-  		          stroke: {
-  		          	color: "white",
-  		          	width: 2,
-  		          	cap: "butt",
-  		          	join: "miter",
-  		          },
-  		        }
-  		      }),
-  		      new Rectangle({
-  		        x: this.x + this.width - 15,
-  		        y: this.y + this.height - 15,
-  		        w: 15,
-  		        h: 15,
-				style: {
-				  stroke: {
-				  	color: "white",
-				  	width: 1,
-				  	cap: "butt",
-				  	join: "miter",
-				  },
-				}
-  		      }),
-			  new Rectangle({
-			  x: this.x, 
-			  y: this.y, 
-			  w: this.width, 
-			  h: this.height,
-			  style: {
-			    stroke: {
-			    	color: "white",
-			    	width: 2,
-			    	cap: "butt",
-			    	join: "miter",
-			    },
-			    fill: {
-			  		color: textStyle.background
-			  	}
-			    }
-			  }),
-			  new Text({ 
-			  	x: this.x, 
-			  	y: this.y + 14, 
-			  	text: this.source,
-			  	style: {
-			  		fill: {
-			  			color: textStyle.textColor
-			  		},
-					text: {
-						fontSize: 16
+  		    children: [ 
+				new Rectangle({
+					x: this.x, 
+					y: this.y, 
+					w: this.width, 
+					h: this.height,
+					style: {
+						stroke: {
+							color: "black",
+							width: 1,
+							cap: "butt",
+							join: "miter",
+						},
+						fill: {
+							color: textStyle.background
+						}
 					}
-			  	}
-			  }),
+				}),
+				new Text({ 
+					x: this.x, 
+					y: this.y + 14, 
+					text: this.source,
+					style: {
+						fill: {
+							color: textStyle.textColor
+						},
+						text: {
+							fontSize: 16
+						}
+					}
+				}),				
+				new Rectangle({
+					x: this.x,
+				    y: this.y,
+				    w: this.width,
+				    h: this.height,
+				    style: {
+						stroke: {
+							color: "white",
+							width: 2,
+							cap: "butt",
+							join: "miter",
+						},
+				    }
+				}),
+				new Rectangle({
+				    x: this.x + this.width - 15,
+				    y: this.y + this.height - 15,
+				    w: 15,
+				    h: 15,
+					style: {
+						stroke: {
+							color: "white",
+							width: 2,
+							cap: "butt",
+							join: "miter",
+						},
+					}
+				}),
   		    ],
   		  })
   	  );
@@ -193,8 +193,8 @@ export class DraggableImage {
 						h: this.height,
 						style: {
 						  stroke: {
-						  	color: "white",
-						  	width: 2,
+						  	color: "black",
+						  	width: 1,
 						  	cap: "butt",
 						  	join: "miter",
 						  },
@@ -204,8 +204,8 @@ export class DraggableImage {
 						}
 					}),
 					new Text({ 
-						x: 0, 
-						y: 0, 
+						x: this.x,
+						y: this.y + 14, 
 						text: this.source,
 						style: {
 							fill: {
