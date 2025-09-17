@@ -138,6 +138,7 @@
 							break;
 					}
 					
+					console.log(dataObj);
 					const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
 					if(!res) {
 						uni.showToast({
@@ -159,13 +160,24 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
-					uni.showToast({
-						icon: 'none',
-						title: `${errObj.message}`,
-						duration: 3000,
-					})
+					if((typeof JSON.parse(JSON.stringify(err))) == 'string') {
+						const errObj = JSON.stringify(err)
+						console.log(errObj);
+						uni.showToast({
+							icon: 'none',
+							title: `${errObj}`,
+							duration: 3000,
+						})
+					}
+					else {						
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						console.log(errObj);
+						uni.showToast({
+							icon: 'none',
+							title: `${errObj.message}`,
+							duration: 3000,
+						})
+					}
 				}
 			},
 			async handleDelete() {

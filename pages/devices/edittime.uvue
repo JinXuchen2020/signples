@@ -100,19 +100,23 @@
 				timeZones: [
 					{
 						key: "China Standard Time",
-						name: "中国 (UTC+8)"
+						name: "中国 (UTC+8)",
+						offset: 8
 					},					
 					{
 						key: "Pacific Standard Time",
 						name: "美国 (UTC-8)",
+						offset: -8
 					}, 
 					{
 						key: "Tokyo Standard Time",
 						name: "日本 (UTC+9)",
+						offset: 9
 					}, 
 					{
 						key: "Korea Standard Time",
 						name: "韩国 (UTC+9)",
+						offset: 9
 					}, 
 				] as UTSJSONObject[],
 				userInfo: {} as UTSJSONObject,
@@ -182,6 +186,9 @@
 					itemList: this.timeZones.map((c: UTSJSONObject) => c.getString('name')!),
 					success: (res) => {
 						const selectedIndex = res.tapIndex;
+						const oldOffset = this.timeZones.find(c=>c.key == this.currentTimeZoneKey)!.offset as number;
+						const newOffset = this.timeZones[selectedIndex].getNumber('offset')!;
+						this.updateCurrentDate(oldOffset, newOffset);
 						this.currentTimeZoneKey = this.timeZones[selectedIndex].getString('key')!;
 						this.currentTimeZone = this.timeZones[selectedIndex].getString('name')!;
 					},
@@ -202,11 +209,11 @@
 					const controlData = {
 						deviceId: this.deviceInfo['snCode'],
 						timezone: this.currentTimeZoneKey,
-						currentDate: `${this.currentDate}T${this.currentTime}`,
+						currentDate: `${this.currentDate} ${this.currentTime}`,
 						syncMode: "manual",
 						userAccount: this.deviceInfo['userAccount']
 					};
-						
+
 					const dataObj = {
 						cmd: 'CMD|Time|',
 						data: JSON.stringify(controlData),
@@ -274,29 +281,38 @@
 					
 					const result = await request("GET", apiUrl +  this.deviceId, {}) as UTSJSONObject;
 					this.deviceInfo = result;
-					console.log(result);
 					let currentDataTime = this.deviceInfo['currentDataTime'];
 					if(currentDataTime == null) {
-						const nowDate = new Date();
-						this.currentDate =`${nowDate.getFullYear()}/${nowDate.getMonth() + 1}/${nowDate.getDate()}`;
-						this.currentTime = (nowDate.getHours() >= 10 ? `${nowDate.getHours()}` : `0${nowDate.getHours()}`) + ':' + (nowDate.getMinutes() >= 10 ? `${nowDate.getMinutes()}` : `0${nowDate.getMinutes()}`) + ':' + (nowDate.getSeconds()>= 10 ? `${nowDate.getSeconds()}` : `0${nowDate.getSeconds()}`)
+						const offset = this.timeZones.find(c=>c.key == this.currentTimeZoneKey)!.offset as number;
+						const nowDate = new Date().getTime();
+						const localDate = new Date(nowDate + offset * 60 * 60000);
+						this.currentDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
+						this.currentTime = (localDate.getHours() >= 10 ? `${localDate.getHours()}` : `0${localDate.getHours()}`) + ':' + (localDate.getMinutes() >= 10 ? `${localDate.getMinutes()}` : `0${localDate.getMinutes()}`) + ':' + (localDate.getSeconds()>= 10 ? `${localDate.getSeconds()}` : `0${localDate.getSeconds()}`)
 					}
 					else{						
 						this.currentDate = (currentDataTime as string).split(" ")[0];
 						this.currentTime = (currentDataTime as string).split(" ")[1];
+						const offset = this.timeZones.find(c=>c.key == this.currentTimeZoneKey)!.offset as number;
+						this.updateCurrentDate(0, offset);
 					}
 					
 					uni.hideLoading();
 				} catch (err : Error){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
 						duration: 3000,
 					})
 				}
+			},
+			updateCurrentDate(oldOffset: number, newOffset: number) {
+				const localDate = new Date(`${this.currentDate} ${this.currentTime}`).getTime();
+				const utcDate = localDate - oldOffset * 60 * 60000;
+				const newDate = new Date(utcDate + newOffset * 60 * 60000);
+				this.currentDate = `${newDate.getFullYear()}-${newDate.getMonth() + 1}-${newDate.getDate()}`;
+				this.currentTime = (newDate.getHours() >= 10 ? `${newDate.getHours()}` : `0${newDate.getHours()}`) + ':' + (newDate.getMinutes() >= 10 ? `${newDate.getMinutes()}` : `0${newDate.getMinutes()}`) + ':' + (newDate.getSeconds()>= 10 ? `${newDate.getSeconds()}` : `0${newDate.getSeconds()}`)
 			}
 		}
 	}

@@ -199,11 +199,13 @@
 						title: ''
 					});
 					
-					const { setLoginUser}  = useState()
+					const { setLoginUser, setActiveUser, setActiveDevice}  = useState()
 					const apiUrl = APIS.user.getString('getById')!;
 					const result = await request('GET', apiUrl.replace("{id}", `${id}`), {}) as UTSJSONObject;
 					this.userInfo = result;
 					setLoginUser(result);
+					setActiveUser({});
+					setActiveDevice({});
 					this.popupLogin = false;
 					uni.hideLoading();
 					// uni.request({
