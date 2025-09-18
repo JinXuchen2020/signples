@@ -707,10 +707,15 @@
 	.tools{
 		// position: fixed;
 		width: 100%;
+		height: 250rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		margin-top:10rpx;
 		// left: 0;
 		// bottom: 0;
 		// z-index: 999;
-		background-color: $uni-bg-color;
+		background-color: white;// $uni-bg-color;
 		// padding: 24rpx;
 		
 		.pages{
@@ -801,6 +806,7 @@
 	}
 	.options{
 		padding: 24rpx;
+		flex: 1;
 		
 		.options-tab{
 			width: 100%;
@@ -830,7 +836,7 @@
 			.option-a.active,
 			.option-b.active {
 				display: flex;				
-				height: 700rpx;
+				// height: 700rpx;
 				// height: calc(100vh - 60px - 40px);
 			}
 		}

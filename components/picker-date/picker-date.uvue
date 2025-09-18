@@ -3,7 +3,7 @@
 		<input
 			class="uni-input shadow" 
 			:disabled="true"
-			:value="value" 
+			:value="currentValue" 
 			:placeholder="placeholder" 
 			maxlength="-1" 
 			@click="showDatePopup" />
@@ -89,12 +89,33 @@
 				maskClass: '',
 				maskTopStyle: '',
 				maskBottomStyle: '',
+				currentValue: ''
 				
 			};
 		},
+		watch: {
+			value(newValue: string) {
+				const dateObj = new Date(newValue);
+				const year = dateObj.getFullYear()
+				const month = dateObj.getMonth() + 1
+				const day = dateObj.getDate()
+				this.currentValue = year + this.delimiter + (month >= 10 ? `${month}` : `0${month}`) + this.delimiter + (day >= 10 ? `${day}` : `0${day}`)
+			}
+		},
 		emits: ['refresh'],
 		onLoad(){
-			
+			// const dateObj = new Date(this.value);
+			// const year = dateObj.getFullYear()
+			// const month = dateObj.getMonth() + 1
+			// const day = dateObj.getDate()
+			// this.currentValue = year + this.delimiter + (month >= 10 ? `${month}` : `0${month}`) + this.delimiter + (day >= 10 ? `${day}` : `0${day}`)
+		},
+		onReady(){
+			const dateObj = new Date(this.value);
+			const year = dateObj.getFullYear()
+			const month = dateObj.getMonth() + 1
+			const day = dateObj.getDate()
+			this.currentValue = year + this.delimiter + (month >= 10 ? `${month}` : `0${month}`) + this.delimiter + (day >= 10 ? `${day}` : `0${day}`)
 		},
 		methods: {
 			showDatePopup() {
