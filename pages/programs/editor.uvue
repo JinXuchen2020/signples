@@ -51,16 +51,22 @@
 			<view class="pages">
 				<swiper id="swiper-view" class="swiper">
 					<swiper-item v-if="activeTab == 1" class="swiper-item" item-id="1">
-						<view v-for="(item, index) in mediaConfig?.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.name == item.name}" @click="selectPage(item)">
+						<view v-for="(item, index) in mediaConfig?.pages" :key="index" class="item" :class="{active: activePage != null && activePage?.id == item.id}" @click="selectPage(item, index)">
 							<text class="t">{{item.name}}</text>
+							<view class="delete-btn" @click.stop="(e: UniPointerEvent) => deletePage(e, index)">
+								<image class="icon" src="/static/svg/del.png" mode="widthFix"></image>
+							</view>
 						</view>
 						<view class="item" style="background-color: #cccccc;" @click="addPage()">
 							<text class="t">+</text>
 						</view>
 					</swiper-item>
 					<swiper-item v-else class="swiper-item" item-id="2">
-						<view v-for="(item, index) in  activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item)">
+						<view v-for="(item, index) in  activePage?.components" :key="index" class="item" :class="{active: activeComponent != null && activeComponent?.name == item.name}" @click="selectComponent(item, index)">
 							<text class="t">{{item.name}}</text>
+							<view class="delete-btn" @click.stop="(e: UniPointerEvent) => deleteComponent(e, index)">
+								<image class="icon" src="/static/svg/del.png" mode="widthFix"></image>
+							</view>
 						</view>
 					</swiper-item>
 				</swiper>
@@ -186,8 +192,10 @@
 	const mediaConfig = ref<MediaConfig | null>(null);
 	
 	const activePage = ref<MediaPage | null>(null);
+	const currentPageIndex = ref<number | null>(null);
 	
 	const activeComponent = ref<BaseComponent | null>(null);
+	const currentComponentIndex = ref<number | null>(null);
 	
 	const activeTab = ref(1);
 	
@@ -229,7 +237,6 @@
 	
 	const handleScheduleDayChange = (event: UniCheckboxGroupChangeEvent) => {
 		if (activePage.value != null) {
-			console.log(event);
 			const selectedValues = event.detail.value as string [];
 			const scheduler = activePage.value.schedulers[0].toModel();
 			const newScheduler = new Scheduler({
@@ -241,32 +248,67 @@
 		}
 	}
 	
-	const addPage = () => {
-		const pagesCount = mediaConfig.value!.pages.length + 1;	
-		
-		const page = MediaPage.createInstance(pagesCount);
-		mediaConfig.value!.pages.push(page)
-		activePage.value = page;
-		activeComponent.value = null;
-	}
-	
-	const updatePage = (newData: UTSJSONObject) => {
-		console.log(newData);
-		activePage.value = new MediaPage(newData);
-	}
-	
-	const selectPage = async (item: MediaPage) =>{
-		if(activePage.value != null) {			
-			const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
-			activePage.value!.thumbnailFilePath = thunmbailFilePath;
-		}
-		activePage.value = item;
-		activeComponent.value = null;
-	}	
-	
 	async function drawPage() :Promise<void> {
 		await activePage.value?.draw(uCanvas);
 	    uCanvas.render();
+	}
+	
+	const addPage = async () => {
+		if(mediaConfig.value!.pages.length >= 5) {
+			uni.showToast({
+			  title: '页面超出最大限制',
+			  icon: 'none',
+			  duration: 1000
+			})
+			return;
+		}
+		const maxId = mediaConfig.value!.pages.length == 0 ? 0 : Math.max(...mediaConfig.value!.pages.map(c => c.id)) + 0;
+		
+		const page = MediaPage.createInstance(maxId + 1);
+		mediaConfig.value!.pages.push(page)
+		activePage.value = page;
+		currentPageIndex.value = mediaConfig.value!.pages.length - 1;
+		activeComponent.value = null;
+		await drawPage();
+	}
+	
+	const deletePage = async (e: UniPointerEvent,index: number) => {
+		mediaConfig.value!.pages.splice(index, 1);
+		if(mediaConfig.value!.pages.length > 0) {			
+			if (index == currentPageIndex.value) {
+				const newIndex = index == 0 ? index : index - 1;
+				activePage.value = mediaConfig.value!.pages[newIndex];
+				currentPageIndex.value = newIndex;
+			}
+			else {
+				currentPageIndex.value = mediaConfig.value!.pages.findIndex(c => c.name == activePage.value!.name);
+				activePage.value = null;
+				activePage.value = mediaConfig.value!.pages[currentPageIndex.value];
+			}
+			activeComponent.value = null;
+		}
+		else {
+			activePage.value = null;
+			activeComponent.value = null;
+		}
+		
+		await drawPage();
+	}
+	
+	const updatePage = (newData: UTSJSONObject) => {
+		activePage.value = new MediaPage(newData);
+	}
+	
+	const selectPage = async (item: MediaPage, index: number) =>{
+		if(activePage.value != null) {
+			const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
+			activePage.value!.thumbnailFilePath = thunmbailFilePath;
+		}
+		
+		activePage.value = item;
+		currentPageIndex.value = index;
+		activeComponent.value = null;
+		await drawPage();
 	}
 	
 	const handleTouchStart = async (e: TouchEvent) =>{
@@ -377,8 +419,9 @@
 		}
 	}
 	
-	async function selectComponent(item: BaseComponent){
+	async function selectComponent(item: BaseComponent, index: number){
 		activeComponent.value = item;
+		currentComponentIndex.value = index;
 		if (activeComponent.value!= null && activeComponent.value!.element != null) {
 			for (const component of activePage.value!.components.filter(c => c.element != null))
 			{
@@ -391,6 +434,15 @@
 	
 	async function createComponent(index: number) {
 		if (activePage.value == null) return;
+		if(activePage.value!.components.length >= 5) {
+			uni.showToast({
+			  title: '组件数量超出最大限制',
+			  icon: 'none',
+			  duration: 1000
+			})
+			
+			return;
+		}
 		const maxId = activePage.value!.components.length == 0 ? 0 : Math.max(...activePage.value!.components.map(c => c.id)) + 0;
 		let component : BaseComponent | null = null;
 		switch(index) {
@@ -413,9 +465,10 @@
 		if(component !=  null) {
 			activePage.value?.components.push(component);
 			if (!component.hasFile) {
-				selectComponent(component);
+				selectComponent(component, activePage.value!.components.length - 1);
 			} else {				
 				activeComponent.value = component;
+				currentComponentIndex.value = activePage.value!.components.length - 1;
 			}
 		}
 	}
@@ -443,9 +496,30 @@
 		}
 		
 		if (component != null) {
-			let index = activePage.value!.components.findIndex(c => c.name == data["Name"]);
-			activePage.value!.components.splice(index, 1, component!);
-			selectComponent(component!);
+			activePage.value!.components.splice(currentComponentIndex.value!, 1, component!);
+			selectComponent(component!, currentComponentIndex.value!);
+		}
+	}
+	
+	const deleteComponent = (e: UniPointerEvent, index: number) => {
+		e.bubbles = false;
+		e.preventDefault();
+		activePage.value!.components.splice(index, 1);
+		if(activePage.value!.components.length > 0) {
+			if (index == currentComponentIndex.value) {
+				const newIndex = index == 0 ? index : index - 1;
+				activeComponent.value = activePage.value!.components[newIndex];
+				currentComponentIndex.value = newIndex;
+			}
+			else {
+				currentComponentIndex.value = activePage.value!.components.findIndex(c => c.name == activeComponent.value!.name);
+				activeComponent.value = null;
+				activeComponent.value = activePage.value!.components[currentComponentIndex.value];
+			}
+		}
+		else {
+			activeComponent.value = null;
+			currentComponentIndex.value = null;
 		}
 	}
 	
@@ -455,7 +529,9 @@
 		canvasHeight.value = currentConfig.program.resolution.split("*")[1];
 		mediaConfig.value = currentConfig;
 		activePage.value = currentConfig.pages.length > 0 ? currentConfig.pages[0] : null;
+		currentPageIndex.value = currentConfig.pages.length > 0 ? 0 : null;
 		activeComponent.value = activePage.value == null || activePage.value!.components.length == 0 ? null : activePage.value?.components[0];
+		currentComponentIndex.value = activePage.value == null || activePage.value!.components.length == 0 ? null : 0;
 		if (activeComponent.value != null && activeComponent.value!.element != null) {
 			activeComponent.value!.element!.isSelected = true;
 		}
@@ -635,18 +711,19 @@
 		// bottom: 0;
 		// z-index: 999;
 		background-color: $uni-bg-color;
-		padding: 24rpx;
+		// padding: 24rpx;
 		
 		.pages{
 			padding: 0 0 12rpx 0;
 			.swiper-item{
 				flex-direction: row;
+				flex-wrap: wrap;
 				align-items: center;
-				justify-content: space-between;
+				justify-content: flex-start;
 				width: 100%;
 				.item{
 					// width: 21%;
-					height: 48rpx;
+					height: 80rpx;
 					flex: 1;
 					background-color: #000000;
 					flex-direction: row;
@@ -654,9 +731,28 @@
 					justify-content: center;
 					border-radius: $uni-border-radius-lg;
 					margin: 0 1%;
+					position: relative;
 					.t{
 						color: $uni-text-color-inverse;
 						font-size: $uni-font-size-sm;
+					}
+					
+					.delete-btn {
+						position: absolute;
+						top: 5rpx;
+						right: 5rpx;
+						width: 30rpx;
+						height: 30rpx;
+						background-color: white;
+						border-radius: 50rpx;
+						display: flex;
+						justify-content: center;
+						align-items: center;
+						
+						.icon {
+							width: 24rpx;
+							height: 24rpx;
+						}
 					}
 				}
 				.item.active{
@@ -666,7 +762,7 @@
 		}
 		
 		.component{
-			padding: 0 0 24rpx 0;
+			padding: 0 10rpx 60rpx 10rpx;
 			flex-direction: row;
 			align-items: center;
 			justify-content: space-between;

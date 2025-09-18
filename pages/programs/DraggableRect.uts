@@ -144,23 +144,9 @@ export class DraggableImage {
 							color: textStyle.textColor
 						},
 						text: {
-							fontSize: 16
+							fontSize: textStyle.textSize
 						}
 					}
-				}),				
-				new Rectangle({
-					x: this.x,
-				    y: this.y,
-				    w: this.width,
-				    h: this.height,
-				    style: {
-						stroke: {
-							color: "white",
-							width: 2,
-							cap: "butt",
-							join: "miter",
-						},
-				    }
 				}),
 				new Rectangle({
 				    x: this.x + this.width - 15,
@@ -210,6 +196,9 @@ export class DraggableImage {
 						style: {
 							fill: {
 								color: textStyle.textColor
+							},
+							text: {
+								fontSize: textStyle.textSize
 							}
 						}
 					}),
