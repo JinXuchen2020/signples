@@ -158,7 +158,7 @@
 					});
 					const activeUser = this.userInfo;
 					const person: UTSJSONObject = {}
-					const param = activeUser.getString('role') == 'admin' ? `?enabled=1` : `?userAccount=${activeUser.account}&enabled=1`;
+					const param = `?userAccount=${activeUser.account}&enabled=1`;
 					const result = await request('GET', APIS.deviceListPage as string + param, person)
 					const d = result as Array<UTSJSONObject>;
 					this.deviceList = d
