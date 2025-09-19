@@ -2,7 +2,7 @@
 	<scroll-view :bounces="false" :show-scrollbar="true" class="component-form" v-if="formData != null">
 		<view class="item">
 			<view class="item-key">
-				<text class="t">区域(px)</text>
+				<text class="t">{{$t("program.Location")}}</text>
 			</view>
 			<view class="position">
 				<view class="location">
@@ -18,7 +18,7 @@
 		<view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">名称</text>
+					<text class="t">{{$t("program.ComponentName")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="text" :value="formData?.name" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('name', e.detail.value)" />
@@ -26,7 +26,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">层级</text>
+					<text class="t">{{$t("program.Level")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="number" :value="formData?.zIndex" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('zIndex', e.detail.value)" />
@@ -34,7 +34,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">内容</text>
+					<text class="t">{{$t("program.Content")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="text" :value="formData?.source" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('source', e.detail.value)" />
@@ -42,7 +42,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">播放次数</text>
+					<text class="t">{{$t("program.PlayCount")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="number" :value="formData?.playCount" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('playCount', e.detail.value)" />
@@ -50,7 +50,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">播放时长(s)</text>
+					<text class="t">{{$t("program.PlayDuration")}}</text>
 				</view>
 				<view class="item-value">
 					<picker-time :value="formData?.playDuration" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('playDuration', value)"></picker-time>

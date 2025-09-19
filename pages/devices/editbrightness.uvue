@@ -113,7 +113,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -126,9 +126,13 @@
 				}
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择设备`,
+				uni.showModal({
+					title: $t("error.SelectDevice"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/devices');
+						}
+					}
 				})
 			}
 			uni.setNavigationBarTitle({
@@ -154,7 +158,6 @@
 					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
 					const result = await request('GET', apiUrl + param, person) 
 					this.deviceControls = result as UTSJSONObject[];
-					console.log(result);
 					this.deviceControls.forEach((item: UTSJSONObject) => {
 						const nitem = item as UTSJSONObject;
 						const endDay = item['validDateEnd'] as string;
@@ -183,7 +186,6 @@
 				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
 			},			
 			changing(event: UniSliderChangeEvent){
-				// console.log("拖动过程中触发的事件，event.detail = {value: value}", event.detail);
 				this.value_input = event.detail.value
 			},
 			async changed(event: UniSliderChangeEvent){
@@ -217,7 +219,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `设备：${this.deviceInfo['snCode']} 亮度调节命令执行失败`,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessFailure")}`,
 							duration: 3000,
 							success: () => { 
 							}
@@ -237,7 +239,7 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `设备：${this.deviceInfo['snCode']} 亮度更新成功`,
+						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessSuccess")}`,
 						duration: 3000,
 					})
 					

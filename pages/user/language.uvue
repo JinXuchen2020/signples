@@ -47,9 +47,15 @@
 				] as Array<LangItem>
 			}
 		},
+		onLoad() {
+			uni.setNavigationBarTitle({
+				title: this.$t('pages.languageSwitch')
+			});
+		},
 		methods: {
 			choiceLang(lang: string) {
 				changeLanguage(lang)
+				uni.navigateBack()
 			}
 		}
 	}

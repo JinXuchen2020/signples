@@ -6,7 +6,7 @@
 					<view class="uc-menus-item-title">
 						<text>{{item['name']}}</text>
 						<view class="programs-meta">
-							<text class="t">常规节目</text>
+							<text class="t">{{ $t('program.Normal') }}</text>
 							<!-- <text class="t">共1页</text>
 							<text class="t">1920*1080</text> -->
 						</view>
@@ -28,21 +28,21 @@
 		<view class="create-btn">
 			<view class="btn-box">
 				<button class="btn" @click="createPopup = true">
-					  + 新增节目
+					{{`+ ${ $t('program.Create')}`}}
 				</button>
 			</view>
 		</view>
 		<!-- popup -->
 		<popup-default
 			v-model:visible="createPopup"
-			title="创建新节目"
+			:title="$t('program.CreateTitle')"
 			:show-icon="false"
 			icon-src="/static/svg/suggest.png"
 			@confirm="handleCreate"
 			>
 			<view class="program-meta">
 				<view class="item">
-					<view class="item-title"><text class="t">节目名称</text></view>
+					<view class="item-title"><text class="t">{{$t('program.Name')}}</text></view>
 					<view class="item-body">
 						<view class="program-size">
 							<view class="input-box" style="width: 100%">
@@ -52,7 +52,7 @@
 					</view>
 				</view>
 				<view class="item">
-					<view class="item-title"><text class="t">节目分辨率(宽x高)</text></view>
+					<view class="item-title"><text class="t">{{$t('program.Resolution')}}</text></view>
 					<view class="item-body">
 						<view class="program-size">
 							<view class="input-box">
@@ -69,18 +69,18 @@
 		
 		<popup-default
 			v-model:visible="pushPopup"
-			title="上传发布节目"
+			:title="$t('program.PublishTitle')"
 			:show-icon="false"
 			icon-src="/static/svg/suggest.png"
 			@confirm="handlePushProgram"
 			>
 			<view class="program-meta">
 				<view class="uni-flex" style="padding: 6px 0;">
-					<text>节目名称: </text>
+					<text>{{`${$t('program.Name')}: `}}</text>
 					<text>{{prePushProgram.name}}</text>
 				</view>
 				<view class="uni-flex" style="padding: 6px 0;">
-					<text>请先选择设备</text>
+					<text>{{$t('program.SelectDevice')}}</text>
 				</view>
 				<checkbox-group class="" @change="devicesChange">
 					<checkbox 
@@ -114,7 +114,7 @@
 				pushPopup: false,
 				checkLayoutIndex: 0,
 				newProgram: {
-					name: '节目名称' + getCurrentTimeYYMMDDHHmmss(),
+					name: `${this.$t("program.Name")}${getCurrentTimeYYMMDDHHmmss()}`,
 					width: 256,
 					height: 192
 				} as UTSJSONObject,
@@ -139,9 +139,13 @@
 				this.getDevices();
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择用户`,
+				uni.showModal({
+					title: $t("error.SelectUser"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/users');
+						}
+					}
 				})
 			}
 		},
@@ -164,7 +168,7 @@
 					this.deviceList = d
 					uni.hideLoading();
 				} catch (error) {
-				  console.error('获取设备列表失败', error)
+				  console.error(error)
 				  uni.hideLoading();
 				}
 			},
@@ -191,7 +195,7 @@
 				const uploadResult = await this.fileManager.uploadProgram(programName);
 				if (uploadResult.statusCode != 200) {
 					uni.showToast({
-					  title: '上传失败',
+					  title: $t("program.UploadFailure"),
 					  icon: 'none',
 					  duration: 1000
 					})
@@ -205,7 +209,7 @@
 					await this.fileManager.saveProgram(programName, data);
 					uni.showToast({
 						icon: 'none',
-						title: '发布成功',
+						title: $t("program.UploadSuccess"),
 						duration: 3000,
 						success: () => {
 							this.pushPopup = false;

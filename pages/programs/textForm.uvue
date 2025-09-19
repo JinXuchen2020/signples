@@ -2,7 +2,7 @@
 	<scroll-view :bounces="false" :show-scrollbar="true" class="component-form" v-if="formData != null">
 		<view class="item">
 			<view class="item-key">
-				<text class="t">区域(px)</text>
+				<text class="t">{{$t("program.Location")}}</text>
 			</view>
 			<view class="position">
 				<view class="location">
@@ -18,7 +18,7 @@
 		<view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">名称</text>
+					<text class="t">{{$t("program.ComponentName")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="text" :value="formData?.name" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('name', e.detail.value)" />
@@ -26,7 +26,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">层级</text>
+					<text class="t">{{$t("program.Level")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="number" :value="formData?.zIndex" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('zIndex', e.detail.value)" />
@@ -34,7 +34,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">内容</text>
+					<text class="t">{{$t("program.Content")}}</text>
 				</view>
 				<view class="item-value">
 					<rich-text class="rich-text" :selectable="true" :nodes="formData?.source"></rich-text>
@@ -42,7 +42,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">背景色</text>
+					<text class="t">{{$t("program.BackgroundColor")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="color" :value="formData?.background" class="uni-input" />
@@ -50,35 +50,35 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">垂直对齐</text>
+					<text class="t">{{$t("program.VerticalAlignment")}}</text>
 				</view>
 				<view class="item-value">
 					<radio-group name="verticalContentAlignment" @change="handleVerticalAlignChange">
 						<view class="radio-group" >
-							<radio class="radio" value="bottom" :checked="formData?.verticalContentAlignment == 'bottom'" >向下</radio>
-							<radio class="radio" value="center" :checked="formData?.verticalContentAlignment == 'center'">居中</radio>
-							<radio class="radio" value="top" :checked="formData?.verticalContentAlignment == 'top'">向上</radio>
+							<radio class="radio" value="bottom" :checked="formData?.verticalContentAlignment == 'bottom'" >{{$t("program.Bottom")}}</radio>
+							<radio class="radio" value="center" :checked="formData?.verticalContentAlignment == 'center'">{{$t("program.Center")}}</radio>
+							<radio class="radio" value="top" :checked="formData?.verticalContentAlignment == 'top'">{{$t("program.Top")}}</radio>
 						</view>
 					</radio-group>
 				</view>
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">显示方式</text>
+					<text class="t">{{$t("program.ShowMode")}}</text>
 				</view>
 				<view class="item-value">
 					<radio-group name="playMode" @change="handlePlayModeChange">
 						<view class="radio-group" >
-							<radio class="radio" value="pageTurning" :checked="formData?.playMode == 'pageTurning'" >翻页</radio>
-							<radio class="radio" value="rolling" :checked="formData?.playMode == 'rolling'">滚动</radio>
-							<radio class="radio" value="stop" :checked="formData?.playMode == 'stop'">静止</radio>
+							<radio class="radio" value="pageTurning" :checked="formData?.playMode == 'pageTurning'" >{{$t("program.PageTurning")}}</radio>
+							<radio class="radio" value="rolling" :checked="formData?.playMode == 'rolling'">{{$t("program.Rolling")}}</radio>
+							<radio class="radio" value="stop" :checked="formData?.playMode == 'stop'">{{$t("program.Stop")}}</radio>
 						</view>
 					</radio-group>
 				</view>
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">播放次数</text>
+					<text class="t">{{$t("program.PlayCount")}}</text>
 				</view>
 				<view class="item-value">
 					<input type="number" :value="formData?.playCount" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('playCount', e.detail.value)" />
@@ -86,7 +86,7 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">播放时长(s)</text>
+					<text class="t">{{$t("program.PlayDuration")}}</text>
 				</view>
 				<view class="item-value">
 					<picker-time :value="formData?.playDuration" :placeholder="$t('device.PleaseSelectTime')" @refresh="(value: string)=> updateProperty('playDuration', value)"></picker-time>
@@ -95,7 +95,7 @@
 			<view v-if="formData?.playMode == 'pageTurning'">
 				<view class="item">
 					<view class="item-key">
-						<text class="t">特效</text>
+						<text class="t">{{$t("program.Effect")}}</text>
 					</view>
 					<view class="item-value">
 						<view class="uni-input" @click="showEffectActionSheet"><text class="t">{{currentEffect}}</text></view>
@@ -103,7 +103,7 @@
 				</view>
 				<view class="item">
 					<view class="item-key">
-						<text class="t">特效时长(ms)</text>
+						<text class="t">{{$t("program.EffectDuration")}}</text>
 					</view>
 					<view class="item-value">
 						<input type="number" :value="formData?.effectDuration" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('effectDuration', e.detail.value)" />
@@ -113,7 +113,7 @@
 			<view v-else-if="formData?.playMode == 'rolling'">
 				<view class="item">
 					<view class="item-key">
-						<text class="t">方向</text>
+						<text class="t">{{$t("program.Direction")}}</text>
 					</view>
 					<view class="item-value">
 						<view class="uni-input" @click="showDirectionActionSheet"><text class="t">{{currentDirection}}</text></view>
@@ -121,7 +121,7 @@
 				</view>
 				<view class="item">
 					<view class="item-key">
-						<text class="t">滚动速度</text>
+						<text class="t">{{$t("program.RollingSpeed")}}</text>
 					</view>
 					<view class="item-value">
 						<input type="number" :value="formData?.rollingSpeed" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('rollingSpeed', e.detail.value)" />
@@ -129,7 +129,7 @@
 				</view>
 				<view class="item">
 					<view class="item-key">
-						<text class="t">首尾相连</text>
+						<text class="t">{{$t("program.LoopEnabled")}}</text>
 					</view>
 					<view class="item-value">
 						<checkbox :checked="formData?.isLoopEnabled" @tap="handleValueChange" />
@@ -156,29 +156,29 @@
 				effects: [
 					{
 						key: "Empty",
-						name: "无"
+						name: $t("program.EffectEmpty")
 					},					
 					{
 						key: "FadeIn",
-						name: "淡入",
+						name: $t("program.EffectFadeIn"),
 					}, 
 				] as UTSJSONObject[],
 				directions: [
 					{
 						key: "rollingLeft",
-						name: "向左滚动"
+						name: $t("program.RollingLeft")
 					},					
 					{
 						key: "rollingUp",
-						name: "向上滚动",
+						name: $t("program.RollingUp"),
 					},
 					 {
 					 	key: "rollingRight",
-					 	name: "向右滚动"
+					 	name: $t("program.RollingRight")
 					 },					
 					 {
 					 	key: "rollingDown",
-					 	name: "向下滚动",
+					 	name: $t("program.RollingDown"),
 					 }, 
 				] as UTSJSONObject[],
 				currentEffect: '',
@@ -259,7 +259,7 @@
 			},
 			showEffectActionSheet() {
 				const options: ShowActionSheetOptions = {
-					title: '特效',
+					title: $t("program.Effect"),
 					itemList: this.effects.map((c: UTSJSONObject) => c.getString('name')!),
 					success: (res) => {
 						const selectedIndex = res.tapIndex;
@@ -275,7 +275,7 @@
 			},
 			showDirectionActionSheet() {
 				const options: ShowActionSheetOptions = {
-					title: '滚动方向',
+					title: $t("program.Direction"),
 					itemList: this.directions.map((c: UTSJSONObject) => c.getString('name')!),
 					success: (res) => {
 						const selectedIndex = res.tapIndex;
@@ -351,6 +351,7 @@
 			padding: 18rpx 24rpx;
 			display: flex;
 			flex-direction: row;
+			align-items: center;
 			justify-content: space-between;
 			
 			.item-key{

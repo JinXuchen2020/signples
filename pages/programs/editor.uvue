@@ -28,10 +28,10 @@
 			</view>
 		</view>
 		<view class="options-tab">
-			<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
-			<view class="item" v-else @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
-			<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
-			<view class="item" v-else @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+			<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">{{$t("program.ComponentPro")}}</text></view>
+			<view class="item" v-else @click="handleActiveTab(0)"><text class="t">{{$t("program.ComponentPro")}}</text></view>
+			<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">{{$t("program.PagePro")}}</text></view>
+			<view class="item" v-else @click="handleActiveTab(1)"><text class="t">{{$t("program.PagePro")}}</text></view>
 		</view>
 		<view class="option-body">
 			<view class="option-a" :class="{active: activeTab == 0}">
@@ -75,7 +75,7 @@
 						<image class="icon" src="/static/svg/component-6.png" mode="widthFix"></image>
 					</view>
 					<view class="text">
-						<text class="t">视频</text>
+						<text class="t">{{$t("program.Video")}}</text>
 					</view>
 				</view>
 				<view class="item" @click="createComponent(2)">
@@ -83,7 +83,7 @@
 						<image class="icon" src="/static/svg/component-0.png" mode="widthFix"></image>
 					</view>
 					<view class="text">
-						<text class="t">图片</text>
+						<text class="t">{{$t("program.Image")}}</text>
 					</view>
 				</view>
 				<view class="item" @click="createComponent(3)">
@@ -91,7 +91,7 @@
 						<image class="icon" src="/static/svg/component-1.png" mode="widthFix"></image>
 					</view>
 					<view class="text">
-						<text class="t">文字</text>
+						<text class="t">{{$t("program.Text")}}</text>
 					</view>
 				</view>
 				<view class="item" @click="createComponent(4)">
@@ -99,7 +99,7 @@
 						<image class="icon" src="/static/svg/component-7.png" mode="widthFix"></image>
 					</view>
 					<view class="text">
-						<text class="t">网页</text>
+						<text class="t">{{$t("program.Web")}}</text>
 					</view>
 				</view>
 				<view class="item" @click="createComponent(5)">
@@ -107,7 +107,7 @@
 						<image class="icon" src="/static/svg/component-8.png" mode="widthFix"></image>
 					</view>
 					<view class="text">
-						<text class="t">文档</text>
+						<text class="t">{{$t("program.Word")}}</text>
 					</view>
 				</view>
 			</view>
@@ -115,18 +115,18 @@
 		
 		<popup-default
 			v-model:visible="pushPopup"
-			title="上传发布节目"
+			:title="$t('program.PublishTitle')"
 			:show-icon="false"
 			icon-src="/static/svg/suggest.png"
 			@confirm="handlePushProgram"
 		>
 			<view class="program-meta">
 				<view class="uni-flex" style="padding: 6px 0;">
-					<text>节目名称: </text>
+					<text>{{`${$t('program.Name')}: `}}</text>
 					<text>{{programName}}</text>
 				</view>
 				<view class="uni-flex" style="padding: 6px 0;">
-					<text>请先选择设备</text>
+					<text>{{$t('program.SelectDevice')}}</text>
 				</view>
 				<checkbox-group class="" @change="devicesChange">
 					<checkbox 
@@ -197,6 +197,8 @@
 	
 	const activeTab = ref(1);
 	
+	const defl = uni.getStorageSync('language') as string
+	
 	const handleActiveTab = (val: number)=>{
 		activeTab.value = val
 	}
@@ -254,7 +256,7 @@
 	const addPage = async () => {
 		if(mediaConfig.value!.pages.length >= 5) {
 			uni.showToast({
-			  title: '页面超出最大限制',
+			  title: i18n.global.t('program.PageExceed', null, defl),
 			  icon: 'none',
 			  duration: 1000
 			})
@@ -434,7 +436,7 @@
 		if (activePage.value == null) return;
 		if(activePage.value!.components.length >= 5) {
 			uni.showToast({
-			  title: '组件数量超出最大限制',
+			  title: i18n.global.t('program.ComponentExceed', null, defl),
 			  icon: 'none',
 			  duration: 1000
 			})
@@ -549,7 +551,7 @@
 		await fileManager.saveProgram(programName.value, data);
 		uni.showToast({
 			icon: 'none',
-			title: '保存成功',
+			title: i18n.global.t("program.SaveSuccess", null, defl),
 			duration: 3000,
 			success: () => { 
 			}
@@ -570,7 +572,7 @@
 		const uploadResult = await fileManager.uploadProgram(programName.value);
 		if (uploadResult.statusCode != 200) {
 			uni.showToast({
-			  title: '上传失败',
+			  title: i18n.global.t("program.UploadFailure", null, defl),
 			  icon: 'none',
 			  duration: 1000
 			})
@@ -584,13 +586,12 @@
 			await fileManager.saveProgram(programName.value, data);
 			uni.showToast({
 				icon: 'none',
-				title: '发布成功',
+				title: i18n.global.t("program.PublishSuccess", null, defl),
 				duration: 3000,
 				success: () => {
 				}
 			})
 			
-			console.log("发布成功");
 			pushPopup.value = false;
 		}
 	}
@@ -632,7 +633,7 @@
 			mediaList.value = d
 			uni.hideLoading();
 		} catch (error) {
-		  console.error('获取媒体库失败', error)
+		  console.error(error)
 		  uni.hideLoading();
 		}
 	}
@@ -651,7 +652,7 @@
 			deviceList.value = d
 			uni.hideLoading();
 		} catch (error) {
-		  console.error('获取设备列表失败', error)
+		  console.error(error)
 		  uni.hideLoading();
 		}
 	}
@@ -666,15 +667,8 @@
 			canvasHeight.value = e['height'] as string;
 		}
 		
-		const defl = uni.getStorageSync('language') as string
-		
-		let defaultLang =  'kr'
-		if(defl != ''){
-			defaultLang = defl
-		}
-		
 		uni.setNavigationBarTitle({
-			title: i18n.global.t('pages.programEditor', null, defaultLang)
+			title: i18n.global.t('pages.programEditor', null, defl)
 		})
 	});
     onReady(() => {

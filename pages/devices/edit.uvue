@@ -135,7 +135,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -144,9 +144,13 @@
 				that.deviceId = that.deviceInfo['id'] as number;
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择设备`,
+				uni.showModal({
+					title: $t("error.SelectDevice"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/devices');
+						}
+					}
 				})
 			}
 		},
@@ -156,10 +160,11 @@
 			},
 			async handleDelete(device: UTSJSONObject){
 				uni.showModal({
-					title: "确定要删除该设备吗?",
+					title: $t("error.ConfirmToDeleteDevice"),
+					confirmText: $t("index.Confirm"),
+					cancelText: $t("index.Cancel"),
 					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							
+						if(res.confirm){							
 							try {
 								uni.showLoading({
 									title: ''
@@ -189,18 +194,17 @@
 				if(device['connectStatus'] != 1){
 					uni.showToast({
 						icon: 'none',
-						title: '设备未连接，不可操作',
+						title: $t("error.NotConnected"),
 						duration: 2000,
-						success: () => {
-							
+						success: () => {							
 						}
 					})
 				}else {
-					console.log('Can do this.')
-					if(this.deviceInfo['status'] == 0) 
-					{
+					if(this.deviceInfo['status'] == 0) {
 						uni.showModal({
-							title: "确定要激活该设备吗?",
+							title: $t("error.ActivateDevice"),
+							confirmText: $t("index.Confirm"),
+							cancelText: $t("index.Cancel"),
 							success: (res: UniShowModalResult) => {
 								if(res.confirm){								
 									try {
@@ -214,7 +218,7 @@
 											}).then(() => {
 												uni.showToast({
 													icon: 'none',
-													title: `设备：${this.deviceInfo['snCode']} 激活成功`,
+													title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.ActivateSuccess")}`,
 													duration: 3000,
 												})
 											});
@@ -243,16 +247,17 @@
 				if(device['connectStatus'] != 1){
 					uni.showToast({
 						icon: 'none',
-						title: '设备未连接，不可操作',
+						title: $t("error.NotConnected"),
 						duration: 2000,
 						success: () => {
 							
 						}
 					})
 				}else{
-					console.log('Can do this.')
 					uni.showModal({
-						title: "确定要停用该设备吗?",
+						title: $t("error.DisableDevice"),
+						confirmText: $t("index.Confirm"),
+						cancelText: $t("index.Cancel"),
 						success: (res: UniShowModalResult) => {
 							if(res.confirm){
 								
@@ -266,13 +271,19 @@
 										}).then(() => {
 											uni.showToast({
 												icon: 'none',
-												title: `设备：${this.deviceInfo['snCode']} 停用成功`,
+												title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.DisableSuccess")}`,
 												duration: 3000,
 											})
-										});
-									
+										});									
 								} catch (err){
-									console.log(err)
+									uni.hideLoading();
+									const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+									console.log(errObj);
+									uni.showToast({
+										icon: 'none',
+										title: `${errObj.message}`,
+										duration: 3000,
+									})
 								}
 							}
 						}

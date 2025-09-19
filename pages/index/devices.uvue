@@ -106,9 +106,13 @@
 				that.getDeviceList();
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择用户`,
+				uni.showModal({
+					title: $t("error.SelectUser"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/users');
+						}
+					}
 				})
 			}
 		},
@@ -121,7 +125,6 @@
 				const person: UTSJSONObject = {}
 				const param = '?userAccount=' + this.userAccount;
 			    const result = await request('GET', APIS.deviceListPage as string + param, person)
-				console.log('result', result)
 				const currentDate = new Date().getTime()
 				const d = result as Array<UTSJSONObject>;
 				const copyD: UTSJSONObject[] = [];
@@ -129,7 +132,7 @@
 						  const nitem = item as UTSJSONObject;
 						  const day = item['validEnd'] as string;
 						  const daynum = new Date(day).getTime();
-						  if(currentDate > daynum){
+						  if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 							  nitem['isvalidEnd'] = true;
 						  }else{
 							  nitem['isvalidEnd'] = false;
@@ -139,13 +142,16 @@
 				this.deviceList = copyD
 				uni.hideLoading();
 			  } catch (error) {
-			    console.error('获取设备列表失败', error)
+				uni.hideLoading();
+			    console.error(error)
 			  }
 			},
 			async handleDelete(device: UTSJSONObject){
 				let that = this
 				uni.showModal({
-					title: "确定要删除该设备吗?",
+					title: $t("error.ConfirmToDeleteDevice"),
+					confirmText: $t("index.Confirm"),
+					cancelText: $t("index.Cancel"),
 					success: (res: UniShowModalResult) => {
 						if(res.confirm){							
 							try {

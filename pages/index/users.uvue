@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<view class="space-box"></view>
 		<view class="add shadow" @click="handleCreate()">
 			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
@@ -92,46 +92,34 @@
 				}
 			    const result = await request('GET', APIS.usersAll as string, person)
 				const d = result as Array<UTSJSONObject>;
-				console.log('d', d);
 				this.userList = d
 			  } catch (error) {
-			    console.error('获取用户列表失败', error)
+			    console.error( error)
 			  }
 			},
 			
-			async handleDelete(device: UTSJSONObject){
+			async handleDelete(user: UTSJSONObject){
 				let that = this
 				uni.showModal({
-					title: "确定要删除该用户吗?",
+					title: $t("error.ConfirmToDeleteUser"),
+					confirmText: $t("index.Confirm"),
+					cancelText: $t("index.Cancel"),
 					success: (res: UniShowModalResult) => {
 						if(res.confirm){							
 							try {
 								uni.showLoading({
 									title: ''
 								});
-								uni.request({
-									url: APIS.deleteDevice as string + '/' + device.id,
-									method: "DELETE",
-									header: {
-										'Authorization': "Bearer " + this.token
-									},
-									data:{
-										
-									},
-									success: (res) => {
-										console.log('delete res', res)
-										uni.hideLoading();
-										that.getUserList();
-									},
-									fail: () => {
-										
-									}
-								});
+								
+								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${user.id}`);
+								request('DELETE', apiUrl, {}).then(()=> {
+									uni.hideLoading();
+									that.getUserList();
+								})
 							} catch (err){
+								uni.hideLoading();
 								console.log(err)
 							}
-							
-							
 						}
 					}
 				})

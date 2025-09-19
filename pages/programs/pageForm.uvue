@@ -2,7 +2,7 @@
 	<scroll-view :bounces="false" :show-scrollbar="true" class="page-option-form" v-if="formData != null">
 		<view class="item">
 			<view class="item-key">
-				<text class="t">名称</text>
+				<text class="t">{{$t("program.ComponentName")}}</text>
 			</view>
 			<view class="item-value">
 				<input type="text" :value="formData?.name" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('name', e.detail.value)" />
@@ -10,20 +10,20 @@
 		</view>
 		<view class="item">
 			<view class="item-key">
-				<text class="t">类型</text>
+				<text class="t">{{$t("program.PageType")}}</text>
 			</view>
 			<view class="item-value">
 				<radio-group name="type" @change="handleTypeChange">
 					<view class="radio-group" >
-						<radio class="radio" value="normal" :checked="formData?.type == 'normal'" >常规</radio>
-						<radio value="ad" :checked="formData?.type == 'ad'">广告</radio>
+						<radio class="radio" value="normal" :checked="formData?.type == 'normal'" >{{$t("program.NormalType")}}</radio>
+						<radio value="ad" :checked="formData?.type == 'ad'">{{$t("program.AdType")}}</radio>
 					</view>
 				</radio-group>
 			</view>
 		</view>
 		<view class="item">
 			<view class="item-key">
-				<text class="t">有效期</text>
+				<text class="t">{{$t("program.ValidDate")}}</text>
 			</view>
 			<view class="item-value">
 				<checkbox :checked="formData?.isHasValidity == true" @tap="handleIsHasValidityChange"></checkbox>
@@ -31,7 +31,7 @@
 		</view>
 		<view class="item" v-if="formData?.isHasValidity == true">
 			<view class="item-key">
-				<text class="t">开始日期</text>
+				<text class="t">{{$t("program.StartDate")}}</text>
 			</view>
 			<view class="item-value">
 				<picker-date :value="formData.validStartDate" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validStartDate', value)"></picker-date>
@@ -39,7 +39,7 @@
 		</view>
 		<view class="item" v-if="formData?.isHasValidity == true">
 			<view class="item-key">
-				<text class="t">结束日期</text>
+				<text class="t">{{$t("program.EndDate")}}</text>
 			</view>
 			<view class="item-value">
 				<picker-date :value="formData.validEndDate" :placeholder="$t('device.PleaseSelectDate')" @refresh="(value: string)=> updateProperty('validEndDate', value)"></picker-date>
@@ -47,7 +47,7 @@
 		</view>
 		<view class="item">
 			<view class="item-key">
-				<text class="t">播放次数</text>
+				<text class="t">{{$t("program.PlayCount")}}</text>
 			</view>
 			<view class="item-value">
 				<input type="number" :value="formData?.playCount" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('playCount', e.detail.value)" />
@@ -55,7 +55,7 @@
 		</view>
 		<view class="item">
 			<view class="item-key">
-				<text class="t">时间计划表</text>
+				<text class="t">{{$t("program.Scheduler")}}</text>
 			</view>
 			<view class="item-value">
 				<view class="sub-list" style="width: 100%;">

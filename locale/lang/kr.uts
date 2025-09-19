@@ -20,7 +20,8 @@ export default {
 		powerControl: "전원 제어",
 		userManagement: "사용자 관리",
 		programEditor: "프로그램 편집기",
-		languageSwitch: "언어 전환"
+		languageSwitch: "언어 전환",
+		languageConfirm: "已设置语言",
 	},
   index: {
     BelongingUser: "소속 사용자",

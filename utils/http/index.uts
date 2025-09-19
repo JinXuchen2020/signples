@@ -1,6 +1,7 @@
 // HTTP请求封装
 const BASE_URL = 'http://1.255.226.145:12106'
 import { useState }  from '@/store/index.uts'
+import i18n from '@/locale'
 
 
 /**
@@ -28,8 +29,9 @@ export function request(method: RequestMethod, url: string, option: UTSJSONObjec
 						return resolve(data);
     				}else if(result['code'] == 401){
 						setToken('');
+						const defl = uni.getStorageSync('language') as string
 						uni.showModal({
-							title: "尚未登录，请您先登录???",
+							title: i18n.global.t("error.ReLogin", null, defl),
 							success: (res: UniShowModalResult) => {
 								if(res.confirm){
 									uni.switchTab({

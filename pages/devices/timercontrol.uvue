@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<form class="defalut-form" @submit="onFormSubmit">
 			<view class="item" v-if="formData.controlType == 'Brightness'" >
 				<view class="label"><text class="t">{{$t('device.BrightnessValue')}}</text></view>
@@ -290,7 +290,7 @@
 				if(this.formData.repeatMode == '' || this.formData.executeTime == '' || this.executeTime == '' || this.formData.validDateStart == '' || this.formData.validDateEnd == ''){
 					uni.showToast({
 						icon: 'none',
-						title: '字段不能为空',
+						title: $t("error.TimerControlPrompt"),
 						duration: 3000,
 						success: () => {
 						}
@@ -313,7 +313,7 @@
 						
 						uni.showToast({
 							icon: 'none',
-							title: '保存成功',
+							title: $t("error.TimerControlSaveSuccess"),
 							duration: 2000,
 						})
 						

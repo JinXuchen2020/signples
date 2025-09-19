@@ -41,6 +41,7 @@ export const APIS: ApiEndpoints = {
   	  getAll: BASE_URL + '/user/all',
 	  getById: BASE_URL + '/user/{id}',
   	  save: BASE_URL + '/user/save',
+	  deleteById: BASE_URL + '/user/{id}',
   },
   monitor: {
   	  getAll: BASE_URL + '/monitor/all',

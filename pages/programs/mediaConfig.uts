@@ -1,6 +1,7 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { DraggableImage } from "./draggableRect.uts";
-// import { ProgramFolder} from "./fileManager.uts";
+import i18n from '@/locale'
+const defl = uni.getStorageSync('language') as string
 export class MediaConfig {
 	left: number;
 	top: number;
@@ -188,7 +189,7 @@ export class MediaPage{
 	static createInstance(id: number){
 		const data = {
 			"Id": id ,
-			"Name": "页面" + id,
+			"Name": i18n.global.t('program.Page', null, defl) + id,
 			"Type": "normal",
 			"Order": id,
 			"ThumbnailFilePath": "",
@@ -234,31 +235,31 @@ export class Scheduler {
 
 export const allDays = [
 	{
-		label: "一",
+		label: i18n.global.t('program.One', null, defl),
 		day: 1
 	},
 	{
-		label: "二",
+		label: i18n.global.t('program.Two', null, defl),
 		day: 2
 	},
 	{
-		label: "三",
+		label: i18n.global.t('program.Three', null, defl),
 		day: 3
 	},
 	{
-		label: "四",
+		label: i18n.global.t('program.Four', null, defl),
 		day: 4
 	},
 	{
-		label: "五",
+		label: i18n.global.t('program.Five', null, defl),
 		day: 5
 	},
 	{
-		label: "六",
+		label: i18n.global.t('program.Six', null, defl),
 		day: 6
 	},
 	{
-		label: "日",
+		label: i18n.global.t('program.Seven', null, defl),
 		day: 7
 	}
 ]
@@ -355,7 +356,7 @@ export class VideoComponent extends BaseComponent {
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `视频${id}`,
+			Name: `${i18n.global.t('program.Video', null, defl)}${id}`,
 			ZIndex:  id,
 			PlayMode:  "fullscreen",
 			PlayCount:  1,
@@ -394,7 +395,7 @@ export class ImageComponent extends BaseComponent {
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `图片${id}`,
+			Name: `${i18n.global.t('program.Image', null, defl)}${id}`,
 			ZIndex:  id,
 			PlayCount:  1,
 			Timeline:  5,
@@ -469,12 +470,12 @@ export class TextComponent extends BaseComponent {
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name : `文字${id}`,
+			Name : `${i18n.global.t('program.Text', null, defl)}${id}`,
 			ZIndex : id,
 			Type : "Text",
 			Width: 256,
 			Height: 192,
-			Source : "Hello word",
+			Source : i18n.global.t('program.HelloWorld', null, defl),
 			PlayCount : 1,
 			PlayDuration : "00:00:05",
 			PlayMode : "pageTurning",
@@ -543,7 +544,7 @@ export class WebComponent extends BaseComponent {
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `网页${id}`,
+			Name: `${i18n.global.t('program.Web', null, defl)}${id}`,
 			ZIndex:  id,
 			Width: 256,
 			Height: 192,
@@ -602,7 +603,7 @@ export class WordComponent extends BaseComponent {
 	static createInstance(id: number){
 		const data = {
 			Id: id,
-			Name: `文档${id}`,
+			Name: `${i18n.global.t('program.World', null, defl)}${id}`,
 			ZIndex:  id,
 			PlayCount:  1,
 			Width: 256,

@@ -4,6 +4,8 @@ import { APIS } from '@/api/config.uts';
 import { Ziper } from "@/uni_modules/ns-unzip";
 import { request } from '@/utils/http/index';
 import { useState }  from '@/store/index.uts'
+import i18n from '@/locale'
+const defl = uni.getStorageSync('language') as string
 
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 export class FileManager {
@@ -43,7 +45,7 @@ export class FileManager {
 				});
 			});
 		} catch (err) {
-			console.error('读取目录失败:', err);
+			console.error(err);
 		}
 		
 		return results;
@@ -78,7 +80,6 @@ export class FileManager {
 		const newProgramFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
-		console.log(configFilePath);
 		if (await this.IsExist(configFilePath)) {
 			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
 			configFileContent = JSON.parse(content) as UTSJSONObject;
@@ -107,16 +108,12 @@ export class FileManager {
 			}
 			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
 		}
-
-		console.log(configFileContent);
 		return new MediaConfig(configFileContent);
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject) {
 		const programFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
-		console.log(configFilePath);
-		console.log(data);
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
@@ -180,7 +177,7 @@ export class FileManager {
 		
 		if (!fileExists) {
 			uni.showToast({
-				title: '没有节目包, 请先去编辑页面打包',
+				title: i18n.global.t('program.NeedToZip', null, defl),
 				icon: 'none'
 			})
 			return {
@@ -209,7 +206,7 @@ export class FileManager {
 		
 		if (!rightResult) {
 			uni.showToast({
-				title: '没有文件权限',
+				title: i18n.global.t('program.NoRight', null, defl),
 				icon: 'none'
 			})
 			
@@ -221,7 +218,7 @@ export class FileManager {
 		
 		try {
 			uni.showLoading({
-				title: '上传中...'
+				title: i18n.global.t('program.Uploading', null, defl)
 			});
 			const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
 				uni.downloadFile({
@@ -239,7 +236,7 @@ export class FileManager {
 								resolve(res);
 							},
 							fail(res){
-								console.error("上传失败:", JSON.stringify(res, null, 2));
+								console.error("fail to upload:", JSON.stringify(res, null, 2));
 								reject(res);
 							}
 						})
@@ -262,15 +259,13 @@ export class FileManager {
 	async sendProgram(program: UTSJSONObject, snCode: string){
 		try {
 			uni.showLoading({
-				title: '发布中...'
+				title: i18n.global.t('program.Publishing', null, defl)
 			});
 			const dataObj = {
 				cmd: 'CMD|SendProgram|',
 				data: program
 				deviceSnCode: snCode
 			} as UTSJSONObject
-			
-			console.log(JSON.stringify(dataObj));
 			
 			const res = await request("POST", APIS.sendCMD as string, dataObj);
 			uni.hideLoading();
@@ -319,14 +314,13 @@ export class FileManager {
 					deviceSnCode: snCode
 				} as UTSJSONObject
 				
-				console.log(JSON.stringify(dataObj));
-				
 				const res = await request("POST", APIS.sendCMD as string, dataObj) as Boolean;
 				
 				if(!res) {
+					const errorM =  `${i18n.global.t("index.Device", null, defl)}：${snCode} ${i18n.global.t("program.SetPlayTimeFailure", null, defl)}`
 					uni.showToast({
 						icon: 'none',
-						title: `设备：${snCode} 设置播放时间命令执行失败`,
+						title: errorM,
 						duration: 3000,
 					})
 				}
@@ -334,7 +328,7 @@ export class FileManager {
 			else {
 				uni.showToast({
 					icon: 'none',
-					title: `设备：${snCode} 发布命令执行失败`,
+					title: `${i18n.global.t("index.Device", null, defl)}：${snCode} ${i18n.global.t("program.PublishFailure", null, defl)}`,
 					duration: 3000,
 					success: () => { 
 					}

@@ -137,7 +137,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -146,9 +146,13 @@
 				that.deviceId = that.deviceInfo['id'] as number;
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择设备`,
+				uni.showModal({
+					title: $t("error.SelectDevice"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/devices');
+						}
+					}
 				})
 			}
 			
@@ -224,7 +228,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `设备：${this.deviceInfo['snCode']} 时间同步命令执行失败`,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.TimeSyncFailure")}`,
 							success: () => { 
 							}
 						})
@@ -235,7 +239,7 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `设备：${this.deviceInfo['snCode']} 时间同步成功`,
+						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.TimeSyncSuccess")}`,
 						success: () => {
 							
 						}
@@ -269,7 +273,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `设备：${this.deviceInfo['snCode']} 同步时间命令执行失败`,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.GetTimeFailure")}`,
 							duration: 3000,
 							success: () => { 
 							}
