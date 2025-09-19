@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<view class="space-box"></view>
 		<view class="add shadow" @click="handleCreate()">
 			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>

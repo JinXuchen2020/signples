@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
@@ -159,7 +159,8 @@
 						const nitem = item as UTSJSONObject;
 						const endDay = item['validDateEnd'] as string;
 						const daynum = new Date(endDay).getTime();
-						if(currentDate > daynum){
+						
+						if(currentDate > daynum && (currentDate - daynum) > 1000 * 3600 * 24){
 							nitem['isvalidEnd'] = true;
 						}else{
 							nitem['isvalidEnd'] = false;

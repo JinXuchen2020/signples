@@ -208,8 +208,8 @@
 				this.formData = {
 					controlType: this.controlType,
 					repeatMode: 'day',
-					validDateStart: new Date().toISOString().split("T")[0],
-					validDateEnd:new Date().toISOString().split("T")[0],
+					validDateStart: '',
+					validDateEnd:'',
 					value: 0,
 					deviceId: this.deviceInfo['snCode'],
 					executionType: "SCHEDULED",

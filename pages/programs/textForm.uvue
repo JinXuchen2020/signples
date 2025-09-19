@@ -1,5 +1,5 @@
 <template>
-	<view class="component-form" v-if="formData != null">
+	<scroll-view :bounces="false" :show-scrollbar="true" class="component-form" v-if="formData != null">
 		<view class="item">
 			<view class="item-key">
 				<text class="t">区域(px)</text>
@@ -137,7 +137,7 @@
 				</view>
 			</view>
 		</view>
-	</view>	
+	</scroll-view>	
 </template>
 
 <script lang="uts" >
@@ -346,6 +346,7 @@
 		border-radius: 24rpx;
 		box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
 		padding: 12rpx 0;
+		height: 100%;
 		.item{
 			padding: 18rpx 24rpx;
 			display: flex;

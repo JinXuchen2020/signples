@@ -1,5 +1,5 @@
 <template>
-	<view class="page-option-form" v-if="formData != null">
+	<scroll-view :bounces="false" :show-scrollbar="true" class="page-option-form" v-if="formData != null">
 		<view class="item">
 			<view class="item-key">
 				<text class="t">名称</text>
@@ -77,7 +77,7 @@
 				</view>
 			</view>
 		</view>
-	</view>
+	</scroll-view>
 </template>
 
 <script>
@@ -169,6 +169,7 @@
 		border-radius: 24rpx;
 		box-shadow: 0 0 12rpx rgba(0,0,0,0.05);
 		padding: 12rpx 0;
+		height: 100%;
 		.item {
 			padding: 18rpx 24rpx;
 			display: flex;
@@ -189,9 +190,12 @@
 				flex-direction: row;
 				.sub-list{
 					width: 100%;
+					display: flex;
+					flex-direction: column;
 					
 					.sub-item{
 						width: 100%;
+						flex: 1;
 						
 						.sub-value{
 							flex-direction: row;

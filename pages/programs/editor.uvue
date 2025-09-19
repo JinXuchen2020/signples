@@ -27,24 +27,22 @@
 				</view>
 			</view>
 		</view>
-		<view class="options">
-			<view class="options-tab">				
-				<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
-				<view class="item" v-else @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
-				<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
-				<view class="item" v-else @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+		<view class="options-tab">
+			<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
+			<view class="item" v-else @click="handleActiveTab(0)"><text class="t">组件属性</text></view>
+			<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+			<view class="item" v-else @click="handleActiveTab(1)"><text class="t">页面属性</text></view>
+		</view>
+		<view class="option-body">
+			<view class="option-a" :class="{active: activeTab == 0}">
+				<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<ImageForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<WebForm :item="activeComponent" @refresh="updateComponent" />
+				<WordForm :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<TextForm :item="activeComponent" @refresh="updateComponent" />
 			</view>
-			<view class="option-body">
-				<scroll-view class="option-a" :class="{active: activeTab == 0}">
-					<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-					<ImageForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-					<WebForm :item="activeComponent" @refresh="updateComponent" />
-					<WordForm :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-					<TextForm :item="activeComponent" @refresh="updateComponent" />
-				</scroll-view>
-				<scroll-view class="option-b" :class="{active: activeTab == 1}">
-					<PageForm :item="activePage" @refresh="updatePage" />
-				</scroll-view>
+			<view class="option-b" :class="{active: activeTab == 1}">
+				<PageForm :item="activePage" @refresh="updatePage" />
 			</view>
 		</view>
 		<view class="tools">			
@@ -707,7 +705,7 @@
 	.tools{
 		// position: fixed;
 		width: 100%;
-		height: 250rpx;
+		height: 180rpx;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -803,42 +801,41 @@
 				font-size: $uni-font-size-sm;
 			}
 		}
-	}
-	.options{
-		padding: 24rpx;
-		flex: 1;
+	}	
+	
+	.options-tab{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		padding-bottom: 24rpx;
 		
-		.options-tab{
-			width: 100%;
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: center;
-			padding-bottom: 24rpx;
-			
-			.item{
-				padding: 0 24rpx;
-				.t{
-					font-size: 14px;
-				}
-			}
-			.item.active{
-				.t{
-					color: $uni-color-primary
-				}
+		.item{
+			padding: 0 24rpx;
+			.t{
+				font-size: 14px;
 			}
 		}
-		.option-body {
-			.option-a,
-			.option-b {
-				display: none;
+		.item.active{
+			.t{
+				color: $uni-color-primary
 			}
-			.option-a.active,
-			.option-b.active {
-				display: flex;				
-				// height: 700rpx;
-				// height: calc(100vh - 60px - 40px);
-			}
+		}
+	}
+	
+	.option-body {
+		flex: 1;
+		padding: 0 24rpx;
+		overflow: hidden;
+		.option-a,
+		.option-b {
+			display: none;
+		}
+		.option-a.active,
+		.option-b.active {
+			display: flex;
+			height: 100%;
 		}
 	}
 	.program-meta{

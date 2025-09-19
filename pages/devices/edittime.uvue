@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app" enable-back-to-top="{{false}}">
+	<scroll-view :bounces="false" class="app" enable-back-to-top="{{false}}">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
