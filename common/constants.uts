@@ -1,0 +1,109 @@
+export const DEVICE_STATUS = {
+	ONLINE: 'online',
+	OFFLINE: 'offline',
+	UNKNOWN: 'unknown',
+	CONNECTED: 'Connected',
+	NOT_CONNECTED: 'NotConnected'
+} as const;
+
+export const DEVICE_CONNECTION = {
+	CONNECTED: 1,
+	NOT_CONNECTED: 0
+} as const;
+
+export const CANVAS = {
+	WIDTH: 256,
+	HEIGHT: 192,
+	MAX_PAGES: 5,
+	MAX_COMPONENTS: 5,
+	MIN_SIZE: 10,
+	HANDLE_SIZE: 20,
+	RESIZE_BOX_SIZE: 15,
+	TEXT_Y_OFFSET: 14
+} as const;
+
+export const COMPONENT_TYPE = {
+	VIDEO: 'Video',
+	IMAGE: 'Image',
+	TEXT: 'Text',
+	WEB: 'Web',
+	WORD: 'Word'
+} as const;
+
+export const COMPONENT_ICONS: Record<string, string> = {
+	Video: '/static/svg/component-6.png',
+	Image: '/static/svg/component-0.png',
+	Text: '/static/svg/component-1.png',
+	Web: '/static/svg/component-7.png',
+	Word: '/static/svg/component-8.png'
+};
+
+export const STORAGE_KEYS = {
+	TOKEN: 'token',
+	LOGIN_USER: 'loginUser',
+	PROGRAM: 'program',
+	PROGRAM_FOLDER: 'programFolder',
+	ACTIVE_DEVICE: 'activeDevice',
+	ACTIVE_USER: 'activeUser',
+	LANGUAGE: 'language'
+} as const;
+
+export const API_TIMEOUT = 30000;
+
+export const HTTP_STATUS = {
+	OK: 200,
+	BAD_REQUEST: 400,
+	UNAUTHORIZED: 401,
+	FORBIDDEN: 403,
+	NOT_FOUND: 404,
+	SERVER_ERROR: 500
+} as const;
+
+export const PROGRAM_STATUS = {
+	DRAFT: 0,
+	PUBLISHED: 1,
+	ARCHIVED: 2
+} as const;
+
+export const DATE_FORMAT = 'YYYY-MM-DD';
+export const TIME_FORMAT = 'HH:mm:ss';
+export const DATETIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
+
+export const WEEKDAYS = [
+	{ label: '一', day: 1 },
+	{ label: '二', day: 2 },
+	{ label: '三', day: 3 },
+	{ label: '四', day: 4 },
+	{ label: '五', day: 5 },
+	{ label: '六', day: 6 },
+	{ label: '日', day: 7 }
+] as const;
+
+export const TEXT_ALIGN = {
+	LEFT: 'left',
+	CENTER: 'center',
+	RIGHT: 'right'
+} as const;
+
+export const FONT_FAMILIES = [
+	{ value: 'sans-serif', label: '无衬线体' },
+	{ value: 'serif', label: '衬线体' },
+	{ value: 'monospace', label: '等宽字体' },
+	{ value: 'cursive', label: '手写体' }
+] as const;
+
+export const PAGE_TABS = {
+	COMPONENT: 0,
+	PAGE: 1
+} as const;
+
+export const DRAW_THROTTLE_MS = 16;
+
+export const DEFAULT_LANGUAGE = 'zh-CN';
+
+export const SUPPORTED_LANGUAGES = [
+	{ code: 'zh-CN', name: '简体中文' },
+	{ code: 'en', name: 'English' },
+	{ code: 'jp', name: '日本語' },
+	{ code: 'kr', name: '한국어' }
+] as const;

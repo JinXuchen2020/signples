@@ -1,0 +1,137 @@
+type ThemeMode = 'light' | 'dark' | 'system';
+
+type ThemeListener = (mode: ThemeMode) => void;
+
+class ThemeManager {
+	private static instance: ThemeManager;
+	private currentMode: ThemeMode = 'system';
+	private listeners: ThemeListener[] = [];
+	private systemDarkMode: boolean = false;
+
+	private constructor() {
+		this.loadSavedMode();
+		this.setupSystemListener();
+	}
+
+	static getInstance(): ThemeManager {
+		if (!ThemeManager.instance) {
+			ThemeManager.instance = new ThemeManager();
+		}
+		return ThemeManager.instance;
+	}
+
+	private loadSavedMode(): void {
+		try {
+			const saved = uni.getStorageSync('theme_mode') as string;
+			if (saved === 'light' || saved === 'dark' || saved === 'system') {
+				this.currentMode = saved;
+			}
+		} catch (e) {
+			console.error('Failed to load theme mode', e);
+		}
+		this.applyTheme();
+	}
+
+	private setupSystemListener(): void {
+		uni.onAppRoute((res) => {
+			this.checkSystemDarkMode();
+		});
+	}
+
+	private checkSystemDarkMode(): void {
+		const systemInfo = uni.getSystemInfoSync();
+		this.systemDarkMode = systemInfo.platform === 'android' || systemInfo.platform === 'ios';
+		this.applyTheme();
+	}
+
+	setMode(mode: ThemeMode): void {
+		this.currentMode = mode;
+		try {
+			uni.setStorageSync('theme_mode', mode);
+		} catch (e) {
+			console.error('Failed to save theme mode', e);
+		}
+		this.applyTheme();
+		this.notifyListeners();
+	}
+
+	getMode(): ThemeMode {
+		return this.currentMode;
+	}
+
+	isDarkMode(): boolean {
+		if (this.currentMode === 'system') {
+			return this.systemDarkMode;
+		}
+		return this.currentMode === 'dark';
+	}
+
+	onThemeChange(listener: ThemeListener): () => void {
+		this.listeners.push(listener);
+		return () => {
+			const index = this.listeners.indexOf(listener);
+			if (index > -1) {
+				this.listeners.splice(index, 1);
+			}
+		};
+	}
+
+	private applyTheme(): void {
+		const isDark = this.isDarkMode();
+		const theme = isDark ? 'dark' : 'light';
+
+		uni.setStorageSync('theme', theme);
+
+		if (typeof uni !== 'undefined' && uni.applyTheme) {
+			uni.applyTheme(theme);
+		}
+	}
+
+	private notifyListeners(): void {
+		this.listeners.forEach(listener => listener(this.currentMode));
+	}
+
+	toggle(): void {
+		if (this.currentMode === 'light') {
+			this.setMode('dark');
+		} else if (this.currentMode === 'dark') {
+			this.setMode('system');
+		} else {
+			this.setMode('light');
+		}
+	}
+
+	getThemeColors(): Record<string, string> {
+		const isDark = this.isDarkMode();
+		const themeConfig = isDark ? {
+			"primary": "#0A84FF",
+			"secondary": "#5E5CE6",
+			"success": "#30D158",
+			"warning": "#FF9F0A",
+			"error": "#FF453A",
+			"info": "#98989D",
+			"bg-color": "#1C1C1E",
+			"bg-color-grey": "#2C2C2E",
+			"text-color": "#FFFFFF",
+			"text-color-inverse": "#000000",
+			"border-color": "#38383A"
+		} : {
+			"primary": "#007AFF",
+			"secondary": "#5856D6",
+			"success": "#34C759",
+			"warning": "#FF9500",
+			"error": "#FF3B30",
+			"info": "#8E8E93",
+			"bg-color": "#FFFFFF",
+			"bg-color-grey": "#F5F5F5",
+			"text-color": "#333333",
+			"text-color-inverse": "#FFFFFF",
+			"border-color": "#E0E0E0"
+		};
+		return themeConfig;
+	}
+}
+
+export const themeManager = ThemeManager.getInstance();
+
+export default themeManager;

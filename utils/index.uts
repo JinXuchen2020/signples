@@ -1,10 +1,132 @@
-export function getCurrentTimeYYMMDDHHmmss() {
-	const now = new Date();
-	const year = now.getFullYear().toString();       // YYYY
-	const month = (now.getMonth() + 1).toString().padStart(2, '0'); // MM
-	const day = (now.getDate()).toString().padStart(2, '0');        // DD
-	const hours = (now.getHours()).toString().padStart(2, '0');     // HH
-	const minutes = (now.getMinutes()).toString().padStart(2, '0'); // mm
-	const seconds = (now.getSeconds()).toString().padStart(2, '0'); // ss
-	return `${year}${month}${day}${hours}${minutes}${seconds}`;
+export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
+    let d: Date;
+    if (typeof date === 'string') {
+        d = new Date(date.replace(/-/g, '/'));
+    } else {
+        d = date;
+    }
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    
+    return format
+        .replace('YYYY', String(year))
+        .replace('MM', month)
+        .replace('DD', day)
+        .replace('HH', hours)
+        .replace('mm', minutes)
+        .replace('ss', seconds);
+}
+
+export function formatDuration(seconds: number): string {
+    const secs = Math.round(seconds % 60);
+    const mins = Math.round((seconds / 60) % 60);
+    let hrs = Math.round(seconds / 60 / 60);
+    if (hrs > 23) hrs = 23;
+    
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+export function parseDuration(duration: string): number {
+    const parts = duration.split(':');
+    if (parts.length !== 3) return 0;
+    
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    const seconds = parseInt(parts[2]) || 0;
+    
+    return hours * 3600 + minutes * 60 + seconds;
+}
+
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return ((...args: any[]) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    }) as T;
+}
+
+export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number): T {
+    let inThrottle = false;
+    return ((...args: any[]) => {
+        if (!inThrottle) {
+            fn(...args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }) as T;
+}
+
+export function generateId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+export function getFileExtension(filename: string): string {
+    return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+export function isValidEmail(email: string): boolean {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+export function isValidPhone(phone: string): boolean {
+    const regex = /^1[3-9]\d{9}$/;
+    return regex.test(phone);
+}
+
+export function trimAll(str: string): string {
+    return str.replace(/\s/g, '');
+}
+
+export function truncate(str: string, maxLength: number, suffix: string = '...'): string {
+    if (str.length <= maxLength) return str;
+    return str.slice(0, maxLength) + suffix;
+}
+
+export function deepClone<T>(obj: T): T {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return new Date(obj.getTime()) as T;
+    if (Array.isArray(obj)) return obj.map(item => deepClone(item)) as T;
+    return Object.keys(obj).reduce((acc, key) => {
+        acc[key] = deepClone((obj as any)[key]);
+        return acc;
+    }, {} as T);
+}
+
+export function isEmpty(obj: any): boolean {
+    if (obj === null || obj === undefined) return true;
+    if (typeof obj === 'string') return obj.trim() === '';
+    if (Array.isArray(obj)) return obj.length === 0;
+    if (typeof obj === 'object') return Object.keys(obj).length === 0;
+    return false;
+}
+
+export function getStorage<T>(key: string, defaultValue: T): T {
+    try {
+        const value = uni.getStorageSync(key);
+        return value ? JSON.parse(value) : defaultValue;
+    } catch {
+        return defaultValue;
+    }
+}
+
+export function setStorage<T>(key: string, value: T): void {
+    try {
+        uni.setStorageSync(key, JSON.stringify(value));
+    } catch (e) {
+        console.error('Storage error:', e);
+    }
+}
+
+export function removeStorage(key: string): void {
+    try {
+        uni.removeStorageSync(key);
+    } catch (e) {
+        console.error('Storage remove error:', e);
+    }
 }

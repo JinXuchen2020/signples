@@ -1,24 +1,23 @@
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue';
+import { getStorage, setStorage } from '@/utils/index.uts';
 
 export type State = {
-	token: string,
-	loginUser: UTSJSONObject,
-	program: UTSJSONObject,
-	programFolder: string,
-	activeDevice: UTSJSONObject,
-	activeUser: UTSJSONObject
+	token: string;
+	loginUser: UTSJSONObject;
+	program: UTSJSONObject;
+	programFolder: string;
+	activeDevice: UTSJSONObject;
+	activeUser: UTSJSONObject;
 }
 
-export type UserState = {
-	state: State,
-	setToken: (token: string) => void,
-	setProgram:(program: UTSJSONObject) => void,
-	setProgramFolder: (folderPath: string) => void,
-	setActiveDevice: (device: UTSJSONObject) => void,
-	setLoginUser: (userInfo: UTSJSONObject) => void,
-	setActiveUser: (userInfo: UTSJSONObject) => void,
-	loadStateFromStorage: () => void
-}
+const STORAGE_KEYS = {
+	TOKEN: 'token',
+	LOGIN_USER: 'loginUser',
+	PROGRAM: 'program',
+	PROGRAM_FOLDER: 'programFolder',
+	ACTIVE_DEVICE: 'activeDevice',
+	ACTIVE_USER: 'activeUser'
+};
 
 const state = reactive<State>({
 	token: '',
@@ -26,60 +25,135 @@ const state = reactive<State>({
 	program: {},
 	programFolder: '',
 	activeDevice: {},
-	activeUser: {},
-} as State)
+	activeUser: {}
+} as State);
 
-export function useState() {
-	const setToken = (token: string) => {
-		state.token = token
-		uni.setStorageSync('token', token);
-	}
-	const setProgram = (program: UTSJSONObject) => {
-		state.program = program
-		uni.setStorageSync('program', program);
-	}
+export function useAuth() {
+	const token = computed(() => state.token);
+	const loginUser = computed(() => state.loginUser);
+	const isLoggedIn = computed(() => token.value !== '' && Object.keys(state.loginUser).length > 0);
+	
+	const setToken = (tokenValue: string) => {
+		state.token = tokenValue;
+		setStorage(STORAGE_KEYS.TOKEN, tokenValue);
+	};
+	
+	const setLoginUser = (userInfo: UTSJSONObject) => {
+		state.loginUser = userInfo;
+		setStorage(STORAGE_KEYS.LOGIN_USER, userInfo);
+	};
+	
+	const logout = () => {
+		state.token = '';
+		state.loginUser = {};
+		
+		try {
+			uni.removeStorageSync(STORAGE_KEYS.TOKEN);
+			uni.removeStorageSync(STORAGE_KEYS.LOGIN_USER);
+		} catch (e) {
+			console.error('Failed to logout:', e);
+		}
+	};
+	
+	return {
+		token,
+		loginUser,
+		isLoggedIn,
+		setToken,
+		setLoginUser,
+		logout
+	};
+}
+
+export function useProgram() {
+	const program = computed(() => state.program);
+	const programFolder = computed(() => state.programFolder);
+	
+	const setProgram = (programValue: UTSJSONObject) => {
+		state.program = programValue;
+		setStorage(STORAGE_KEYS.PROGRAM, programValue);
+	};
 	
 	const setProgramFolder = (folderPath: string) => {
 		state.programFolder = folderPath;
-		uni.setStorageSync('program-folder', folderPath);
-	}
+		setStorage(STORAGE_KEYS.PROGRAM_FOLDER, folderPath);
+	};
+	
+	return {
+		program,
+		programFolder,
+		setProgram,
+		setProgramFolder
+	};
+}
+
+export function useDevice() {
+	const activeDevice = computed(() => state.activeDevice);
 	
 	const setActiveDevice = (device: UTSJSONObject) => {
-		state.activeDevice = device
-		uni.setStorageSync('active-device', device);
-	}
+		state.activeDevice = device;
+		setStorage(STORAGE_KEYS.ACTIVE_DEVICE, device);
+	};
+	
+	return {
+		activeDevice,
+		setActiveDevice
+	};
+}
+
+export function useUser() {
+	const activeUser = computed(() => state.activeUser);
 	
 	const setActiveUser = (user: UTSJSONObject) => {
-		state.activeUser = user
-		uni.setStorageSync('active-user', user);
-	}
-  
-	const setLoginUser = (userInfo: UTSJSONObject) => {
-		state.loginUser = userInfo
-		uni.setStorageSync('userInfo', userInfo);
-	}
+		state.activeUser = user;
+		setStorage(STORAGE_KEYS.ACTIVE_USER, user);
+	};
 	
+	return {
+		activeUser,
+		setActiveUser
+	};
+}
+
+export function useState() {
 	const loadStateFromStorage = () => {
-	    try {
-	        state.token = uni.getStorageSync('token') as string;
-	        state.loginUser = uni.getStorageSync('userInfo') as UTSJSONObject;
-	        state.activeDevice = uni.getStorageSync('active-device') as UTSJSONObject;
-	        state.activeUser = uni.getStorageSync('active-user') as UTSJSONObject;
-	        state.programFolder = uni.getStorageSync('program-folder') as string;
-	        // state.program = uni.getStorageSync('program') as UTSJSONObject;
-	    } catch (e) {
-	        console.error('Failed to load state from storage', e);
-	    }
+		try {
+			state.token = getStorage(STORAGE_KEYS.TOKEN, '');
+			state.loginUser = getStorage(STORAGE_KEYS.LOGIN_USER, {});
+			state.activeDevice = getStorage(STORAGE_KEYS.ACTIVE_DEVICE, {});
+			state.activeUser = getStorage(STORAGE_KEYS.ACTIVE_USER, {});
+			state.programFolder = getStorage(STORAGE_KEYS.PROGRAM_FOLDER, '');
+			state.program = getStorage(STORAGE_KEYS.PROGRAM, {});
+		} catch (e) {
+			console.error('Failed to load state from storage', e);
+		}
+	};
+	
+	const isLoggedIn = (): boolean => {
+		return state.token !== '' && Object.keys(state.loginUser).length > 0;
+	};
+	
+	const clearAll = () => {
+		state.token = '';
+		state.loginUser = {};
+		state.program = {};
+		state.programFolder = '';
+		state.activeDevice = {};
+		state.activeUser = {};
+		
+		Object.values(STORAGE_KEYS).forEach(key => {
+			try {
+				uni.removeStorageSync(key);
+			} catch (e) {
+				console.error('Failed to remove storage:', key, e);
+			}
+		});
 	};
 
 	return {
 		state,
-		setProgram,
-		setProgramFolder,
-		setLoginUser,
-		setToken,
-		setActiveDevice,
-		setActiveUser,
-		loadStateFromStorage
-	} as UserState
+		loadStateFromStorage,
+		isLoggedIn,
+		clearAll
+	};
 }

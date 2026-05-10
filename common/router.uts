@@ -1,28 +1,107 @@
-import { useState }  from '@/store/index.uts'
-export function routeGoto(route: string): void{
-	console.log('routeGoto=', route)
-	const { state } = useState()
-	let token = state.token;
-	//判断是否登录
-	if(token == ''){
+import { useAuth } from '@/store/index.uts';
+
+const ROUTES = {
+	HOME: '/pages/index/index',
+	USER: '/pages/user/index',
+	DEVICES: '/pages/index/devices',
+	PROGRAMS: '/pages/programs/index',
+	SETTING: '/pages/setting/index',
+	PLAYER: '/pages/player/index',
+	USER_SOFTWARE: '/pages/user/software',
+	PROGRAM_EDIT: '/pages/programs/edit',
+	PROGRAM_REVIEW: '/pages/programs/review',
+	DEVICE_CREATE: '/pages/devices/create',
+	DEVICE_EDIT: '/pages/devices/edit',
+	DEVICE_BRIGHTNESS: '/pages/devices/editbrightness',
+	DEVICE_VOLUME: '/pages/devices/volume',
+	DEVICE_TIME: '/pages/devices/edittime',
+	DEVICE_RESTART: '/pages/devices/restart',
+	DEVICE_POWER: '/pages/devices/poweroffon',
+	INDEX_USERS: '/pages/index/users',
+	PROGRAM_EDITOR: '/pages/programs/editor',
+	USER_LANGUAGE: '/pages/user/language',
+	USER_EDIT: '/pages/user/edit',
+	DEVICE_TIMER: '/pages/devices/timercontrol'
+};
+
+export const publicRoutes = [
+	ROUTES.HOME,
+	ROUTES.USER
+];
+
+export function routeGoto(route: string, options?: UniApp.NavigateToOptions): void {
+	console.log('routeGoto=', route);
+	const { isLoggedIn } = useAuth();
+	
+	if (!publicRoutes.includes(route) && !isLoggedIn.value) {
 		uni.showModal({
-			title: "尚未登录，请您先登录??",
+			title: '请先登录',
+			content: '登录后才能访问该页面',
+			showCancel: false,
 			success: (res: UniShowModalResult) => {
-				if(res.confirm){
+				if (res.confirm) {
 					uni.switchTab({
-						url: '/pages/user/index'
+						url: ROUTES.USER
 					});
 				}
 			}
-		})
-		return;
-	}else{
-		uni.navigateTo({
-			url: route
 		});
+		return;
 	}
-}
 	
+	uni.navigateTo({
+		url: route,
+		...options
+	});
+}
+
+export function routeSwitchTab(url: string, options?: UniApp.SwitchTabOptions): void {
+	uni.switchTab({ url, ...options });
+}
+
+export function routeRedirectTo(url: string, options?: UniApp.RedirectToOptions): void {
+	const { isLoggedIn } = useAuth();
+	if (!publicRoutes.includes(url) && !isLoggedIn.value) {
+		uni.switchTab({ url: ROUTES.USER });
+		return;
+	}
+	uni.redirectTo({ url, ...options });
+}
+
+export function routeReLaunch(url: string, options?: UniApp.ReLaunchOptions): void {
+	uni.reLaunch({ url, ...options });
+}
+
+export function routeNavigateBack(delta: number = 1, options?: UniApp.NavigateBackOptions): void {
+	uni.navigateBack({ delta, ...options });
+}
+
+export function goHome() {
+	routeSwitchTab(ROUTES.HOME);
+}
+
+export function goUser() {
+	routeSwitchTab(ROUTES.USER);
+}
+
+export function goDevices() {
+	routeGoto(ROUTES.DEVICES);
+}
+
+export function goPrograms() {
+	routeGoto(ROUTES.PROGRAMS);
+}
+
 export default {
-  routeGoto
+	ROUTES,
+	publicRoutes,
+	routeGoto,
+	routeSwitchTab,
+	routeRedirectTo,
+	routeReLaunch,
+	routeNavigateBack,
+	goHome,
+	goUser,
+	goDevices,
+	goPrograms
 }

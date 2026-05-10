@@ -1,0 +1,42 @@
+<template>
+	<view class="base-card">
+		<view class="base-card__header" v-if="title">
+			<text class="base-card__title">{{ title }}</text>
+		</view>
+		<view class="base-card__body">
+			<slot></slot>
+		</view>
+	</view>
+</template>
+
+<script setup>
+defineProps({
+	title: {
+		type: String,
+		default: ''
+	}
+});
+</script>
+
+<style lang="scss" scoped>
+.base-card {
+	background-color: $uni-bg-color;
+	border-radius: $uni-border-radius-lg;
+	overflow: hidden;
+
+	&__header {
+		padding: 32rpx;
+		border-bottom: 1px solid #eeeeee;
+	}
+
+	&__title {
+		font-size: 32rpx;
+		font-weight: bold;
+		color: #333333;
+	}
+
+	&__body {
+		padding: 32rpx;
+	}
+}
+</style>

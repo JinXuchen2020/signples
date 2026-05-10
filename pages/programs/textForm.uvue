@@ -34,10 +34,72 @@
 			</view>
 			<view class="item">
 				<view class="item-key">
-					<text class="t">内容</text>
+					<text class="t">文字内容</text>
 				</view>
 				<view class="item-value">
-					<rich-text class="rich-text" :selectable="true" :nodes="formData?.source"></rich-text>
+					<textarea 
+						v-model="textContent" 
+						class="text-input" 
+						placeholder="请输入文字内容"
+						@blur="handleTextContentChange"
+					></textarea>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">文字样式</text>
+				</view>
+				<view class="item-value">
+					<view class="format-toolbar">
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.isBold }"
+							@click="toggleBold"
+						><text class="bold">B</text></view>
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.isItalic }"
+							@click="toggleItalic"
+						><text class="italic">I</text></view>
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.isUnderline }"
+							@click="toggleUnderline"
+						><text class="underline">U</text></view>
+						<view class="divider"></view>
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.textAlign == 'left' }"
+							@click="setTextAlign('left')"
+						><text>左</text></view>
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.textAlign == 'center' }"
+							@click="setTextAlign('center')"
+						><text>中</text></view>
+						<view 
+							class="format-btn" 
+							:class="{ active: formData?.textAlign == 'right' }"
+							@click="setTextAlign('right')"
+						><text>右</text></view>
+					</view>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">字体大小</text>
+				</view>
+				<view class="item-value">
+					<input type="number" :value="formData?.textSize" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('textSize', e.detail.value)" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">文字颜色</text>
+				</view>
+				<view class="item-value">
+					<input type="color" :value="formData?.textColor" class="color-input" @change="(e: UniInputChangeEvent)=> updateTextColor(e.detail.value)" />
+					<text class="color-preview" :style="{ color: formData?.textColor }">预览</text>
 				</view>
 			</view>
 			<view class="item">
@@ -45,7 +107,34 @@
 					<text class="t">背景色</text>
 				</view>
 				<view class="item-value">
-					<input type="color" :value="formData?.background" class="uni-input" />
+					<input type="color" :value="formData?.background" class="color-input" @change="(e: UniInputChangeEvent)=> updateBackgroundColor(e.detail.value)" />
+					<view class="bg-preview" :style="{ backgroundColor: formData?.background }"></view>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">字体</text>
+				</view>
+				<view class="item-value">
+					<view class="uni-input" @click="showFontFamilyActionSheet">
+						<text class="t">{{getFontFamilyName(formData?.fontFamily)}}</text>
+					</view>
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">字间距</text>
+				</view>
+				<view class="item-value">
+					<input type="number" :value="formData?.letterSpacing" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('letterSpacing', e.detail.value)" />
+				</view>
+			</view>
+			<view class="item">
+				<view class="item-key">
+					<text class="t">行间距</text>
+				</view>
+				<view class="item-value">
+					<input type="number" :value="formData?.lineSpacing" class="uni-input" @change="(e: UniInputChangeEvent)=> updateProperty('lineSpacing', e.detail.value)" />
 				</view>
 			</view>
 			<view class="item">
@@ -141,7 +230,21 @@
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent, TextComponent } from './mediaConfig.uts'
+	import { BaseComponent, TextComponent } from './mediaConfig.uts';
+	import { 
+		handlePositionUpdate, 
+		updateComponentProperty,
+		mapOptionsToNames,
+		findOptionByKey 
+	} from './formUtils.uts';
+	
+	const fontFamilies = [
+		{ key: 'sans-serif', name: '无衬线体' },
+		{ key: 'serif', name: '衬线体' },
+		{ key: 'monospace', name: '等宽字体' },
+		{ key: 'cursive', name: '手写体' },
+	];
+	
 	export default {
 		props: {
 			item: {
@@ -153,33 +256,16 @@
 		data() {
 			return {
 				formData: null as TextComponent | null,				
+				textContent: '',
 				effects: [
-					{
-						key: "Empty",
-						name: "无"
-					},					
-					{
-						key: "FadeIn",
-						name: "淡入",
-					}, 
+					{ key: "Empty", name: "无" },
+					{ key: "FadeIn", name: "淡入" },
 				] as UTSJSONObject[],
 				directions: [
-					{
-						key: "rollingLeft",
-						name: "向左滚动"
-					},					
-					{
-						key: "rollingUp",
-						name: "向上滚动",
-					},
-					 {
-					 	key: "rollingRight",
-					 	name: "向右滚动"
-					 },					
-					 {
-					 	key: "rollingDown",
-					 	name: "向下滚动",
-					 }, 
+					{ key: "rollingLeft", name: "向左滚动" },
+					{ key: "rollingUp", name: "向上滚动" },
+					{ key: "rollingRight", name: "向右滚动" },
+					{ key: "rollingDown", name: "向下滚动" },
 				] as UTSJSONObject[],
 				currentEffect: '',
 				currentDirection: ''
@@ -189,152 +275,148 @@
 			item(newValue?: BaseComponent) {
 				if (newValue instanceof TextComponent) {	
 					this.formData = newValue as TextComponent;
-					
-					this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
-					this.currentDirection = this.directions.find(c => c['key'] == this.formData!.direction)!.getString('name')!;
-				}
-				else {
+					this.textContent = this.formData.source || '';
+					this.currentEffect = findOptionByKey(this.effects, this.formData!.componentEffect) || '';
+					this.currentDirection = findOptionByKey(this.directions, this.formData!.direction) || '';
+				} else {
 					this.formData = null;
+					this.textContent = '';
 				}
 			}
 		},
 		onReady() {
 			if (this.item instanceof TextComponent) {
 				this.formData = this.item as TextComponent;
-				this.currentEffect = this.effects.find(c => c['key'] == this.formData!.componentEffect)!.getString('name')!;
-				this.currentDirection = this.directions.find(c => c['key'] == this.formData!.direction)!.getString('name')!;
-				
-			}
-			else {
+				this.textContent = this.formData.source || '';
+				this.currentEffect = findOptionByKey(this.effects, this.formData!.componentEffect) || '';
+				this.currentDirection = findOptionByKey(this.directions, this.formData!.direction) || '';
+			} else {
 				this.formData = null;
 			}
 		},
 		methods: {
-			updateProperty(propertyName: string, proValue: string){
-				if(propertyName == 'name') {
-					this.formData!.name = proValue;
-				}
-				
-				if(propertyName == 'zIndex') {
-					this.formData!.zIndex = parseInt(proValue);
-				}
-				
-				if(propertyName == 'playDuration') {
-					this.formData!.playDuration = proValue;
-				}
-				
-				if(propertyName == 'effectDuration') {
-					this.formData!.effectDuration = parseInt(proValue);
-				}
-				
-				if(propertyName == 'playCount') {
-					this.formData!.playCount = parseInt(proValue);
-				}
-				
-				if(propertyName == 'rollingSpeed') {
-					this.formData!.rollingSpeed = parseInt(proValue);
-				}
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+			updateProperty(propertyName: string, proValue: string) {
+				updateComponentProperty(this.formData, propertyName, proValue);
+				this.emitUpdate();
+			},
+			handleTextContentChange() {
+				if (!this.formData) return;
+				this.formData.source = this.textContent;
+				this.emitUpdate();
+			},
+			toggleBold() {
+				if (!this.formData) return;
+				this.formData.isBold = !this.formData.isBold;
+				this.emitUpdate();
+			},
+			toggleItalic() {
+				if (!this.formData) return;
+				this.formData.isItalic = !this.formData.isItalic;
+				this.emitUpdate();
+			},
+			toggleUnderline() {
+				if (!this.formData) return;
+				this.formData.isUnderline = !this.formData.isUnderline;
+				this.emitUpdate();
+			},
+			setTextAlign(align: string) {
+				if (!this.formData) return;
+				this.formData.textAlign = align;
+				this.emitUpdate();
+			},
+			updateTextColor(color: string) {
+				if (!this.formData) return;
+				this.formData.textColor = color;
+				this.emitUpdate();
+			},
+			updateBackgroundColor(color: string) {
+				if (!this.formData) return;
+				this.formData.background = color;
+				this.emitUpdate();
+			},
+			getFontFamilyName(key: string | undefined): string {
+				if (!key) return '无衬线体';
+				const font = fontFamilies.find(f => f.key === key);
+				return font ? font.name : '无衬线体';
+			},
+			showFontFamilyActionSheet() {
+				const options: ShowActionSheetOptions = {
+					title: '选择字体',
+					itemList: fontFamilies.map(f => f.name),
+					success: (res) => {
+						this.formData!.fontFamily = fontFamilies[res.tapIndex].key;
+						this.emitUpdate();
+					},
+					fail: (error) => {
+						console.log(error);
+					}
+				};
+				uni.showActionSheet(options);
 			},
 			handleVerticalAlignChange(e: UniRadioGroupChangeEvent) {
-				if(this.formData == null) return;
-				const result = e.detail.value;
-				this.formData!.verticalContentAlignment = result;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+				if (!this.formData) return;
+				this.formData!.verticalContentAlignment = e.detail.value;
+				this.emitUpdate();
 			},
 			handlePlayModeChange(e: UniRadioGroupChangeEvent) {
-				if(this.formData == null) return;
-				const result = e.detail.value;
-				this.formData!.playMode = result;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+				if (!this.formData) return;
+				this.formData!.playMode = e.detail.value;
+				this.emitUpdate();
 			},
 			handleValueChange(_e: UniPointerEvent) {
-				if (this.formData == null) return;
+				if (!this.formData) return;
 				this.formData!.isLoopEnabled = !this.formData!.isLoopEnabled;
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
+				this.emitUpdate();
 			},
 			showEffectActionSheet() {
 				const options: ShowActionSheetOptions = {
 					title: '特效',
-					itemList: this.effects.map((c: UTSJSONObject) => c.getString('name')!),
+					itemList: mapOptionsToNames(this.effects),
 					success: (res) => {
-						const selectedIndex = res.tapIndex;
-						this.formData!.componentEffect = this.effects[selectedIndex].getString('key')!;
-						const data = this.formData!.toModel();
-						this.$emit("refresh", data);
+						this.formData!.componentEffect = this.effects[res.tapIndex].getString('key')!;
+						this.emitUpdate();
 					},
 					fail: (error) => {
 						console.log(error);
 					}
-				}
-				uni.showActionSheet(options)
+				};
+				uni.showActionSheet(options);
 			},
 			showDirectionActionSheet() {
 				const options: ShowActionSheetOptions = {
 					title: '滚动方向',
-					itemList: this.directions.map((c: UTSJSONObject) => c.getString('name')!),
+					itemList: mapOptionsToNames(this.directions),
 					success: (res) => {
-						const selectedIndex = res.tapIndex;
-						this.formData!.direction = this.directions[selectedIndex].getString('key')!;
-						const data = this.formData!.toModel();
-						this.$emit("refresh", data);
+						this.formData!.direction = this.directions[res.tapIndex].getString('key')!;
+						this.emitUpdate();
 					},
 					fail: (error) => {
 						console.log(error);
 					}
-				}
-				uni.showActionSheet(options)
+				};
+				uni.showActionSheet(options);
 			},
 			onLeftChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "left")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'left');
+				this.emitUpdate();
 			},
 			onTopChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "top")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'top');
+				this.emitUpdate();
 			},
 			onWidthChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "width")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'width');
+				this.emitUpdate();
 			},
 			onHeightChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "height")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'height');
+				this.emitUpdate();
 			},
-			handleUpdate(val: number, type: string) {
-				if(this.formData == null) return;
-				
-				switch(type) {
-					case 'left':
-						this.formData!.left = val;
-						if (this.formData!.width + val > 256) {
-							this.formData!.width = 256 - val;
-						}
-						break;
-					case 'top':
-						this.formData!.top = val;
-						if (this.formData!.height + val > 192) {
-							this.formData!.height = 192 - val;
-						}
-						break;
-					case 'width':
-						let widthVal = val;
-						if (this.formData!.left + val > 256) {
-							widthVal = 256 - this.formData!.left;
-						}
-						this.formData!.width = widthVal;
-						break;
-					case 'height':
-						let heightVal = val;
-						if (this.formData!.top + val > 256) {
-							heightVal = 192 - this.formData!.top;
-						}
-						this.formData!.height = heightVal;
-						break;					
+			emitUpdate() {
+				if (this.formData) {
+					const data = this.formData.toModel();
+					this.$emit("refresh", data);
 				}
-				
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);				
 			}
 		}
 	}
@@ -363,17 +445,43 @@
 				width: 80%;
 				display: flex;
 				flex-direction: row;
+				align-items: center;
+				flex-wrap: wrap;
 				.uni-input{
 					border: 1px solid #ccc;
 					border-radius: 12rpx;
-					height:30rpx
+					height:30rpx;
+					flex: 1;
 				}
 				
-				.rich-text{
+				.text-input{
 					border: 1px solid #ccc;
 					border-radius: 12rpx;
-					height:160rpx;
+					height: 160rpx;
 					width: 100%;
+					padding: 12rpx;
+					font-size: 14px;
+				}
+				
+				.color-input{
+					width: 60rpx;
+					height: 40rpx;
+					border: none;
+					border-radius: 8rpx;
+					padding: 0;
+					margin-right: 12rpx;
+				}
+				
+				.color-preview{
+					font-size: 14px;
+					font-weight: bold;
+				}
+				
+				.bg-preview{
+					width: 40rpx;
+					height: 40rpx;
+					border-radius: 8rpx;
+					border: 1px solid #ccc;
 				}
 			}
 			
@@ -397,10 +505,57 @@
 				}
 			}
 		}
+		
+		.format-toolbar{
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			background: #f5f5f5;
+			border-radius: 12rpx;
+			padding: 8rpx;
+			flex-wrap: wrap;
+			
+			.format-btn{
+				width: 48rpx;
+				height: 48rpx;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: #fff;
+				border-radius: 8rpx;
+				margin: 4rpx;
+				border: 1px solid #ddd;
+				font-size: 14px;
+				
+				.bold{
+					font-weight: bold;
+				}
+				.italic{
+					font-style: italic;
+				}
+				.underline{
+					text-decoration: underline;
+				}
+				
+				&.active{
+					background: #4CAF50;
+					color: #fff;
+					border-color: #4CAF50;
+				}
+			}
+			
+			.divider{
+				width: 1px;
+				height: 32rpx;
+				background: #ddd;
+				margin: 0 8rpx;
+			}
+		}
+		
 		.radio-group {
-			display: flex; /* 横向排列 */
-			flex-direction: row; /* 行排列 */
-			align-items: center; /* 垂直居中 */
+			display: flex;
+			flex-direction: row;
+			align-items: center;
 			flex-wrap: wrap;
 			
 			.radio {
@@ -408,5 +563,4 @@
 			}
 		}
 	}
-
 </style>

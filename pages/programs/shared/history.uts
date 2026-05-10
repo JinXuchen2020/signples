@@ -1,0 +1,98 @@
+export type HistoryState = {
+	pages: UTSJSONObject[];
+	activePageIndex: number;
+	activeComponentIndex: number | null;
+};
+
+type Listener = () => void;
+
+export class HistoryManager {
+	private undoStack: HistoryState[] = [];
+	private redoStack: HistoryState[] = [];
+	private maxSize: number = 50;
+	private listeners: Listener[] = [];
+	private isRecording: boolean = true;
+
+	record(state: HistoryState): void {
+		if (!this.isRecording) return;
+
+		this.undoStack.push(this.deepClone(state));
+
+		if (this.undoStack.length > this.maxSize) {
+			this.undoStack.shift();
+		}
+
+		this.redoStack = [];
+		this.notifyListeners();
+	}
+
+	undo(currentState: HistoryState): HistoryState | null {
+		if (this.undoStack.length === 0) return null;
+
+		const previousState = this.undoStack.pop()!;
+		this.redoStack.push(this.deepClone(currentState));
+		this.notifyListeners();
+
+		return previousState;
+	}
+
+	redo(currentState: HistoryState): HistoryState | null {
+		if (this.redoStack.length === 0) return null;
+
+		const nextState = this.redoStack.pop()!;
+		this.undoStack.push(this.deepClone(currentState));
+		this.notifyListeners();
+
+		return nextState;
+	}
+
+	canUndo(): boolean {
+		return this.undoStack.length > 0;
+	}
+
+	canRedo(): boolean {
+		return this.redoStack.length > 0;
+	}
+
+	clear(): void {
+		this.undoStack = [];
+		this.redoStack = [];
+		this.notifyListeners();
+	}
+
+	pause(): void {
+		this.isRecording = false;
+	}
+
+	resume(): void {
+		this.isRecording = true;
+	}
+
+	onChange(listener: Listener): () => void {
+		this.listeners.push(listener);
+		return () => {
+			const index = this.listeners.indexOf(listener);
+			if (index > -1) {
+				this.listeners.splice(index, 1);
+			}
+		};
+	}
+
+	private notifyListeners(): void {
+		this.listeners.forEach(listener => listener());
+	}
+
+	private deepClone(state: HistoryState): HistoryState {
+		return JSON.parse(JSON.stringify(state)) as HistoryState;
+	}
+
+	getUndoCount(): number {
+		return this.undoStack.length;
+	}
+
+	getRedoCount(): number {
+		return this.redoStack.length;
+	}
+}
+
+export const historyManager = new HistoryManager();

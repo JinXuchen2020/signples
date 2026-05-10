@@ -1,0 +1,38 @@
+import { request, get, post } from '@/utils/http/index.uts';
+import { APIS } from '@/api/config.uts';
+
+export interface UserInfo {
+  id: string;
+  name: string;
+  phone: string;
+  role: string;
+  [key: string]: any;
+}
+
+export interface LoginParams {
+  account: string;
+  password: string;
+}
+
+export async function login(params: LoginParams, config?: any) {
+  return await post(APIS.login, params, config);
+}
+
+export async function getUserInfo(userId: string, config?: any) {
+  return await get(`${APIS.userInfo}${userId}`, {}, config);
+}
+
+export async function getAllUsers(config?: any) {
+  return await get(APIS.usersAll, {}, config);
+}
+
+export async function saveUser(user: UserInfo, config?: any) {
+  return await post((APIS.user as any).save, user, config);
+}
+
+export default {
+  login,
+  getUserInfo,
+  getAllUsers,
+  saveUser
+};

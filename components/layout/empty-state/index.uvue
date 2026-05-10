@@ -1,0 +1,60 @@
+<template>
+	<view class="empty-state">
+		<image class="empty-state__image" :src="image || '/static/image/ad.png'" mode="aspectFit"></image>
+		<text class="empty-state__title">{{ title || '暂无数据' }}</text>
+		<text class="empty-state__description" v-if="description">{{ description }}</text>
+		<view class="empty-state__action" v-if="$slots.action">
+			<slot name="action"></slot>
+		</view>
+	</view>
+</template>
+
+<script setup>
+defineProps({
+	image: {
+		type: String,
+		default: ''
+	},
+	title: {
+		type: String,
+		default: '暂无数据'
+	},
+	description: {
+		type: String,
+		default: ''
+	}
+});
+</script>
+
+<style lang="scss" scoped>
+.empty-state {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 120rpx 60rpx;
+
+	&__image {
+		width: 240rpx;
+		height: 240rpx;
+		margin-bottom: 48rpx;
+		opacity: 0.6;
+	}
+
+	&__title {
+		font-size: 32rpx;
+		color: #666666;
+		margin-bottom: 16rpx;
+	}
+
+	&__description {
+		font-size: 28rpx;
+		color: #999999;
+		text-align: center;
+		margin-bottom: 48rpx;
+	}
+
+	&__action {
+		margin-top: 24rpx;
+	}
+}
+</style>

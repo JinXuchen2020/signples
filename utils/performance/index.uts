@@ -1,0 +1,144 @@
+type PerformanceMetrics = {
+	fps: number;
+	memory: number;
+	loadTime: number;
+	renderTime: number;
+};
+
+type PerformanceObserver = (metrics: PerformanceMetrics) => void;
+
+class PerformanceMonitor {
+	private static instance: PerformanceMonitor;
+	private fps: number = 60;
+	private frameCount: number = 0;
+	private lastTime: number = 0;
+	private observers: PerformanceObserver[] = [];
+	private isRunning: boolean = false;
+	private startTime: number = 0;
+
+	private constructor() {}
+
+	static getInstance(): PerformanceMonitor {
+		if (!PerformanceMonitor.instance) {
+			PerformanceMonitor.instance = new PerformanceMonitor();
+		}
+		return PerformanceMonitor.instance;
+	}
+
+	start(): void {
+		if (this.isRunning) return;
+		this.isRunning = true;
+		this.startTime = Date.now();
+		this.lastTime = Date.now();
+		this.frameCount = 0;
+		this.tick();
+	}
+
+	stop(): void {
+		this.isRunning = false;
+	}
+
+	private tick(): void {
+		if (!this.isRunning) return;
+
+		this.frameCount++;
+		const currentTime = Date.now();
+		const elapsed = currentTime - this.lastTime;
+
+		if (elapsed >= 1000) {
+			this.fps = Math.round((this.frameCount * 1000) / elapsed);
+			this.frameCount = 0;
+			this.lastTime = currentTime;
+			this.notifyObservers();
+		}
+
+		requestAnimationFrame(() => this.tick());
+	}
+
+	observe(observer: PerformanceObserver): () => void {
+		this.observers.push(observer);
+		return () => {
+			const index = this.observers.indexOf(observer);
+			if (index > -1) {
+				this.observers.splice(index, 1);
+			}
+		};
+	}
+
+	private notifyObservers(): void {
+		const metrics: PerformanceMetrics = {
+			fps: this.fps,
+			memory: this.getMemoryUsage(),
+			loadTime: Date.now() - this.startTime,
+			renderTime: 0
+		};
+
+		this.observers.forEach(observer => observer(metrics));
+	}
+
+	private getMemoryUsage(): number {
+		try {
+			const memoryInfo = uni.getStorageInfo ? null : null;
+			return memoryInfo ? memoryInfo.currentSize : 0;
+		} catch {
+			return 0;
+		}
+	}
+
+	getFPS(): number {
+		return this.fps;
+	}
+
+	getMetrics(): PerformanceMetrics {
+		return {
+			fps: this.fps,
+			memory: this.getMemoryUsage(),
+			loadTime: Date.now() - this.startTime,
+			renderTime: 0
+		};
+	}
+}
+
+export const perfMonitor = PerformanceMonitor.getInstance();
+
+export function measureFunction<T extends (...args: any[]) => any>(
+	fn: T,
+	name: string = 'anonymous'
+): T {
+	return ((...args: any[]) => {
+		const start = Date.now();
+		const result = fn(...args);
+		const duration = Date.now() - start;
+
+		if (duration > 16) {
+			console.warn(`[Performance] ${name} took ${duration}ms`);
+		}
+
+		return result;
+	}) as T;
+}
+
+export function measureAsyncFunction<T extends (...args: any[]) => Promise<any>>(
+	fn: T,
+	name: string = 'anonymous'
+): T {
+	return (async (...args: any[]) => {
+		const start = Date.now();
+		try {
+			const result = await fn(...args);
+			const duration = Date.now() - start;
+
+			if (duration > 100) {
+				console.warn(`[Performance] ${name} took ${duration}ms`);
+			}
+
+			return result;
+		} catch (error) {
+			const duration = Date.now() - start;
+			console.error(`[Performance] ${name} failed after ${duration}ms:`, error);
+			throw error;
+		}
+	}) as T;
+}
+
+export default perfMonitor;

@@ -1,5 +1,30 @@
 <template>
 	<scroll-view class="app">
+		<view class="drafts-section" v-if="drafts.length > 0">
+			<view class="section-header">
+				<text class="section-title">本地草稿</text>
+				<text class="section-count">{{drafts.length}}</text>
+			</view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item draft-item" v-for="(item, index) in drafts" :key="'draft-' + index">
+					<view class="uc-menus-item-title">
+						<text>{{item.name}}</text>
+						<view class="programs-meta">
+							<text class="t">草稿</text>
+							<text class="t">{{item.lastModified}}</text>
+						</view>
+					</view>
+					<view class="btns">
+						<view class="icon-box no-margin" @click="handleEditDraft(item)">
+							<image class="icon" src="/static/svg/suggest.png" mode="widthFix"></image>
+						</view>
+						<view class="icon-box no-margin" @click="handleDeleteDraft(item, index)">
+							<image class="icon" src="/static/svg/del.png" mode="widthFix"></image>
+						</view>
+					</view>
+				</list-item>
+			</list-view>
+		</view>
 		<view class="list-box">
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item" v-for="item in programList">
@@ -40,6 +65,23 @@
 			icon-src="/static/svg/suggest.png"
 			@confirm="handleCreate"
 			>
+			<view class="template-section">
+				<text class="template-label">选择模板:</text>
+				<view class="template-list">
+					<view class="template-item" :class="{active: selectedTemplate === 'blank'}" @click="selectedTemplate = 'blank'">
+						<text>空白</text>
+					</view>
+					<view class="template-item" :class="{active: selectedTemplate === 'video'}" @click="selectedTemplate = 'video'">
+						<text>视频</text>
+					</view>
+					<view class="template-item" :class="{active: selectedTemplate === 'image'}" @click="selectedTemplate = 'image'">
+						<text>图片</text>
+					</view>
+					<view class="template-item" :class="{active: selectedTemplate === 'mixed'}" @click="selectedTemplate = 'mixed'">
+						<text>混合</text>
+					</view>
+				</view>
+			</view>
 			<view class="program-meta">
 				<view class="item">
 					<view class="item-title"><text class="t">节目名称</text></view>
@@ -122,7 +164,9 @@
 				prePushProgram: {} as UTSJSONObject,
 				deviceList: [] as Array<UTSJSONObject>,
 				preDevice: [] as Array<string>,
-				fileManager: {} as FileManager
+				fileManager: {} as FileManager,
+				drafts: [] as Array<UTSJSONObject>,
+				selectedTemplate: 'blank' as string
 			}
 		},
 		onLoad(){
@@ -150,6 +194,44 @@
 				let that = this
 				that.fileManager = new FileManager();
 				that.programList = await that.fileManager.getProgramList();
+				this.loadDrafts();
+			},
+			loadDrafts(){
+				try {
+					const draftsStr = uni.getStorageSync('program_drafts') as string;
+					if (draftsStr) {
+						this.drafts = JSON.parse(draftsStr) as Array<UTSJSONObject>;
+					}
+				} catch (e) {
+					console.error('加载草稿失败', e);
+					this.drafts = [];
+				}
+			},
+			saveDrafts(){
+				try {
+					uni.setStorageSync('program_drafts', JSON.stringify(this.drafts));
+				} catch (e) {
+					console.error('保存草稿失败', e);
+				}
+			},
+			handleEditDraft(item: UTSJSONObject){
+				routeGoto('/pages/programs/editor?draft=' + item.name);
+			},
+			handleDeleteDraft(item: UTSJSONObject, index: number){
+				uni.showModal({
+					title: '确认删除',
+					content: '确定要删除这个草稿吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.drafts.splice(index, 1);
+							this.saveDrafts();
+							uni.showToast({
+								icon: 'success',
+								title: '已删除'
+							});
+						}
+					}
+				});
 			},
 			async getDevices(){
 				try {
@@ -223,6 +305,62 @@
 </script>
 
 <style lang="scss">
+	.drafts-section {
+		padding: 0 32rpx;
+		.section-header {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			padding: 24rpx 0;
+		}
+		.section-title {
+			font-size: 32rpx;
+			font-weight: bold;
+			color: #333333;
+		}
+		.section-count {
+			font-size: 24rpx;
+			color: #999999;
+			background-color: #f5f5f5;
+			padding: 4rpx 16rpx;
+			border-radius: 20rpx;
+		}
+		.draft-item {
+			border-bottom: 1rpx solid #f0f0f0;
+		}
+	}
+	.template-section {
+		padding: 16rpx 0;
+		.template-label {
+			font-size: 28rpx;
+			color: #666666;
+			margin-bottom: 16rpx;
+		}
+		.template-list {
+			flex-direction: row;
+			justify-content: space-between;
+		}
+		.template-item {
+			width: 150rpx;
+			height: 80rpx;
+			border: 2rpx solid #e0e0e0;
+			border-radius: 12rpx;
+			align-items: center;
+			justify-content: center;
+			background-color: #f5f5f5;
+			&.active {
+				border-color: $uni-color-primary;
+				background-color: rgba($uni-color-primary, 0.1);
+				text {
+					color: $uni-color-primary;
+				}
+			}
+			text {
+				font-size: 26rpx;
+				color: #666666;
+			}
+		}
+	}
 	.list-box{
 		padding: 0 32rpx;
 		.uc-menus{

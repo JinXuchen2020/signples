@@ -1,0 +1,122 @@
+type ErrorHandler = (error: Error, context?: string) => void;
+
+type ErrorLog = {
+	error: Error;
+	context?: string;
+	timestamp: number;
+	handled: boolean;
+};
+
+class ErrorHandler {
+	private static instance: ErrorHandler;
+	private errorLogs: ErrorLog[] = [];
+	private handlers: ErrorHandler[] = [];
+	private maxLogs: number = 50;
+
+	private constructor() {}
+
+	static getInstance(): ErrorHandler {
+		if (!ErrorHandler.instance) {
+			ErrorHandler.instance = new ErrorHandler();
+		}
+		return ErrorHandler.instance;
+	}
+
+	handleError(error: Error, context?: string): void {
+		const log: ErrorLog = {
+			error,
+			context,
+			timestamp: Date.now(),
+			handled: false
+		};
+
+		this.errorLogs.push(log);
+		if (this.errorLogs.length > this.maxLogs) {
+			this.errorLogs.shift();
+		}
+
+		console.error(`[Error] ${context || 'Unknown'}:`, error);
+
+		this.notifyHandlers(error, context);
+	}
+
+	onError(handler: ErrorHandler): () => void {
+		this.handlers.push(handler);
+		return () => {
+			const index = this.handlers.indexOf(handler);
+			if (index > -1) {
+				this.handlers.splice(index, 1);
+			}
+		};
+	}
+
+	private notifyHandlers(error: Error, context?: string): void {
+		this.handlers.forEach(handler => handler(error, context));
+	}
+
+	getErrorLogs(): ErrorLog[] {
+		return [...this.errorLogs];
+	}
+
+	clearLogs(): void {
+		this.errorLogs = [];
+	}
+
+	handlePromiseRejection(event: PromiseRejectionEvent): void {
+		this.handleError(event.reason, 'unhandledRejection');
+	}
+
+	handleGlobalError(event: UniApp.OnErrorCallbackResult): void {
+		const error = new Error(event.message);
+		error.stack = event.stack;
+		this.handleError(error, 'globalError');
+	}
+
+	wrapAsyncFunction<T extends (...args: any[]) => Promise<any>>(
+		fn: T,
+		context?: string
+	): T {
+		return (async (...args: any[]) => {
+			try {
+				return await fn(...args);
+			} catch (error) {
+				this.handleError(error as Error, context || fn.name);
+				throw error;
+			}
+		}) as T;
+	}
+}
+
+export const errorHandler = ErrorHandler.getInstance();
+
+export function handleApiError(error: any, defaultMessage: string = '请求失败'): string {
+	if (error.statusCode === 401) {
+		errorHandler.handleError(new Error('登录已过期'), 'api');
+		return '登录已过期，请重新登录';
+	}
+
+	if (error.statusCode === 403) {
+		errorHandler.handleError(new Error('无权限'), 'api');
+		return '无权限访问';
+	}
+
+	if (error.statusCode === 404) {
+		errorHandler.handleError(new Error('资源不存在'), 'api');
+		return '请求的资源不存在';
+	}
+
+	if (error.statusCode === 500) {
+		errorHandler.handleError(new Error('服务器错误'), 'api');
+		return '服务器错误，请稍后重试';
+	}
+
+	if (error.errMsg?.includes('timeout')) {
+		errorHandler.handleError(new Error('请求超时'), 'api');
+		return '请求超时，请检查网络';
+	}
+
+	errorHandler.handleError(new Error(error.errMsg || defaultMessage), 'api');
+	return defaultMessage;
+}
+
+export default errorHandler;

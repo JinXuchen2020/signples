@@ -99,7 +99,22 @@ export default {
   	UserLogin:"사용자 로그인",
   	PleaseEnterAccount:"계정을 입력해주세요",
   	PleaseEnterPassword:"비밀번호를 입력해주세요"
+  },
+  setting:{
+  	Brightness:"밝기",
+  	Volume:"볼륨",
+  	Time:"시간",
+  	Network:"네트워크 설정",
+  	SyncPlay:"동기 재생",
+  	LocalPlay:"로컬 재생",
+  	ScreenRotation:"화면 회전",
+  	SoftSplicing:"소프트 스플라이싱",
+  	Restart:"재시작",
+  	Power:"전원",
+  	Reset:"리셋",
+  	BindCloud:"클라우드 연결",
+  	DevicePassword:"기기 비밀번호",
+  	MonitorInfo:"모니터 정보",
+  	DeviceInfo:"기기 정보"
   }
-  
- 
 } as UTSJSONObject

@@ -1,0 +1,75 @@
+import { request, get, post, put, del } from '@/utils/http/index.uts';
+import { APIS } from '@/api/config.uts';
+
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  sn: string;
+  width: number;
+  height: number;
+  [key: string]: any;
+}
+
+export interface CMDParams {
+  cmd: string;
+  value: any;
+  deviceIds: string[];
+}
+
+export async function getAllDevices(config?: any) {
+  return await get(APIS.deviceListPage, {}, config);
+}
+
+export async function getDeviceInfo(deviceId: string, config?: any) {
+  return await get(`${APIS.deviceInfo}${deviceId}`, {}, config);
+}
+
+export async function createDevice(device: DeviceInfo, config?: any) {
+  return await post(APIS.createDevice, device, config);
+}
+
+export async function updateDevice(device: DeviceInfo, config?: any) {
+  return await put(APIS.updateDevice, device, config);
+}
+
+export async function deleteDevice(deviceId: string, config?: any) {
+  return await del(`${APIS.deleteDevice}${deviceId}`, {}, config);
+}
+
+export async function sendCMD(cmd: CMDParams, config?: any) {
+  return await post(APIS.sendCMD, cmd, config);
+}
+
+export async function getDeviceControls(config?: any) {
+  return await get((APIS.deviceControl as any).getAll, {}, config);
+}
+
+export async function saveDeviceControl(control: any, config?: any) {
+  return await post((APIS.deviceControl as any).save, control, config);
+}
+
+export async function getTimeSyncConfigs(config?: any) {
+  return await get((APIS.timeSyncConfig as any).getAll, {}, config);
+}
+
+export async function saveTimeSyncConfig(config: any, configOpts?: any) {
+  return await post((APIS.timeSyncConfig as any).save, config, configOpts);
+}
+
+export async function getMonitorInfo(config?: any) {
+  return await get((APIS.monitor as any).getAll, {}, config);
+}
+
+export default {
+  getAllDevices,
+  getDeviceInfo,
+  createDevice,
+  updateDevice,
+  deleteDevice,
+  sendCMD,
+  getDeviceControls,
+  saveDeviceControl,
+  getTimeSyncConfigs,
+  saveTimeSyncConfig,
+  getMonitorInfo
+};

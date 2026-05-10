@@ -1,0 +1,60 @@
+import type { DeviceInfo } from './types.uts';
+
+export function useDeviceList() {
+	const deviceList = ref<DeviceInfo[]>([]);
+	const loading = ref(false);
+	const error = ref<string | null>(null);
+
+	const fetchDevices = async () => {
+		loading.value = true;
+		error.value = null;
+		try {
+			const res = await uni.request({
+				url: '/api/devices',
+				method: 'GET'
+			});
+			deviceList.value = res.data as DeviceInfo[];
+		} catch (err) {
+			error.value = '获取设备列表失败';
+		} finally {
+			loading.value = false;
+		}
+	};
+
+	return {
+		deviceList,
+		loading,
+		error,
+		fetchDevices
+	};
+}
+
+export function useDeviceControl() {
+	const controlling = ref(false);
+
+	const sendCommand = async (deviceId: string, cmd: string, value: any): Promise<boolean> => {
+		controlling.value = true;
+		try {
+			await uni.request({
+				url: `/api/devices/${deviceId}/command`,
+				method: 'POST',
+				data: { cmd, value }
+			});
+			return true;
+		} catch {
+			return false;
+		} finally {
+			controlling.value = false;
+		}
+	};
+
+	return {
+		controlling,
+		sendCommand
+	};
+}
+
+export default {
+	useDeviceList,
+	useDeviceControl
+};

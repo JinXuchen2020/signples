@@ -1,0 +1,75 @@
+<template>
+	<view class="page-header">
+		<view class="page-header__left" @click="handleBack" v-if="showBack">
+			<image class="page-header__back" src="/static/svg/right.png" mode="widthFix"></image>
+		</view>
+		<view class="page-header__title">
+			<text>{{ title }}</text>
+		</view>
+		<view class="page-header__right">
+			<slot name="right"></slot>
+		</view>
+	</view>
+</template>
+
+<script setup>
+defineProps({
+	title: {
+		type: String,
+		default: ''
+	},
+	showBack: {
+		type: Boolean,
+		default: true
+	}
+});
+
+const emit = defineEmits(['back']);
+
+const handleBack = () => {
+	emit('back');
+	uni.navigateBack();
+};
+</script>
+
+<style lang="scss" scoped>
+.page-header {
+	flex-direction: row;
+	align-items: center;
+	height: 88rpx;
+	padding: 0 32rpx;
+	background-color: $uni-bg-color;
+	border-bottom: 1px solid #eeeeee;
+
+	&__left {
+		width: 60rpx;
+		height: 60rpx;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__back {
+		width: 40rpx;
+		height: 40rpx;
+		transform: rotate(180deg);
+	}
+
+	&__title {
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+
+		text {
+			font-size: 34rpx;
+			font-weight: bold;
+			color: #333333;
+		}
+	}
+
+	&__right {
+		min-width: 60rpx;
+		align-items: center;
+		justify-content: flex-end;
+	}
+}
+</style>

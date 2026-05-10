@@ -1,0 +1,3 @@
+export { default as BaseButton } from './base-button/index.uvue';
+export { default as BaseInput } from './base-input/index.uvue';
+export { default as BaseCard } from './base-card/index.uvue';

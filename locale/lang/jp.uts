@@ -99,5 +99,22 @@ export default {
 		UserLogin:"ユーザーログイン",
 		PleaseEnterAccount:"アカウントを入力してください",
 		PleaseEnterPassword:"パスワードを入力してください"
-	} 
+	},
+	setting:{
+		Brightness:"明るさ",
+		Volume:"音量",
+		Time:"時間",
+		Network:"ネットワーク設定",
+		SyncPlay:"同期再生",
+		LocalPlay:"ローカル再生",
+		ScreenRotation:"画面回転",
+		SoftSplicing:"ソフトスプライシング",
+		Restart:"再起動",
+		Power:"電源",
+		Reset:"リセット",
+		BindCloud:"クラウドに接続",
+		DevicePassword:"デバイスパスワード",
+		MonitorInfo:"監視情報",
+		DeviceInfo:"デバイス情報"
+	}
 } as UTSJSONObject

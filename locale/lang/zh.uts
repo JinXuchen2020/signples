@@ -135,7 +135,17 @@ export default {
 		Quarter1: "第一季度",
 		Quarter2: "第二季度",
 		Quarter3: "第三季度",
-		Quarter4: "第四季度",		
+		Quarter4: "第四季度",
+		UserManagement: "用户管理",
+		SearchPlaceholder: "搜索名称或SN码",
+		All: "全部",
+		Online: "在线",
+		Offline: "离线",
+		Selected: "已选择",
+		BatchDelete: "批量删除",
+		Cancel: "取消",
+		ConfirmBatchDelete: "确认批量删除",
+		BatchDeleteConfirmMessage: "确定要删除所选设备吗？"
 	},
 	user:{
 		Admin:"管理员",
@@ -148,6 +158,24 @@ export default {
 		UserLogin:"用户登录",
 		PleaseEnterAccount:"请输入账号",
 		PleaseEnterPassword:"请输入密码"
+	},
+	setting:{
+		Brightness:"亮度",
+		Volume:"音量",
+		Time:"时间",
+		Network:"网络设置",
+		SyncPlay:"同步播放",
+		LocalPlay:"单机播放",
+		ScreenRotation:"屏幕旋转",
+		SoftSplicing:"软拼接",
+		Restart:"重启",
+		Power:"开关机",
+		Reset:"还原",
+		BindCloud:"绑定上云",
+		DevicePassword:"设备密码",
+		MonitorInfo:"监控信息",
+		DeviceInfo:"设备信息",
+		DarkMode:"深色模式"
 	}
 
 } as UTSJSONObject

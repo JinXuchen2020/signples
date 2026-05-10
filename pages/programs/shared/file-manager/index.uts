@@ -1,0 +1,439 @@
+import { UCanvas } from "@/uni_modules/u-canvas";
+import { MediaConfig } from '../media-config/index.uts';
+import { APIS } from '@/api/config.uts';
+import { Ziper } from "@/uni_modules/ns-unzip";
+import { request } from '@/utils/http/index.uts';
+import { useState } from '@/store/index.uts';
+
+export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
+
+export class FileManager {
+	fs: FileSystemManager;
+	token: string;
+	programFolder: string;
+	userAccount: string;
+	
+	constructor(){
+		const { state } = useState();
+		this.fs = uni.getFileSystemManager();
+		this.token = state.token;
+		this.programFolder = state.programFolder;
+		this.userAccount = state.activeUser['account'] as string;
+	}
+	
+	private convertPath(path: string): string {
+		if (path.startsWith("unifile://")) {
+			const packageName = UTSAndroid.getAppContext()?.packageName;
+			return path.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`);
+		}
+		return path;
+	}
+	
+	async getProgramList(): Promise<UTSJSONObject[]> {
+		const results: UTSJSONObject[] = [];
+		try {
+			const items = this.fs.readdirSync(this.programFolder);
+			
+			const statPromises = items?.map(item => {
+				return new Promise<void>((resolve) => {
+					const itemPath = `${this.programFolder}/${item}`;
+					this.fs.stat({
+						path: itemPath,
+						recursive: false,
+						success: res => {
+							if (!res.stats[0].stats.mIsFile) {
+								results.push({
+									name: item,
+									path: itemPath
+								});
+							}
+							resolve();
+						},
+						fail: () => {
+							resolve();
+						}
+					});
+				});
+			});
+			
+			if (statPromises && statPromises.length > 0) {
+				await Promise.all(statPromises);
+			}
+		} catch (err) {
+			console.error('读取目录失败:', err);
+		}
+		
+		return results;
+	}
+	
+	async IsExist(filePath: string): Promise<boolean> {
+		try {
+			this.fs.accessSync(filePath);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
+	
+	async createFolder(folderPath: string): Promise<void> {
+		if(!await this.IsExist(folderPath)){
+			this.fs.mkdirSync(folderPath, true);
+		}	
+	}
+	
+	async deleteProgram(programName: string): Promise<boolean> {
+		try {
+			const destPath = `${this.programFolder}/${programName}`;
+			if (await this.IsExist(destPath)) {
+				this.fs.rmdirSync(destPath, true);
+			}
+			return true;
+		} catch (err) {
+			console.error('删除节目失败:', err);
+			return false;
+		}
+	}
+	
+	async copyFile(srcPath: string, destFilePath: string): Promise<string> {
+		this.fs.copyFileSync(srcPath, destFilePath);
+		return destFilePath;
+	}
+	
+	async getProgramConfig(programName: string, width: string, height: string): Promise<MediaConfig> {
+		const newProgramFolder = `${this.programFolder}/${programName}`;
+		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
+		let configFileContent : UTSJSONObject = {}; 
+		console.log(configFilePath);
+		if (await this.IsExist(configFilePath)) {
+			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
+			configFileContent = JSON.parse(content) as UTSJSONObject;
+		} else {
+			await this.createFolder(newProgramFolder);
+			configFileContent = {
+				"Left": 0.0,
+				"Top": 0.0,
+				"Ratio": 1.0,
+				"Program": {
+					"name": programName,
+					"mediaType": "PROGRAM",
+					"resolution": `${width}*${height}`,
+					"size": 0,
+					"monitorCount": 0,
+					"lastUpdatedTime": new Date().toISOString(),
+					"createdSource": "admin",
+					"status": 0,
+					"playCountPerHour": null,
+					"isHasValidity": false,
+					"validStartDate": null,
+					"validEndDate": null,
+					"userAccount": this.userAccount,
+					"id": 1
+				},
+			}
+			this.fs.writeFileSync(configFilePath, JSON.stringify(configFileContent),"utf-8");
+		}
+
+		console.log(configFileContent);
+		return new MediaConfig(configFileContent);
+	}
+	
+	async saveProgram(programName: string, data: UTSJSONObject): Promise<void> {
+		const programFolder = `${this.programFolder}/${programName}`;
+		const configFilePath = `${programFolder}/MediaConfig.json`;
+		console.log(configFilePath);
+		console.log(data);
+		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
+	}
+	
+	async zipProgram(programName: string): Promise<void> {
+		let sourcePath = this.convertPath(`${this.programFolder}/${programName}`);
+		let zipFile = this.convertPath(`${this.programFolder}/${programName}.zip`);
+		
+		if (await this.IsExist(zipFile)) {
+			this.fs.unlinkSync(zipFile);
+		}
+		
+		const ziper = new Ziper({
+			zipfilepath: zipFile
+		});
+		ziper.setCharset("UTF8");
+		ziper.addFolder({
+		    "path": sourcePath,
+		});
+	}	
+	
+	async readZipFile(programName: string): Promise<number> {
+		const destPath = `${this.programFolder}/${programName}.zip`;
+		
+		if(!await this.IsExist(destPath)){
+			await this.zipProgram(programName);
+		}
+		
+		const res = await new Promise<StatSuccessResult>((resolve, reject) => {
+			this.fs.stat({
+				path: destPath,
+				recursive: false,
+				success: res => {
+					resolve(res)
+				},
+				fail: res => {
+					reject(res)
+				}
+			});
+		});
+		
+		return res.stats[0].stats.size;
+	}
+	
+	async uploadProgram(programName: string): Promise<UploadFileSuccess> {
+		let zipFile = `${this.programFolder}/${programName}.zip`;
+		
+		const fileExists = await this.IsExist(zipFile);
+		
+		if (!fileExists) {
+			uni.showToast({
+				title: '没有节目包, 请先去编辑页面打包',
+				icon: 'none'
+			});
+			return {
+				data: null,
+				statusCode: -1
+			} as UploadFileSuccess;
+		}
+		
+		const rightResult = await new Promise<boolean>((resolve) => {
+			if (UTSAndroid.checkSystemPermissionGranted(UTSAndroid.getUniActivity()!, ['android.permission.READ_EXTERNAL_STORAGE'])) {
+				resolve(true);
+			} else {
+				UTSAndroid.requestSystemPermission(
+					UTSAndroid.getUniActivity()!, 
+					['android.permission.READ_EXTERNAL_STORAGE'],
+					(allRight: boolean, _grantedList: Array<string>) => {
+						resolve(allRight);
+					},
+					(_doNotAskAgain: boolean, _grantedList: Array<string>) => {
+						resolve(false);
+					},
+				);
+			}
+		});
+		
+		if (!rightResult) {
+			uni.showToast({
+				title: '没有文件权限',
+				icon: 'none'
+			});
+			
+			return {
+				data: null,
+				statusCode: -1
+			} as UploadFileSuccess;
+		}			
+		
+		try {
+			uni.showLoading({
+				title: '上传中...'
+			});
+			const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
+				uni.uploadFile({
+					url: APIS.uploadZip,
+					filePath: zipFile,
+					name: 'file',
+					header: {
+						'Authorization': "Bearer " + this.token
+					},
+					success: (res) => {
+						resolve(res);
+					},
+					fail: (res) => {
+						console.error("上传失败:", JSON.stringify(res, null, 2));
+						reject(res);
+					}
+				});
+			});
+			
+			uni.hideLoading();
+			return res;
+		} catch (err) {
+			uni.hideLoading();
+			return {
+				data: null,
+				statusCode: -1
+			} as UploadFileSuccess;
+		}			
+	}
+	
+	async sendProgram(program: UTSJSONObject, snCode: string): Promise<boolean> {
+		try {
+			const dataObj = {
+				cmd: 'CMD|SendProgram|',
+				data: program,
+				deviceSnCode: snCode
+			} as UTSJSONObject;
+			
+			console.log(JSON.stringify(dataObj));
+			
+			const res = await request("POST", APIS.sendCMD as string, dataObj);
+			return res as boolean;
+		} catch (err) {
+			console.log('sendCMD program err', err);
+			return false;
+		}
+	}
+	
+	async pushProgram(programData: UTSJSONObject, snCodes: string[]): Promise<boolean> {
+		if (snCodes.length === 0) {
+			return false;
+		}
+		
+		const pushPromises = snCodes.map(async (snCode) => {
+			const playRecord = { 
+				mediaName: programData.name, 
+				mediaType: programData.mediaType, 
+				monitorSnCode: snCode, 
+				playSuccess: false,
+				isTimerPlay: false, 
+				nextPlayTime: new Date().toISOString() 
+			};
+			
+			const sendResult = await this.sendProgram(programData, snCode);
+			if (sendResult) {
+				playRecord.playSuccess = true;
+				
+				const apiUrl = APIS.playbackRecord.getAll as string;
+				const params = "?playSuccess=true&monitorSnCode=" + snCode;
+				const result = await request('GET', apiUrl + params, {});
+				const playbackRecords = result as Array<UTSJSONObject>;
+				if (playbackRecords != null) {
+					const updatePromises = playbackRecords.map(async (record) => {
+						record.playSuccess = false;
+						return request('POST', APIS.playbackRecord.save as string, record);
+					});
+					await Promise.all(updatePromises);
+				}
+				
+				await request('POST', APIS.playbackRecord.save as string, playRecord);
+				
+				const dataObj = {
+					cmd: 'CMD|PlayTime|',
+					data: playRecord,
+					deviceSnCode: snCode
+				} as UTSJSONObject;
+				
+				console.log(JSON.stringify(dataObj));
+				
+				const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
+				
+				if (!res) {
+					uni.showToast({
+						icon: 'none',
+						title: `设备：${snCode} 设置播放时间命令执行失败`,
+						duration: 3000,
+					});
+				}
+				
+				return true;
+			} else {
+				uni.showToast({
+					icon: 'none',
+					title: `设备：${snCode} 发布命令执行失败`,
+					duration: 3000,
+				});
+				
+				return false;
+			}
+		});
+		
+		const results = await Promise.all(pushPromises);
+		return results.every(r => r);
+	}
+	
+	async capture(programName: string, pageName: string, canvas: UCanvas): Promise<string> {
+		const thumbnailPath = `${this.programFolder}/${programName}/${pageName}/thumbnail.png`;
+		const dataString = canvas.toDataURL();
+		const base64Data = dataString.split(',')[1];
+		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
+		this.fs.writeFileSync(thumbnailPath, dataBuffer,"utf-8");
+		return thumbnailPath;
+	}
+
+	async exportProgram(programName: string): Promise<string | null> {
+		try {
+			const programFolder = `${this.programFolder}/${programName}`;
+			const configFilePath = `${programFolder}/MediaConfig.json`;
+
+			if (!(await this.IsExist(configFilePath))) {
+				uni.showToast({
+					title: '节目不存在',
+					icon: 'none'
+				});
+				return null;
+			}
+
+			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
+			const exportPath = `${this.programFolder}/${programName}_export.json`;
+
+			this.fs.writeFileSync(exportPath, content, 'utf-8');
+
+			uni.showToast({
+				title: '导出成功',
+				icon: 'success'
+			});
+
+			return exportPath;
+		} catch (error) {
+			console.error('导出失败:', error);
+			uni.showToast({
+				title: '导出失败',
+				icon: 'none'
+			});
+			return null;
+		}
+	}
+
+	async importProgram(importFilePath: string, newProgramName?: string): Promise<MediaConfig | null> {
+		try {
+			const content = this.fs.readFileSync(importFilePath, 'utf-8') as string;
+			const configData = JSON.parse(content) as UTSJSONObject;
+
+			const targetProgramName = newProgramName || configData['Program']?.['name'] as string || 'ImportedProgram';
+			const targetFolder = `${this.programFolder}/${targetProgramName}`;
+
+			if (await this.IsExist(targetFolder)) {
+				uni.showModal({
+					title: '提示',
+					content: '节目已存在，是否覆盖？',
+					success: async (res) => {
+						if (!res.confirm) return;
+						await this.doImport(configData, targetFolder, targetProgramName);
+					}
+				});
+			} else {
+				await this.doImport(configData, targetFolder, targetProgramName);
+			}
+
+			return new MediaConfig(configData);
+		} catch (error) {
+			console.error('导入失败:', error);
+			uni.showToast({
+				title: '导入失败',
+				icon: 'none'
+			});
+			return null;
+		}
+	}
+
+	private async doImport(configData: UTSJSONObject, targetFolder: string, programName: string): Promise<void> {
+		await this.createFolder(targetFolder);
+
+		const mediaConfig = new MediaConfig(configData);
+		mediaConfig.program.name = programName;
+
+		await this.saveProgram(programName, mediaConfig.toModel());
+
+		uni.showToast({
+			title: '导入成功',
+			icon: 'success'
+		});
+	}
+}

@@ -1,29 +1,70 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view class="app" refresher-enabled :refresher-triggered="refreshing" @refresherrefresh="onRefresh">
 		<view class="space-box"></view>
-		<view class="add shadow" @click="handleCreate()">
-			<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
+		<view class="search-box">
+			<input class="search-input" v-model="searchKeyword" :placeholder="$t('device.SearchPlaceholder')" />
+		</view>
+		<view class="filter-tabs">
+			<view class="filter-tab" :class="{active: groupFilter === 'all'}" @click="groupFilter = 'all'">
+				<text>{{ $t('device.All') }}</text>
+			</view>
+			<view class="filter-tab" :class="{active: groupFilter === 'display'}" @click="groupFilter = 'display'">
+				<text>显示屏</text>
+			</view>
+			<view class="filter-tab" :class="{active: groupFilter === 'wall'}" @click="groupFilter = 'wall'">
+				<text>拼接墙</text>
+			</view>
+			<view class="filter-tab" :class="{active: groupFilter === 'other'}" @click="groupFilter = 'other'">
+				<text>其他</text>
+			</view>
+		</view>
+		<view class="filter-tabs">
+			<view class="filter-tab" :class="{active: statusFilter === 'all'}" @click="statusFilter = 'all'">
+				<text>{{ $t('device.All') }}</text>
+			</view>
+			<view class="filter-tab" :class="{active: statusFilter === 'online'}" @click="statusFilter = 'online'">
+				<text>{{ $t('device.Online') }}</text>
+			</view>
+			<view class="filter-tab" :class="{active: statusFilter === 'offline'}" @click="statusFilter = 'offline'">
+				<text>{{ $t('device.Offline') }}</text>
+			</view>
+		</view>
+		<view class="batch-actions" v-if="selectedDevices.length > 0">
+			<view class="batch-info">
+				<text>{{ $t('device.Selected') }}: {{ selectedDevices.length }}</text>
+			</view>
+			<view class="batch-btn" @click="handleBatchDelete">
+				<text>{{ $t('device.BatchDelete') }}</text>
+			</view>
+			<view class="batch-btn" @click="selectedDevices = []">
+				<text>{{ $t('device.Cancel') }}</text>
+			</view>
 		</view>
 		<view class="active-user">
 			<text class="t">-- {{userAccount}}  {{ $t('index.BelongingDevice') }} --</text>
 		</view>
 		<view class="space-box"></view>
 		<view class="wifi-list">
-			<view v-if="deviceList.length > 0" class="item shadow" v-for="(item, index) in deviceList" :key="index">
-				<view class="c" style="padding-bottom: 24rpx;justify-content: flex-start;">
-					<view v-if="item['connectStatus'] == 1" class="icon-box icon-box-big wi2">
-						<image class="icon" src="/static/icon/2-w.png" mode="widthFix"></image>
+			<view v-if="filteredDeviceList.length > 0" class="item shadow" v-for="(item, index) in filteredDeviceList" :key="index">
+				<view class="item-header" @click="handleSelectItem(item)">
+					<view class="checkbox" :class="{checked: selectedDevices.includes(item['snCode'] as string)}">
+						<image v-if="selectedDevices.includes(item['snCode'] as string)" src="/static/svg/check.png" mode="widthFix"></image>
 					</view>
-					<view v-else class="icon-box icon-box-big wi">
-						<image class="icon" src="/static/icon/2.png" mode="widthFix"></image>
-					</view>
-					<view>
-						<view>
-							<text class="wifi-t1">{{item['name']}}</text>
+					<view class="device-info">
+						<view v-if="item['connectStatus'] == 1" class="icon-box icon-box-big wi2">
+							<image class="icon" src="/static/icon/2-w.png" mode="widthFix"></image>
 						</view>
-						<view class="text-box">
-							<text class="key">SN:</text>
-							<text class="value">{{item['snCode']}}</text>
+						<view v-else class="icon-box icon-box-big wi">
+							<image class="icon" src="/static/icon/2.png" mode="widthFix"></image>
+						</view>
+						<view>
+							<view>
+								<text class="wifi-t1">{{item['name']}}</text>
+							</view>
+							<view class="text-box">
+								<text class="key">SN:</text>
+								<text class="value">{{item['snCode']}}</text>
+							</view>
 						</view>
 					</view>
 				</view>
@@ -62,6 +103,9 @@
 			<view class="no-more" v-else>
 				<text class="t">{{$t('index.NoMore') }}</text>
 			</view>
+			<view class="add shadow" @click="handleCreate()">
+				<image class="image" src="/static/svg/add.png" mode="aspectFill"></image>
+			</view>
 		</view>
 	</scroll-view>
 </template>
@@ -87,8 +131,50 @@
 				deviceList: [] as Array<UTSJSONObject>,
 				token: '' as string,
 				userAccount: '' as string,
-				userId: '' as string
+				userId: '' as string,
+				searchKeyword: '' as string,
+				statusFilter: 'all' as string,
+				groupFilter: 'all' as string,
+				selectedDevices: [] as Array<string>,
+				refreshing: false as boolean
 				
+			}
+		},
+		computed: {
+			filteredDeviceList(): Array<UTSJSONObject> {
+				let list = this.deviceList;
+				if (this.searchKeyword) {
+					const keyword = this.searchKeyword.toLowerCase();
+					list = list.filter((item: UTSJSONObject) => {
+						const name = (item['name'] as string)?.toLowerCase() || '';
+						const sn = (item['snCode'] as string)?.toLowerCase() || '';
+						return name.includes(keyword) || sn.includes(keyword);
+					});
+				}
+				if (this.groupFilter !== 'all') {
+					list = list.filter((item: UTSJSONObject) => {
+						const type = (item['deviceType'] as string) || 'other';
+						if (this.groupFilter === 'display') {
+							return type.includes('display') || type.includes('screen');
+						} else if (this.groupFilter === 'wall') {
+							return type.includes('wall') || type.includes('拼接');
+						} else if (this.groupFilter === 'other') {
+							return !type.includes('display') && !type.includes('screen') && !type.includes('wall') && !type.includes('拼接');
+						}
+						return true;
+					});
+				}
+				if (this.statusFilter !== 'all') {
+					list = list.filter((item: UTSJSONObject) => {
+						if (this.statusFilter === 'online') {
+							return item['connectStatus'] == 1;
+						} else if (this.statusFilter === 'offline') {
+							return item['connectStatus'] == 0;
+						}
+						return true;
+					});
+				}
+				return list;
 			}
 		},
 		onLoad(): void {
@@ -113,6 +199,14 @@
 			}
 		},
 		methods: {
+			async onRefresh() {
+				this.refreshing = true;
+				try {
+					await this.getDeviceList();
+				} finally {
+					this.refreshing = false;
+				}
+			},
 			async getDeviceList() {
 			  try {
 				uni.showLoading({
@@ -170,6 +264,44 @@
 			handleCreate(){
 				routeGoto('/pages/devices/create?device_id=-1');
 			},
+			handleSelectItem(device: UTSJSONObject){
+				const snCode = device['snCode'] as string;
+				const index = this.selectedDevices.indexOf(snCode);
+				if (index > -1) {
+					this.selectedDevices.splice(index, 1);
+				} else {
+					this.selectedDevices.push(snCode);
+				}
+			},
+			handleBatchDelete(){
+				const that = this;
+				uni.showModal({
+					title: that.$t('device.ConfirmBatchDelete'),
+					content: that.$t('device.BatchDeleteConfirmMessage'),
+					success: async (res: UniShowModalResult) => {
+						if(res.confirm){
+							try {
+								uni.showLoading({
+									title: ''
+								});
+								for (const snCode of that.selectedDevices) {
+									await request('DELETE', APIS.deleteDevice as string + snCode, {});
+								}
+								uni.hideLoading();
+								that.selectedDevices = [];
+								that.getDeviceList();
+								uni.showToast({
+									icon: 'success',
+									title: that.$t('common.OperationSuccess')
+								});
+							} catch (err){
+								uni.hideLoading();
+								console.log(err);
+							}
+						}
+					}
+				});
+			},
 			handleSelectDevice(device: UTSJSONObject){
 				//写入到缓存，并跳转回首页，从首页的设备控制里跳转到页面
 				const { setActiveDevice } = useState();
@@ -190,6 +322,81 @@
 </script>
 
 <style lang="scss">
+	.search-box {
+		padding: 16rpx 32rpx;
+		background-color: #ffffff;
+	}
+	.search-input {
+		height: 72rpx;
+		padding: 0 24rpx;
+		background-color: #f5f5f5;
+		border-radius: 36rpx;
+		font-size: 28rpx;
+	}
+	.filter-tabs {
+		flex-direction: row;
+		padding: 16rpx 32rpx;
+		background-color: #ffffff;
+		justify-content: space-around;
+	}
+	.filter-tab {
+		padding: 16rpx 32rpx;
+		border-radius: 32rpx;
+		background-color: #f5f5f5;
+		&.active {
+			background-color: $uni-color-primary;
+			text {
+				color: #ffffff;
+			}
+		}
+		text {
+			font-size: 26rpx;
+			color: #333333;
+		}
+	}
+	.batch-actions {
+		flex-direction: row;
+		align-items: center;
+		padding: 16rpx 32rpx;
+		background-color: #fff3e0;
+		justify-content: space-between;
+	}
+	.batch-info {
+		text {
+			font-size: 26rpx;
+			color: #ff9800;
+		}
+	}
+	.batch-btn {
+		padding: 12rpx 24rpx;
+		border-radius: 8rpx;
+		background-color: #ff9800;
+		text {
+			font-size: 24rpx;
+			color: #ffffff;
+		}
+	}
+	.device-info {
+		flex-direction: row;
+		align-items: center;
+	}
+	.checkbox {
+		width: 40rpx;
+		height: 40rpx;
+		border: 2rpx solid #cccccc;
+		border-radius: 8rpx;
+		margin-right: 24rpx;
+		align-items: center;
+		justify-content: center;
+		&.checked {
+			border-color: $uni-color-primary;
+			background-color: $uni-color-primary;
+		}
+		image {
+			width: 28rpx;
+			height: 28rpx;
+		}
+	}
 	.active-user{
 		flex-direction: row;
 		align-items: center;

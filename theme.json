@@ -1,44 +1,28 @@
 {
   "light": {
-    "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColorContent": "#efeff4",
-    "backgroundColor": "#fafafa",
-    "backgroundTextStyle": "dark",
-
-    "tabBarColor": "#999999",
-    "tabBarSelectedColor": "#000000",
-    "tabBarBorderStyle": "white",
-    "tabBarBackgroundColor": "#fefefe",
-
-    "tabBarComponentIconPath": "static/component.png",
-    "tabBarComponentSelectedIconPath": "static/componentHL.png",
-    "tabBarAPIIconPath": "static/api.png",
-    "tabBarAPISelectedIconPath": "static/apiHL.png",
-    "tabBarCSSIconPath": "static/css.png",
-    "tabBarCSSSelectedIconPath": "static/cssHL.png",
-    "tabBarTemplateIconPath": "static/template.png",
-    "tabBarTemplateSelectedIconPath": "static/templateHL.png"
+    "primary": "#007AFF",
+    "secondary": "#5856D6",
+    "success": "#34C759",
+    "warning": "#FF9500",
+    "error": "#FF3B30",
+    "info": "#8E8E93",
+    "bg-color": "#FFFFFF",
+    "bg-color-grey": "#F5F5F5",
+    "text-color": "#333333",
+    "text-color-inverse": "#FFFFFF",
+    "border-color": "#E0E0E0"
   },
   "dark": {
-    "navigationBarTextStyle": "white",
-    "navigationBarBackgroundColor": "#1F1F1F",
-    "backgroundColor": "#1F1F1F",
-    "backgroundColorContent": "#646464",
-    "backgroundTextStyle": "light",
-
-    "tabBarColor": "#cacaca",
-    "tabBarSelectedColor": "#007AFF",
-    "tabBarBorderStyle": "white",
-    "tabBarBackgroundColor": "#1F1F1F",
-
-    "tabBarComponentIconPath": "static/component.png",
-    "tabBarComponentSelectedIconPath": "static/componentHL.png",
-    "tabBarAPIIconPath": "static/api.png",
-    "tabBarAPISelectedIconPath": "static/apiHL.png",
-    "tabBarCSSIconPath": "static/css.png",
-    "tabBarCSSSelectedIconPath": "static/cssHL.png",
-    "tabBarTemplateIconPath": "static/template.png",
-    "tabBarTemplateSelectedIconPath": "static/templateHL.png"
+    "primary": "#0A84FF",
+    "secondary": "#5E5CE6",
+    "success": "#30D158",
+    "warning": "#FF9F0A",
+    "error": "#FF453A",
+    "info": "#98989D",
+    "bg-color": "#1C1C1E",
+    "bg-color-grey": "#2C2C2E",
+    "text-color": "#FFFFFF",
+    "text-color-inverse": "#000000",
+    "border-color": "#38383A"
   }
 }
