@@ -6,38 +6,38 @@
 		</view>
 		<view class="filter-tabs">
 			<view class="filter-tab" :class="{active: groupFilter === 'all'}" @click="groupFilter = 'all'">
-				<text>{{ $t('device.All') }}</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': groupFilter === 'all'}">{{ $t('device.All') }}</text>
 			</view>
 			<view class="filter-tab" :class="{active: groupFilter === 'display'}" @click="groupFilter = 'display'">
-				<text>显示屏</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': groupFilter === 'display'}">显示屏</text>
 			</view>
 			<view class="filter-tab" :class="{active: groupFilter === 'wall'}" @click="groupFilter = 'wall'">
-				<text>拼接墙</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': groupFilter === 'wall'}">拼接墙</text>
 			</view>
 			<view class="filter-tab" :class="{active: groupFilter === 'other'}" @click="groupFilter = 'other'">
-				<text>其他</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': groupFilter === 'other'}">其他</text>
 			</view>
 		</view>
 		<view class="filter-tabs">
 			<view class="filter-tab" :class="{active: statusFilter === 'all'}" @click="statusFilter = 'all'">
-				<text>{{ $t('device.All') }}</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': statusFilter === 'all'}">{{ $t('device.All') }}</text>
 			</view>
 			<view class="filter-tab" :class="{active: statusFilter === 'online'}" @click="statusFilter = 'online'">
-				<text>{{ $t('device.Online') }}</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': statusFilter === 'online'}">{{ $t('device.Online') }}</text>
 			</view>
 			<view class="filter-tab" :class="{active: statusFilter === 'offline'}" @click="statusFilter = 'offline'">
-				<text>{{ $t('device.Offline') }}</text>
+				<text class="filter-tab-text" :class="{'filter-tab-text-active': statusFilter === 'offline'}">{{ $t('device.Offline') }}</text>
 			</view>
 		</view>
 		<view class="batch-actions" v-if="selectedDevices.length > 0">
 			<view class="batch-info">
-				<text>{{ $t('device.Selected') }}: {{ selectedDevices.length }}</text>
+				<text class="batch-info-text">{{ $t('device.Selected') }}: {{ selectedDevices.length }}</text>
 			</view>
 			<view class="batch-btn" @click="handleBatchDelete">
-				<text>{{ $t('device.BatchDelete') }}</text>
+				<text class="batch-btn-text">{{ $t('device.BatchDelete') }}</text>
 			</view>
 			<view class="batch-btn" @click="selectedDevices = []">
-				<text>{{ $t('device.Cancel') }}</text>
+				<text class="batch-btn-text">{{ $t('device.Cancel') }}</text>
 			</view>
 		</view>
 		<view class="active-user">
@@ -48,7 +48,7 @@
 			<view v-if="filteredDeviceList.length > 0" class="item shadow" v-for="(item, index) in filteredDeviceList" :key="index">
 				<view class="item-header" @click="handleSelectItem(item)">
 					<view class="checkbox" :class="{checked: selectedDevices.includes(item['snCode'] as string)}">
-						<image v-if="selectedDevices.includes(item['snCode'] as string)" src="/static/svg/check.png" mode="widthFix"></image>
+						<image class="checkbox-image" v-if="selectedDevices.includes(item['snCode'] as string)" src="/static/svg/check.png" mode="widthFix"></image>
 					</view>
 					<view class="device-info">
 						<view v-if="item['connectStatus'] == 1" class="icon-box icon-box-big wi2">
@@ -115,7 +115,7 @@
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	export default {
 		data() {
 			return {
@@ -343,16 +343,16 @@
 		padding: 16rpx 32rpx;
 		border-radius: 32rpx;
 		background-color: #f5f5f5;
-		&.active {
-			background-color: $uni-color-primary;
-			text {
-				color: #ffffff;
-			}
-		}
-		text {
-			font-size: 26rpx;
-			color: #333333;
-		}
+	}
+	.filter-tab.active {
+		background-color: $uni-color-primary;
+	}
+	.filter-tab-text {
+		font-size: 26rpx;
+		color: #333333;
+	}
+	.filter-tab-text-active {
+		color: #ffffff;
 	}
 	.batch-actions {
 		flex-direction: row;
@@ -361,20 +361,18 @@
 		background-color: #fff3e0;
 		justify-content: space-between;
 	}
-	.batch-info {
-		text {
-			font-size: 26rpx;
-			color: #ff9800;
-		}
+	.batch-info-text {
+		font-size: 26rpx;
+		color: #ff9800;
 	}
 	.batch-btn {
 		padding: 12rpx 24rpx;
 		border-radius: 8rpx;
 		background-color: #ff9800;
-		text {
-			font-size: 24rpx;
-			color: #ffffff;
-		}
+	}
+	.batch-btn-text {
+		font-size: 24rpx;
+		color: #ffffff;
 	}
 	.device-info {
 		flex-direction: row;
@@ -388,14 +386,14 @@
 		margin-right: 24rpx;
 		align-items: center;
 		justify-content: center;
-		&.checked {
-			border-color: $uni-color-primary;
-			background-color: $uni-color-primary;
-		}
-		image {
-			width: 28rpx;
-			height: 28rpx;
-		}
+	}
+	.checkbox.checked {
+		border-color: $uni-color-primary;
+		background-color: $uni-color-primary;
+	}
+	.checkbox-image {
+		width: 28rpx;
+		height: 28rpx;
 	}
 	.active-user{
 		flex-direction: row;

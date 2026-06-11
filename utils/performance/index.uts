@@ -78,8 +78,8 @@ class PerformanceMonitor {
 
 	private getMemoryUsage(): number {
 		try {
-			const memoryInfo = uni.getStorageInfo ? null : null;
-			return memoryInfo ? memoryInfo.currentSize : 0;
+			const memoryInfo = uni.getStorageInfoSync();
+			return memoryInfo.currentSize || 0;
 		} catch {
 			return 0;
 		}

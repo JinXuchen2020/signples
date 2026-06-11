@@ -42,23 +42,23 @@ export function parseDuration(duration: string): number {
     return hours * 3600 + minutes * 60 + seconds;
 }
 
-export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    return ((...args: any[]) => {
+export function debounce(fn: Function, delay: number): Function {
+    let timer: number | null = null;
+    return function() {
         if (timer) clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
-    }) as T;
+        timer = setTimeout(fn, delay);
+    };
 }
 
-export function throttle<T extends (...args: any[]) => any>(fn: T, limit: number): T {
+export function throttle(fn: Function, limit: number): Function {
     let inThrottle = false;
-    return ((...args: any[]) => {
+    return function() {
         if (!inThrottle) {
-            fn(...args);
+            fn();
             inThrottle = true;
             setTimeout(() => inThrottle = false, limit);
         }
-    }) as T;
+    };
 }
 
 export function generateId(): string {
@@ -121,6 +121,17 @@ export function setStorage<T>(key: string, value: T): void {
     } catch (e) {
         console.error('Storage error:', e);
     }
+}
+
+export function getCurrentTimeYYMMDDHHmmss(): string {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
 export function removeStorage(key: string): void {

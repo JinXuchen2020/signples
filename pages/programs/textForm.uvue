@@ -230,13 +230,13 @@
 </template>
 
 <script lang="uts" >
-	import { BaseComponent, TextComponent } from './mediaConfig.uts';
+	import { BaseComponent, TextComponent } from './shared/media-config/index.uts';
 	import { 
 		handlePositionUpdate, 
 		updateComponentProperty,
 		mapOptionsToNames,
 		findOptionByKey 
-	} from './formUtils.uts';
+	} from './shared/form-utils/index.uts';
 	
 	const fontFamilies = [
 		{ key: 'sans-serif', name: '无衬线体' },

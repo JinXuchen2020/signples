@@ -2,6 +2,8 @@ const BASE_URL = 'http://1.255.226.145:12106';
 const REQUEST_TIMEOUT = 30000;
 import { useState } from '@/store/index.uts';
 
+type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
 interface RequestConfig {
     showLoading?: boolean;
     loadingText?: string;

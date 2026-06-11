@@ -9,15 +9,12 @@ function getProgramFolder(): string {
 
 function createComponentByType(data: UTSJSONObject): BaseComponent | null {
     const type = data['Type'] as string;
-    const componentMap: Record<string, typeof BaseComponent> = {
-        Video: VideoComponent,
-        Text: TextComponent,
-        Image: ImageComponent,
-        Web: WebComponent,
-        Word: WordComponent
-    };
-    const Cls = componentMap[type];
-    return Cls ? new Cls(data) : null;
+    if (type == 'Video') return new VideoComponent(data);
+    if (type == 'Text') return new TextComponent(data);
+    if (type == 'Image') return new ImageComponent(data);
+    if (type == 'Web') return new WebComponent(data);
+    if (type == 'Word') return new WordComponent(data);
+    return null;
 }
 
 export class MediaConfig {

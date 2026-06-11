@@ -9,7 +9,7 @@
 	</view>
 </template>
 
-<script setup>
+<script setup lang="uts">
 defineProps({
 	title: {
 		type: String,

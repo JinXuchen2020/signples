@@ -96,8 +96,8 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager } from './fileManager.uts';
-	import { BaseComponent, ImageComponent } from './mediaConfig.uts';
+	import { FileManager } from './shared/file-manager/index.uts';
+	import { BaseComponent, ImageComponent } from './shared/media-config/index.uts';
 	import { 
 		handlePositionUpdate, 
 		updateComponentProperty, 
@@ -105,7 +105,7 @@
 		extractFileName,
 		mapOptionsToNames,
 		findOptionByKey 
-	} from './formUtils.uts';
+	} from './shared/form-utils/index.uts';
 	
 	export default {
 		props: {

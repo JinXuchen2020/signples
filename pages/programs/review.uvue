@@ -11,6 +11,7 @@
 	</view>
 </template>
 <script lang="uts" setup>
+    import { ref, onLoad } from 'vue';
     import * as ucan from "@/uni_modules/u-canvas";
     import {
         UCanvas,
@@ -43,7 +44,7 @@
     }
 	
 	
-	onLoad((e: OnLoadOptions): void => {
+	onLoad((e: UTSJSONObject): void => {
 		const defl = uni.getStorageSync('language') as string
 		
 		let defaultLang =  'kr'

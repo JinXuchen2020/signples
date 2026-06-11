@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import type { DeviceInfo } from './types.uts';
 
 export function useDeviceList() {

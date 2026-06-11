@@ -69,16 +69,16 @@
 				<text class="template-label">选择模板:</text>
 				<view class="template-list">
 					<view class="template-item" :class="{active: selectedTemplate === 'blank'}" @click="selectedTemplate = 'blank'">
-						<text>空白</text>
+						<text class="template-item-text" :class="{'template-item-text-active': selectedTemplate === 'blank'}">空白</text>
 					</view>
 					<view class="template-item" :class="{active: selectedTemplate === 'video'}" @click="selectedTemplate = 'video'">
-						<text>视频</text>
+						<text class="template-item-text" :class="{'template-item-text-active': selectedTemplate === 'video'}">视频</text>
 					</view>
 					<view class="template-item" :class="{active: selectedTemplate === 'image'}" @click="selectedTemplate = 'image'">
-						<text>图片</text>
+						<text class="template-item-text" :class="{'template-item-text-active': selectedTemplate === 'image'}">图片</text>
 					</view>
 					<view class="template-item" :class="{active: selectedTemplate === 'mixed'}" @click="selectedTemplate = 'mixed'">
-						<text>混合</text>
+						<text class="template-item-text" :class="{'template-item-text-active': selectedTemplate === 'mixed'}">混合</text>
 					</view>
 				</view>
 			</view>
@@ -142,9 +142,9 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
-	import { request } from '@/utils/http/index'
-	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index'
-	import { FileManager} from './fileManager.uts'
+	import { request } from '@/utils/http/index.uts'
+	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
+	import { FileManager} from './shared/file-manager/index.uts'
 	import { useState }  from '@/store/index.uts'
 	
 	export default {
@@ -348,17 +348,17 @@
 			align-items: center;
 			justify-content: center;
 			background-color: #f5f5f5;
-			&.active {
-				border-color: $uni-color-primary;
-				background-color: rgba($uni-color-primary, 0.1);
-				text {
-					color: $uni-color-primary;
-				}
-			}
-			text {
-				font-size: 26rpx;
-				color: #666666;
-			}
+		}
+		.template-item.active {
+			border-color: $uni-color-primary;
+			background-color: rgba($uni-color-primary, 0.1);
+		}
+		.template-item-text {
+			font-size: 26rpx;
+			color: #666666;
+		}
+		.template-item-text-active {
+			color: $uni-color-primary;
 		}
 	}
 	.list-box{

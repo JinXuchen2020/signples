@@ -7,7 +7,7 @@
 	</view>
 </template>
 
-<script setup>
+<script setup lang="uts">
 defineProps({
 	visible: {
 		type: Boolean,

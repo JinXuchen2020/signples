@@ -110,7 +110,7 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	import { useState } from '@/store/index.uts'
 	
 	export default {

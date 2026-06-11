@@ -77,15 +77,15 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager } from './fileManager.uts';
-	import { BaseComponent, VideoComponent } from './mediaConfig.uts';
+	import { FileManager} from './shared/file-manager/index.uts'
+	import { BaseComponent, VideoComponent } from './shared/media-config/index.uts';
 	import { 
 		handlePositionUpdate, 
 		updateComponentProperty, 
 		getFileDestinationPath,
 		extractFileName,
 		formatDuration 
-	} from './formUtils.uts';
+	} from './shared/form-utils/index.uts';
 	
 	export default {
 		props: {
