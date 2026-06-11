@@ -138,12 +138,11 @@
 							break;
 					}
 					
-					console.log(dataObj);
 					const res = await request("POST", APIS.sendCMD as string, dataObj) as boolean;
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `设备：${snCode} 发布定时任务执行失败`,
+							title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlFailure")}`,
 							duration: 3000,
 							success: () => { 
 							}
@@ -157,6 +156,13 @@
 					}					
 					
 					this.$emit("refresh");
+					uni.showToast({
+						icon: 'none',
+						title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlSuccess")}`,
+						duration: 3000,
+						success: () => { 
+						}
+					})
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();

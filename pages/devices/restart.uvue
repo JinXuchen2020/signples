@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
@@ -94,12 +94,12 @@
 			let that = this
 			const { state } = useState();
 			if (state.token != '' && state.activeUser['id'] != null) {
-				that.userInfo = state.loginUser;
+				that.userInfo = state.activeUser;
 				that.deviceInfo = state.activeDevice;
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -107,7 +107,14 @@
 				that.getDeviceControls();
 			}
 			else {
-				console.log('读取失败userInfo或不存在');
+				uni.showModal({
+					title: $t("error.SelectDevice"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/devices');
+						}
+					}
+				})
 			}
 		},
 		methods: {
@@ -143,7 +150,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `设备：${this.deviceInfo['snCode']} 立即重启命令执行失败`,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.RestartFailure")}`,
 							success: () => { 
 							}
 						})
@@ -154,7 +161,7 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `设备：${this.deviceInfo['snCode']} 立即重启成功`,
+						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.RestartSuccess")}`,
 						success: () => {
 							
 						}
@@ -189,7 +196,7 @@
 						const nitem = item as UTSJSONObject;
 						const day = item['validDateEnd'] as string;
 						const daynum = new Date(day).getTime();
-						if(currentDate > daynum){
+						if(currentDate > daynum  && currentDate - daynum > 24 * 60 * 60 * 1000){
 							nitem['isvalidEnd'] = true;
 						}else{
 							nitem['isvalidEnd'] = false;

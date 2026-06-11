@@ -1,5 +1,5 @@
 <template>
-	<scroll-view class="app">
+	<scroll-view :bounces="false" class="app">
 		<view class="space-box"></view>
 		<view class="device-info">
 			<view class="item shadow" v-if="deviceInfo.hasOwnProperty('id')">
@@ -89,7 +89,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -97,9 +97,13 @@
 				that.getDeviceControls();
 			}
 			else {
-				uni.showToast({
-					icon: 'none',
-					title: `请先选择设备`,
+				uni.showModal({
+					title: $t("error.SelectDevice"),
+					success: (res: UniShowModalResult) => {
+						if(res.confirm){
+							routeGoto('/pages/index/devices');
+						}
+					}
 				})
 			}
 		},
@@ -122,12 +126,11 @@
 					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
 					const result = await request('GET', apiUrl + param, person) 
 					this.deviceControls = result as UTSJSONObject[];
-					console.log(result);
 					this.deviceControls.forEach((item: UTSJSONObject) => {
 						const nitem = item as UTSJSONObject;
 						const day = item['validDateEnd'] as string;
 						const daynum = new Date(day).getTime();
-						if(currentDate > daynum){
+						if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 							nitem['isvalidEnd'] = true;
 						}else{
 							nitem['isvalidEnd'] = false;

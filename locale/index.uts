@@ -47,7 +47,7 @@ export const changeLanguage = (lang: string) => {
   
   uni.showToast({
   	icon: 'none',
-  	title: '已设置语言',
+  	title: i18n.global.t("pages.languageConfirm", null, lang),
   	duration: 3000,
   	success: () => { 
   	}

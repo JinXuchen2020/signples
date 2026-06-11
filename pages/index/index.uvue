@@ -136,6 +136,8 @@
 	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
 	import { useState } from '@/store/index.uts'
 	import { routeGoto } from '@/common/router.uts'
+	import { APIS } from '@/api/config.uts'
+	import { request } from '@/utils/http/index'
 	export default {
 		data() {
 			return {
@@ -162,13 +164,11 @@
 			let that = this
 			const { state } = useState();
 			if (state.token != '' && state.loginUser['id'] != null) {
-				that.userInfo = state.loginUser;
-				that.activeUser = state.activeUser;
-				that.activeDevice = state.activeDevice;
+				that.getAccountInfo(state.loginUser['id'] as number);
 			}
 			else {
 				uni.showModal({
-					title: "尚未登录，请您先登录??",
+					title: $t("error.NotLogin"),
 					success: (res: UniShowModalResult) => {
 						if(res.confirm){
 							uni.switchTab({
@@ -180,6 +180,28 @@
 			}
 		},
 		methods: {
+			async getAccountInfo(id: Number){
+				try {
+					uni.showLoading({
+						title: ''
+					});
+					
+					const { state, setLoginUser}  = useState()
+					const apiUrl = APIS.user.getString('getById')!;
+					const result = await request('GET', apiUrl.replace("{id}", `${id}`), {}) as UTSJSONObject;
+					this.userInfo = result;
+					setLoginUser(result);
+					
+					if (state.activeUser['id'] != null) {
+						this.activeUser = state.activeUser;
+						this.activeDevice = state.activeDevice;
+					}
+					uni.hideLoading();
+				} catch (err){
+					uni.hideLoading();
+					console.log(err)
+				}
+			},
 			handleSubmit(){
 				this.createPopup = false;
 				routeGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
@@ -189,7 +211,7 @@
 					routeGoto('/pages/devices/edit?device_id=' + this.activeDevice.id);
 				}else{
 					uni.showModal({
-						title: "请您先选择设备?",
+						title: $t("error.SelectDevice"),
 						success: (res: UniShowModalResult) => {
 							if(res.confirm){
 								routeGoto('/pages/index/users');
@@ -224,7 +246,7 @@
 			handleGotoSelectProgram() {
 				if (this.userInfo['role'] == 'user') {
 					const { setActiveUser, setProgramFolder } = useState();
-					setActiveUser(this.userInfo);					
+					setActiveUser(this.userInfo);
 					setProgramFolder(`${uni.env.USER_DATA_PATH}/temp/program/${this.userInfo['account'] as string}`);
 				}
 				
