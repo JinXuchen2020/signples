@@ -93,6 +93,8 @@
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
+\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
+	import { MILLISECONDS_PER_HOUR } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -228,7 +230,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.TimeSyncFailure")}`,
+							title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.TimeSyncFailure")}`,
 							success: () => { 
 							}
 						})
@@ -239,7 +241,7 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.TimeSyncSuccess")}`,
+						title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.TimeSyncSuccess")}`,
 						success: () => {
 							
 						}
@@ -248,7 +250,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
@@ -273,7 +275,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.GetTimeFailure")}`,
+							title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.GetTimeFailure")}`,
 							duration: 3000,
 							success: () => { 
 							}
@@ -289,7 +291,7 @@
 					if(currentDataTime == null) {
 						const offset = this.timeZones.find(c=>c.key == this.currentTimeZoneKey)!.offset as number;
 						const nowDate = new Date().getTime();
-						const localDate = new Date(nowDate + offset * 60 * 60000);
+						const localDate = new Date(nowDate + offset * MILLISECONDS_PER_HOUR);
 						this.currentDate = `${localDate.getFullYear()}-${localDate.getMonth() + 1}-${localDate.getDate()}`;
 						this.currentTime = (localDate.getHours() >= 10 ? `${localDate.getHours()}` : `0${localDate.getHours()}`) + ':' + (localDate.getMinutes() >= 10 ? `${localDate.getMinutes()}` : `0${localDate.getMinutes()}`) + ':' + (localDate.getSeconds()>= 10 ? `${localDate.getSeconds()}` : `0${localDate.getSeconds()}`)
 					}
@@ -303,7 +305,7 @@
 					uni.hideLoading();
 				} catch (err : Error){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
@@ -313,8 +315,8 @@
 			},
 			updateCurrentDate(oldOffset: number, newOffset: number) {
 				const localDate = new Date(`${this.currentDate} ${this.currentTime}`).getTime();
-				const utcDate = localDate - oldOffset * 60 * 60000;
-				const newDate = new Date(utcDate + newOffset * 60 * 60000);
+				const utcDate = localDate - oldOffset * MILLISECONDS_PER_HOUR;
+				const newDate = new Date(utcDate + newOffset * MILLISECONDS_PER_HOUR);
 				this.currentDate = `${newDate.getFullYear()}-${newDate.getMonth() + 1}-${newDate.getDate()}`;
 				this.currentTime = (newDate.getHours() >= 10 ? `${newDate.getHours()}` : `0${newDate.getHours()}`) + ':' + (newDate.getMinutes() >= 10 ? `${newDate.getMinutes()}` : `0${newDate.getMinutes()}`) + ':' + (newDate.getSeconds()>= 10 ? `${newDate.getSeconds()}` : `0${newDate.getSeconds()}`)
 			}

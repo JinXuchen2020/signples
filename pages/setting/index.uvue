@@ -3,7 +3,7 @@
 		<view class="space-box"></view>
 		<view class="list-box">
 			<list-view class="uc-menus">
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="navigateTo('/pages/devices/editbrightness')">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Brightness') }}</text>
 					</view>
@@ -11,7 +11,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item end">
+				<list-item class="uc-menus-item end" @click="navigateTo('/pages/devices/volume')">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Volume') }}</text>
 					</view>
@@ -22,7 +22,7 @@
 			</list-view>
 			<view class="space-box"></view>
 			<list-view class="uc-menus">
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="navigateTo('/pages/devices/edittime')">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Time') }}</text>
 					</view>
@@ -30,7 +30,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item end">
+				<list-item class="uc-menus-item end" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Network') }}</text>
 					</view>
@@ -41,7 +41,7 @@
 			</list-view>
 			<view class="space-box"></view>
 			<list-view class="uc-menus">
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.SyncPlay') }}</text>
 					</view>
@@ -49,7 +49,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.LocalPlay') }}</text>
 					</view>
@@ -57,7 +57,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.ScreenRotation') }}</text>
 					</view>
@@ -65,7 +65,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item end">
+				<list-item class="uc-menus-item end" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.SoftSplicing') }}</text>
 					</view>
@@ -76,7 +76,7 @@
 			</list-view>
 			<view class="space-box"></view>
 			<list-view class="uc-menus">
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showRestartConfirm()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Restart') }}</text>
 					</view>
@@ -84,7 +84,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="navigateTo('/pages/devices/poweroffon')">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Power') }}</text>
 					</view>
@@ -92,7 +92,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item end">
+				<list-item class="uc-menus-item end" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.Reset') }}</text>
 					</view>
@@ -103,7 +103,7 @@
 			</list-view>
 			<view class="space-box"></view>
 			<list-view class="uc-menus">
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.BindCloud') }}</text>
 					</view>
@@ -111,7 +111,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.DevicePassword') }}</text>
 					</view>
@@ -119,7 +119,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item">
+				<list-item class="uc-menus-item" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.MonitorInfo') }}</text>
 					</view>
@@ -127,7 +127,7 @@
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
 				</list-item>
-				<list-item class="uc-menus-item end">
+				<list-item class="uc-menus-item end" @click="showUnderDevelopment()">
 					<view class="uc-menus-item-title">
 						<text>{{ $t('setting.DeviceInfo') }}</text>
 					</view>
@@ -151,7 +151,9 @@
 
 <script lang="uts">
 	import { themeManager } from '@/utils/theme/index.uts';
-
+	import { routeGoto } from '@/common/router.uts';
+	import { DARK_MODE_SCALE } from '@/common/config.uts';
+	
 	export default {
 		data() {
 			return {
@@ -169,6 +171,34 @@
 				const isDark = e.detail.value;
 				themeManager.setMode(isDark ? 'dark' : 'light');
 				this.isDarkMode = isDark;
+			},
+			navigateTo(url: string) {
+				uni.navigateTo({
+					url: url,
+				});
+			},
+			showUnderDevelopment() {
+				uni.showToast({
+					icon: 'none',
+					title: this.$t('error.UnderDevelopment'),
+					duration: 3000,
+				})
+			},
+			showRestartConfirm() {
+				let that = this;
+				uni.showModal({
+					title: this.$t('setting.Restart'),
+					content: this.$t('setting.ConfirmRestart'),
+					confirmText: this.$t('index.Confirm'),
+					cancelText: this.$t('index.Cancel'),
+					success: function(res: UniShowModalResult) {
+						if (res.confirm) {
+							uni.navigateTo({
+								url: '/pages/devices/restart',
+							});
+						}
+					}
+				});
 			}
 		}
 	}
@@ -209,7 +239,7 @@
 	}
 
 	.dark-mode-switch {
-		transform: scale(0.8);
+		transform: scale(DARK_MODE_SCALE);
 	}
 
 </style>

@@ -92,6 +92,7 @@
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
+	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
 	
 	export default {
 		data() {
@@ -173,7 +174,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
@@ -219,7 +220,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessFailure")}`,
+							title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.BrightnessFailure")}`,
 							duration: 3000,
 							success: () => { 
 							}
@@ -239,14 +240,14 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessSuccess")}`,
+						title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.BrightnessSuccess")}`,
 						duration: 3000,
 					})
 					
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					console.log(errObj);
 					uni.showToast({
 						icon: 'none',

@@ -84,8 +84,8 @@
 		updateComponentProperty, 
 		getFileDestinationPath,
 		extractFileName,
-		formatDuration 
 	} from './shared/form-utils/index.uts';
+	import { formatDuration } from '@/utils/index.uts';
 	
 	export default {
 		props: {

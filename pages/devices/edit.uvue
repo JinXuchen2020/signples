@@ -112,6 +112,7 @@
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
 	import { useState } from '@/store/index.uts'
+	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
 	
 	export default {
 		data() {
@@ -178,7 +179,7 @@
 								})
 							} catch (err){
 								uni.hideLoading();
-								const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+								const errObj = safeCloneError(err);
 								console.log(errObj);
 								uni.showToast({
 									icon: 'none',
@@ -218,14 +219,14 @@
 											}).then(() => {
 												uni.showToast({
 													icon: 'none',
-													title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.ActivateSuccess")}`,
+													title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.ActivateSuccess")}`,
 													duration: 3000,
 												})
 											});
 										
 									} catch (err){
 										uni.hideLoading();
-										const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+								const errObj = safeCloneError(err);
 										console.log(errObj);
 										uni.showToast({
 											icon: 'none',
@@ -271,13 +272,13 @@
 										}).then(() => {
 											uni.showToast({
 												icon: 'none',
-												title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.DisableSuccess")}`,
+												title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.DisableSuccess")}`,
 												duration: 3000,
 											})
 										});									
 								} catch (err){
 									uni.hideLoading();
-									const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+									const errObj = safeCloneError(err);
 									console.log(errObj);
 									uni.showToast({
 										icon: 'none',

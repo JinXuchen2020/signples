@@ -94,6 +94,7 @@
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
+\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
 	import { useState } from '@/store/index.uts'
 	export default {
 		data() {
@@ -258,7 +259,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
@@ -321,7 +322,7 @@
 						uni.navigateBack();
 					} catch (err){
 						uni.hideLoading();
-						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						const errObj = safeCloneError(err);
 						console.log(errObj);
 						uni.showToast({
 							icon: 'none',
