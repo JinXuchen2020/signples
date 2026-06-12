@@ -1,6 +1,7 @@
 import { reactive, computed } from 'vue';
 import { getStorage, setStorage } from '@/utils/index.uts';
 import { STORAGE_KEYS } from '@/common/config.uts';
+import { isUserLoggedIn } from '@/common/auth-utils.uts';
 
 export type State = {
 	token: string;
@@ -23,7 +24,7 @@ const state = reactive<State>({
 export function useAuth() {
 	const token = computed(() => state.token);
 	const loginUser = computed(() => state.loginUser);
-	const isLoggedIn = computed(() => token.value !== '' && Object.keys(state.loginUser).length > 0);
+	const isLoggedIn = computed(() => isUserLoggedIn());
 	
 	const setToken = (tokenValue: string) => {
 		state.token = tokenValue;
@@ -122,7 +123,7 @@ export function useState() {
 	};
 	
 	const isLoggedIn = (): boolean => {
-		return state.token !== '' && Object.keys(state.loginUser).length > 0;
+		return isUserLoggedIn();
 	};
 	
 	const clearAll = () => {

@@ -75,7 +75,8 @@
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
-	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
+ 	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
+ 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	export default {
 		name:"timer-controls",
 		props: {
@@ -144,7 +145,7 @@
 						uni.showToast({
 							icon: 'none',
 							title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlFailure")}`,
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 							success: () => { 
 							}
 						})
@@ -160,7 +161,7 @@
 					uni.showToast({
 						icon: 'none',
 						title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlSuccess")}`,
-						duration: 3000,
+						duration: DEFAULT_TOAST_DURATION,
 						success: () => { 
 						}
 					})
@@ -173,7 +174,7 @@
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj}`,
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 						})
 					}
 					else {						
@@ -182,7 +183,7 @@
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 						})
 					}
 				}
@@ -213,7 +214,7 @@
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: 3000,
+						duration: DEFAULT_TOAST_DURATION,
 					})
 				}
 			}

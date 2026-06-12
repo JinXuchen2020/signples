@@ -63,6 +63,7 @@
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
 \timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
+	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -146,7 +147,7 @@
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: 3000,
+						duration: DEFAULT_TOAST_DURATION,
 					})
 				}
 			},

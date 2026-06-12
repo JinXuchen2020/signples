@@ -223,6 +223,7 @@
 	import PageForm from './pageForm.uvue'
 	
 	import i18n from '@/locale'
+	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts'
 	
 	const fileManager = new FileManager();
 
@@ -837,7 +838,7 @@
 		uni.showToast({
 			icon: 'none',
 			title: i18n.global.t("program.SaveSuccess", null, defl),
-			duration: 3000,
+			duration: DEFAULT_TOAST_DURATION,
 			success: () => { 
 			}
 		})
@@ -872,7 +873,7 @@
 			uni.showToast({
 				icon: 'none',
 				title: i18n.global.t("program.PublishSuccess", null, defl),
-				duration: 3000,
+				duration: DEFAULT_TOAST_DURATION,
 				success: () => {
 				}
 			})
