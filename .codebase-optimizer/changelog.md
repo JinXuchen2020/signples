@@ -1,10 +1,5 @@
 # Codebase Optimizer - 变更日志
 
-## Round 2
-
-### 2026-06-12
-- [R2] 阶段2分析 | 全项目 | 完成性能/安全/工程化分析，全部P2已跳过
-
 ## Round 1
 
 ### 2026-06-12
@@ -19,3 +14,4 @@
 - [R1-T9] 修复 | `pages/index/index.uvue` | 替换 JSON.stringify 空对象检查
 - [R1-T10] 修复 | 7 处 catch 块 | 修复静默 Catch 块，添加用户提示
 - [R1-T11] 工程化 | `.gitignore` | 补充忽略规则
+- [R1-T12] 修复 | 6 处 | 修正非标准语言代码 kr→ko, jp→ja

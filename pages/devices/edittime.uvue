@@ -170,10 +170,10 @@
 				case "en":
 					this.currentTimeZoneKey = "Pacific Standard Time";
 					break;
-				case "kr":
+				case "ko":
 					this.currentTimeZoneKey = "Korea Standard Time";
 					break;
-				case "jp":
+				case "ja":
 					this.currentTimeZoneKey = "Tokyo Standard Time";
 					break;
 			}
