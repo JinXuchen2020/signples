@@ -104,8 +104,8 @@
 			return {
 				popupLogin: false,
 				opacity: 0,
-				account: 'business_admin',
-				password: '123456',
+				account: '',
+				password: '',
 				userInfo: {} as UTSJSONObject
 			}
 		},
@@ -128,6 +128,14 @@
 				})	
 			},
 			async handleLogin(){
+				if (this.account.trim() == '' || this.password.trim() == '') {
+					uni.showToast({
+						icon: 'none',
+						title: this.$t('error.FieldRequired'),
+						duration: 3000
+					});
+					return;
+				}
 				try {
 					uni.showLoading({
 						title: ''
@@ -180,7 +188,12 @@
 							
 						},
 						fail: () => {
-							
+							uni.hideLoading();
+							uni.showToast({
+								icon: 'none',
+								title: '网络连接失败',
+								duration: 2000,
+							})
 						}
 					});
 				} catch (err){
@@ -197,7 +210,7 @@
 					
 					const { setLoginUser, setActiveUser, setActiveDevice}  = useState()
 					const apiUrl = APIS.user.getString('getById')!;
-					const result = await request('GET', apiUrl.replace("{id}", `${id}`), {}) as UTSJSONObject;
+					const result = await request('GET', apiUrl.replace("{id}", `${Number(id)}`), {}) as UTSJSONObject;
 					this.userInfo = result;
 					setLoginUser(result);
 					setActiveUser({});
@@ -208,11 +221,6 @@
 					uni.hideLoading();
 					console.log(err)
 				}
-			},
-			handleRouteGoto(route: string){
-				uni.navigateTo({
-					url: route
-				});
 			},
 			handleLogout(){
 				const { setToken, setLoginUser}  = useState()

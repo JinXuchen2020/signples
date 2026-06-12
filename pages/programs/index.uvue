@@ -223,15 +223,15 @@
 			},
 			handleDeleteDraft(item: UTSJSONObject, index: number){
 				uni.showModal({
-					title: '确认删除',
-					content: '确定要删除这个草稿吗？',
+					title: this.$t('program.ConfirmDelete'),
+					content: this.$t('program.ConfirmDeleteDraft'),
 					success: (res) => {
 						if (res.confirm) {
 							this.drafts.splice(index, 1);
 							this.saveDrafts();
 							uni.showToast({
 								icon: 'success',
-								title: '已删除'
+								title: this.$t('program.Deleted')
 							});
 						}
 					}
@@ -244,7 +244,7 @@
 					});
 					const activeUser = this.userInfo;
 					const person: UTSJSONObject = {}
-					const param = `?userAccount=${activeUser.account}&enabled=1`;
+					const param = `?userAccount=${encodeURIComponent(activeUser.account)}&enabled=1`;
 					const result = await request('GET', APIS.deviceListPage as string + param, person)
 					const d = result as Array<UTSJSONObject>;
 					this.deviceList = d
@@ -255,8 +255,19 @@
 				}
 			},
 			handleCreate(){
+				const name = String(this.newProgram['name'] ?? '').trim();
+				const width = Number(this.newProgram['width']);
+				const height = Number(this.newProgram['height']);
+				if (name == '') {
+					uni.showToast({ icon: 'none', title: this.$t('error.FieldRequired'), duration: 2000 });
+					return;
+				}
+				if (isNaN(width) || width <= 0 || isNaN(height) || height <= 0) {
+					uni.showToast({ icon: 'none', title: '分辨率需为正整数', duration: 2000 });
+					return;
+				}
 				this.createPopup = false;
-				routeGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
+				routeGoto('/pages/programs/editor?name=' + encodeURIComponent(name) + '&width=' + width + '&height=' + height);
 			},
 			handleEdit(item: UTSJSONObject){
 				routeGoto('/pages/programs/editor?name=' + item['name']);
@@ -371,7 +382,6 @@
 			border-radius: $uni-border-radius-lg;
 			background-color: $uni-bg-color;
 			padding: 0rpx 32rpx;
-			border-radius: $uni-border-radius-lg;
 			
 			.uc-menus-item{
 				flex-direction: row;

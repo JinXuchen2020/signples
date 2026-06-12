@@ -1,19 +1,21 @@
 import { createI18n } from '@/uni_modules/lime-i18n'
 import zhCN from "./lang/zh"
 import en from './lang/en'
-import kr from "./lang/kr"
-import jp from "./lang/jp"
+import ko from "./lang/ko"
+import ja from "./lang/ja"
 // import { getStorageSync, setStorageSync } from '@/uni_modules/uni-storage'
 
 // 定义支持的语言类型
-export type LangType = 'zh-CN' | 'en' | 'kr' | 'jp'
+export type LangType = 'zh-CN' | 'en' | 'ko' | 'ja'
 
-// 从本地存储获取语言设置，
+// 从本地存储获取语言设置，兼容旧版 'kr'/'jp' 代码
 const defl = uni.getStorageSync('language') as string
+const langAlias: Record<string, string> = {'kr': 'ko', 'jp': 'ja'}
+const mapped = langAlias[defl] || defl
 
 let defaultLang =  'zh-CN'
-if(defl != ''){
-	defaultLang = defl
+if(mapped != ''){
+	defaultLang = mapped
 }
 else {	
 	uni.setStorageSync('language', defaultLang)
@@ -22,8 +24,8 @@ else {
 const tabBars = new UTSJSONObject({
 	'en': ['HOME','USER CENTER'],
 	'zh-CN': ["首页", "我的"],
-	'kr': ['홈','내 정보'],
-	'jp': ['ホーム','マイページ'],
+	'ko': ['홈','내 정보'],
+	'ja': ['ホーム','マイページ'],
 });
 // 创建i18n实例
 const i18n = createI18n({
@@ -34,8 +36,8 @@ const i18n = createI18n({
 	messages: {
 		'zh-CN': zhCN,
 		'en': en,
-		"kr": kr,
-		"jp":jp
+		"ko": ko,
+		"ja": ja
 	},
 	tabBars: tabBars
 })

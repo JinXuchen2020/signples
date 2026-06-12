@@ -83,7 +83,15 @@ export class HistoryManager {
 	}
 
 	private deepClone(state: HistoryState): HistoryState {
-		return JSON.parse(JSON.stringify(state)) as HistoryState;
+		const clonedPages: UTSJSONObject[] = [];
+		for (let i = 0; i < state.pages.length; i++) {
+			clonedPages.push(JSON.parse(JSON.stringify(state.pages[i])) as UTSJSONObject);
+		}
+		return {
+			pages: clonedPages,
+			activePageIndex: state.activePageIndex,
+			activeComponentIndex: state.activeComponentIndex
+		};
 	}
 
 	getUndoCount(): number {

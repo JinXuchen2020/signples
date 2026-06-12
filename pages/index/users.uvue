@@ -94,7 +94,12 @@
 				const d = result as Array<UTSJSONObject>;
 				this.userList = d
 			  } catch (error) {
-			    console.error( error)
+			    console.error(error)
+				uni.showToast({
+					icon: 'none',
+					title: '获取用户列表失败',
+					duration: 2000,
+				})
 			  }
 			},
 			
@@ -111,7 +116,7 @@
 									title: ''
 								});
 								
-								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${user.id}`);
+								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${Number(user.id)}`);
 								request('DELETE', apiUrl, {}).then(()=> {
 									uni.hideLoading();
 									that.getUserList();
@@ -119,6 +124,11 @@
 							} catch (err){
 								uni.hideLoading();
 								console.log(err)
+								uni.showToast({
+									icon: 'none',
+									title: '删除用户失败',
+									duration: 2000,
+								})
 							}
 						}
 					}

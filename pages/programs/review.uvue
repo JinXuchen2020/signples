@@ -47,7 +47,7 @@
 	onLoad((e: UTSJSONObject): void => {
 		const defl = uni.getStorageSync('language') as string
 		
-		let defaultLang =  'kr'
+		let defaultLang =  'ko'
 		if(defl != ''){
 			defaultLang = defl
 		}
