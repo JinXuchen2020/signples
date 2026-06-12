@@ -84,8 +84,8 @@
 			</view>
 		</view>
 		<view class="options-tab">
-			<view class="item active" v-if="activeTab == 0" @click="handleActiveTab(0)"><text class="t">{{$t("program.ComponentPro")}}</text></view>
-			<view class="item" v-else @click="handleActiveTab(0)"><text class="t">{{$t("program.ComponentPro")}}</text></view>
+			<view class="item" :class="{active: activeTab == 0}" @click="handleActiveTab(0)"><text class="t">{{("program.ComponentPro")}}</text></view>
+			<view class="item" :class="{active: activeTab == 1}" @click="handleActiveTab(1)"><text class="t">{{("program.PagePro")}}</text></view>
 			<view class="item active" v-if="activeTab == 1" @click="handleActiveTab(1)"><text class="t">{{$t("program.PagePro")}}</text></view>
 			<view class="item" v-else @click="handleActiveTab(1)"><text class="t">{{$t("program.PagePro")}}</text></view>
 		</view>
@@ -207,7 +207,7 @@
         Picture,
     } from "@/uni_modules/u-canvas";
 	
-	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler, historyManager } from './shared/media-config/index.uts'
+	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler, historyManager, createComponentByType } from './shared/media-config/index.uts'
 	
 	import { routeGoto } from '@/common/router.uts'
 	import { FileManager, MediaStoreFolder } from './shared/file-manager/index.uts'
@@ -390,7 +390,7 @@
 		}
 	};
 
-	historyManager.onChange(updateUndoRedoState);
+	const removeHistoryListener = historyManager.onChange(updateUndoRedoState);
 
 	const handleCopy = () => {
 		if (activeComponent.value == null) {
@@ -426,7 +426,7 @@
 		const data = clipboardComponent.value;
 		const maxId = Math.max(...activePage.value!.components.map(c => c.id), 0) + 1;
 		const newData = { ...data, Id: maxId, Name: `${data['Name']}_copy` };
-		const component = createComponentByType(data['Type'] as string, newData);
+		const component = createComponentByType(newData);
 		if (component != null) {
 			activePage.value?.components.push(component);
 			selectComponent(component, activePage.value!.components.length - 1);
@@ -470,16 +470,7 @@
 
 	let lastDrawTime = 0;
 	const drawThrottleMs = 16;
-	
-	const createComponentByType = (type: string, data: UTSJSONObject): BaseComponent | null => {
-		if (type == 'Video') return new VideoComponent(data);
-		if (type == 'Text') return new TextComponent(data);
-		if (type == 'Image') return new ImageComponent(data);
-		if (type == 'Web') return new WebComponent(data);
-		if (type == 'Word') return new WordComponent(data);
-		return null;
-	};
-	
+
 	const defl = uni.getStorageSync('language') as string
 	
 	const handleActiveTab = (val: number)=>{
@@ -501,6 +492,10 @@
 					
 					canvasRect.value = data;
 				}
+				else {
+					console.warn("Canvas element not found, using default rect");
+				}
+			})
 			})
 			.exec();
 	}
@@ -691,15 +686,11 @@
 		await drawPage();
 	}
 	
-	    // 触摸结束
+	    // 触摸结束消除拖拽/缩放状态，直接保留现有实例
 	const handleTouchEnd = () => {
 		if (activeComponent.value != null && activeComponent.value!.element != null){
 			activeComponent.value!.element!.isDragging = false;
 			activeComponent.value!.element!.isResizing = false;
-			const data = activeComponent.value!.toModel() as UTSJSONObject;
-			const type = data['Type'] as string;
-			const newComponent = createComponentByType(type, data);
-			activeComponent.value = newComponent;
 		}
 	}
 	
@@ -762,7 +753,7 @@
 		if (activePage.value == null) return;
 		saveState();
 		const type = data['Type'] as string;
-		const component = createComponentByType(type, data);
+		const component = createComponentByType(data);
 		
 		if (component != null) {
 			activePage.value!.components.splice(currentComponentIndex.value!, 1, component!);
@@ -964,8 +955,6 @@
 			canvasHeight.value = e['height'] as string;
 		}
 		
-		const defl = uni.getStorageSync('language') as string
-		
 		let defaultLang = 'zh-CN'
 		if(defl != ''){
 			defaultLang = defl
@@ -997,6 +986,7 @@
             clearInterval(autoSaveTimer);
             autoSaveTimer = null;
         }
+        removeHistoryListener();
     });
 </script>
 
