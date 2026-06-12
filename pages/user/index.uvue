@@ -193,7 +193,7 @@
 					});
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					console.error("getAccountInfo error:", err)
 				}
 			},
 			async getAccountInfo(id: Number){
@@ -213,7 +213,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					console.error("getAccountInfo error:", err)
 				}
 			},
 			handleRouteGoto(route: string){
