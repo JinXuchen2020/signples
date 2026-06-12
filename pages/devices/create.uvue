@@ -124,13 +124,19 @@
 				}
 			},
 			async onFormSubmit(){
-				if(this.formData['name'] == null){
+				if(this.formData['name'] == null || (this.formData['name'] as string).trim() == ''){
 					uni.showToast({
 						icon: 'none',
 						title: this.$t('error.FieldRequired'),
 						duration: DEFAULT_TOAST_DURATION,
 						success: () => {
 						}
+					})
+				}else if(this.formData['snCode'] == null || (this.formData['snCode'] as string).trim() == ''){
+					uni.showToast({
+						icon: 'none',
+						title: this.$t('error.FieldRequired'),
+						duration: 3000
 					})
 				}else{
 					try {

@@ -96,6 +96,6 @@ export const DEFAULT_LANGUAGE = 'zh-CN';
 export const SUPPORTED_LANGUAGES = [
 	{ code: 'zh-CN', name: '简体中文' },
 	{ code: 'en', name: 'English' },
-	{ code: 'jp', name: '日本語' },
-	{ code: 'kr', name: '한국어' }
+	{ code: 'ja', name: '日本語' },
+	{ code: 'ko', name: '한국어' }
 ] as const;

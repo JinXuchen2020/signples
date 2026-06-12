@@ -238,7 +238,7 @@
 						title: ''
 					});
 					const apiUrl = APIS.deviceControl.getString('getById')!;
-					const result = await request('GET', apiUrl.replace("{id}", `${this.controlId}`), {}) as UTSJSONObject;
+					const result = await request('GET', apiUrl.replace("{id}", `${Number(this.controlId)}`), {}) as UTSJSONObject;
 					console.log(result);
 					this.formData = result as UTSJSONObject;
 					const executionString = result.getString('execution')!;

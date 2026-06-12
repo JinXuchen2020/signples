@@ -91,11 +91,11 @@
 		</view>
 		<view class="option-body">
 			<view class="option-a" :class="{active: activeTab == 0}">
-				<VideoForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-				<ImageForm :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-				<WebForm :item="activeComponent" @refresh="updateComponent" />
-				<WordForm :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
-				<TextForm :item="activeComponent" @refresh="updateComponent" />
+				<VideoForm v-if="activeComponent?.type === 'Video'" :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<ImageForm v-if="activeComponent?.type === 'Image'" :item="activeComponent" :medias="mediaList" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<WebForm v-if="activeComponent?.type === 'Web'" :item="activeComponent" @refresh="updateComponent" />
+				<WordForm v-if="activeComponent?.type === 'Word'" :item="activeComponent" :program-name="programName" :page-name="activePage?.name" :file-manager="fileManager" @refresh="updateComponent" />
+				<TextForm v-if="activeComponent?.type === 'Text'" :item="activeComponent" @refresh="updateComponent" />
 			</view>
 			<view class="option-b" :class="{active: activeTab == 1}">
 				<PageForm :item="activePage" @refresh="updatePage" />
@@ -633,11 +633,9 @@
 		}
 	}
 	
-	const handleTouchMove = async (e: TouchEvent) => {
+	const handleTouchMove = (e: TouchEvent) => {
 		if (activeComponent.value == null || activeComponent.value!.element == null) return;
 		
-		let component = activeComponent.value;
-
 		const touch = e.touches[0];
 		const left = canvasRect.value.left ?? 0;
 		const top = canvasRect.value.top ?? 0;
@@ -645,40 +643,47 @@
 		const height = canvasRect.value.height ?? 0;
 		const touchX = Math.round(touch.clientX - left);
 		const touchY = Math.round(touch.clientY - top);
-		const deltaX = touchX - component.element!.lastTouchX;
-		const deltaY = touchY - component.element!.lastTouchY;
 
-		if (component.element!.isDragging) {
-			// 拖拽移动
-			component.element!.x = Math.max(0, Math.min(
-				width - component.element!.width, 
-				component.element!.x + deltaX
-			));
-		    component.element!.y = Math.max(0, Math.min(
-				height - component.element!.height, 
-				component.element!.y + deltaY
-			));
-			component.left = component.element!.x;
-			component.top = component.element!.y;
-		} else if (component.element!.isResizing) {
-			// 改变大小
-			component.element!.width = Math.min(
-				Math.max(10, component.element!.width + deltaX),
-				width - component.element!.x
-			);
-			
-			component.element!.height = Math.min(
-				Math.max(10, component.element!.height + deltaY),
-				height - component.element!.y
-			);
-			
-			component.width = component.element!.width;
-			component.height = component.element!.height;
+		pendingTouchData = { touchX, touchY, width, height, component: activeComponent.value };
+
+		if (touchMoveTimer == null) {
+			touchMoveTimer = setTimeout(() => {
+				touchMoveTimer = null;
+				const data = pendingTouchData;
+				if (data == null) return;
+				const component = data.component;
+				const deltaX = data.touchX - component.element!.lastTouchX;
+				const deltaY = data.touchY - component.element!.lastTouchY;
+
+				if (component.element!.isDragging) {
+					component.element!.x = Math.max(0, Math.min(
+						data.width - component.element!.width, 
+						component.element!.x + deltaX
+					));
+					component.element!.y = Math.max(0, Math.min(
+						data.height - component.element!.height, 
+						component.element!.y + deltaY
+					));
+					component.left = component.element!.x;
+					component.top = component.element!.y;
+				} else if (component.element!.isResizing) {
+					component.element!.width = Math.min(
+						Math.max(10, component.element!.width + deltaX),
+						data.width - component.element!.x
+					);
+					component.element!.height = Math.min(
+						Math.max(10, component.element!.height + deltaY),
+						data.height - component.element!.y
+					);
+					component.width = component.element!.width;
+					component.height = component.element!.height;
+				}
+
+				component.element!.lastTouchX = data.touchX;
+				component.element!.lastTouchY = data.touchY;
+				drawPage();
+			}, drawThrottleMs);
 		}
-
-		component.element!.lastTouchX = touchX;
-		component.element!.lastTouchY = touchY;
-		await drawPage();
 	}
 	
 	    // 触摸结束
@@ -944,7 +949,7 @@
 			const { state } = useState();
 			const activeUser = state.activeUser;
 			const person: UTSJSONObject = {}
-			const param = `?userAccount=${activeUser.account}&enabled=1`;
+			const param = `?userAccount=${encodeURIComponent(activeUser.account)}&enabled=1`;
 			const result = await request('GET', APIS.deviceListPage as string + param, person)
 			const d = result as Array<UTSJSONObject>;
 			deviceList.value = d

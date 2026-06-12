@@ -116,7 +116,7 @@
 									title: ''
 								});
 								
-								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${user.id}`);
+								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${Number(user.id)}`);
 								request('DELETE', apiUrl, {}).then(()=> {
 									uni.hideLoading();
 									that.getUserList();

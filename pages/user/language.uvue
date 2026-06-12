@@ -38,11 +38,11 @@
 					},
 					{
 						lang: 'にほんご',
-						name: 'jp'
+						name: 'ja'
 					},
 					{
 						lang: '한국어',
-						name: 'kr'
+						name: 'ko'
 					}
 				] as Array<LangItem>
 			}

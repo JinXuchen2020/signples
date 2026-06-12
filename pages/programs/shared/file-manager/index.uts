@@ -30,6 +30,10 @@ export class FileManager {
 		}
 		return path;
 	}
+
+	private sanitizeName(name: string): string {
+		return name.replace(/\.\./g, '').replace(/[/\\]/g, '').trim();
+	}
 	
 	async getProgramList(): Promise<UTSJSONObject[]> {
 		const results: UTSJSONObject[] = [];
@@ -85,7 +89,9 @@ export class FileManager {
 	
 	async deleteProgram(programName: string): Promise<boolean> {
 		try {
-			const destPath = `${this.programFolder}/${programName}`;
+			const safeName = this.sanitizeName(programName);
+			if (safeName == '') return false;
+			const destPath = `${this.programFolder}/${safeName}`;
 			if (await this.IsExist(destPath)) {
 				this.fs.rmdirSync(destPath, true);
 			}
@@ -102,7 +108,8 @@ export class FileManager {
 	}
 	
 	async getProgramConfig(programName: string, width: string, height: string): Promise<MediaConfig> {
-		const newProgramFolder = `${this.programFolder}/${programName}`;
+		const safeName = this.sanitizeName(programName);
+		const newProgramFolder = `${this.programFolder}/${safeName}`;
 		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
 		if (await this.IsExist(configFilePath)) {
@@ -137,14 +144,16 @@ export class FileManager {
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject): Promise<void> {
-		const programFolder = `${this.programFolder}/${programName}`;
+		const safeName = this.sanitizeName(programName);
+		const programFolder = `${this.programFolder}/${safeName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
 	async zipProgram(programName: string): Promise<void> {
-		let sourcePath = this.convertPath(`${this.programFolder}/${programName}`);
-		let zipFile = this.convertPath(`${this.programFolder}/${programName}.zip`);
+		const safeName = this.sanitizeName(programName);
+		let sourcePath = this.convertPath(`${this.programFolder}/${safeName}`);
+		let zipFile = this.convertPath(`${this.programFolder}/${safeName}.zip`);
 		
 		if (await this.IsExist(zipFile)) {
 			this.fs.unlinkSync(zipFile);
@@ -160,7 +169,8 @@ export class FileManager {
 	}	
 	
 	async readZipFile(programName: string): Promise<number> {
-		const destPath = `${this.programFolder}/${programName}.zip`;
+		const safeName = this.sanitizeName(programName);
+		const destPath = `${this.programFolder}/${safeName}.zip`;
 		
 		if(!await this.IsExist(destPath)){
 			await this.zipProgram(programName);
@@ -348,7 +358,9 @@ export class FileManager {
 	}
 	
 	async capture(programName: string, pageName: string, canvas: UCanvas): Promise<string> {
-		const thumbnailPath = `${this.programFolder}/${programName}/${pageName}/thumbnail.png`;
+		const safeName = this.sanitizeName(programName);
+		const safePage = this.sanitizeName(pageName);
+		const thumbnailPath = `${this.programFolder}/${safeName}/${safePage}/thumbnail.png`;
 		const dataString = canvas.toDataURL();
 		const base64Data = dataString.split(',')[1];
 		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
@@ -358,7 +370,9 @@ export class FileManager {
 
 	async exportProgram(programName: string): Promise<string | null> {
 		try {
-			const programFolder = `${this.programFolder}/${programName}`;
+			const safeName = this.sanitizeName(programName);
+			if (safeName == '') { uni.showToast({ title: '无效节目名', icon: 'none' }); return null; }
+			const programFolder = `${this.programFolder}/${safeName}`;
 			const configFilePath = `${programFolder}/MediaConfig.json`;
 
 			if (!(await this.IsExist(configFilePath))) {
