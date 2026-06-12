@@ -173,6 +173,11 @@
 				} catch (err){
 					uni.hideLoading();
 					console.log(err)
+					uni.showToast({
+						icon: 'none',
+						title: '获取控制记录失败',
+						duration: 2000,
+					})
 				}
 			},
 			handleCreate(){

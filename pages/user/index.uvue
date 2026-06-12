@@ -104,8 +104,8 @@
 			return {
 				popupLogin: false,
 				opacity: 0,
-				account: 'business_admin',
-				password: '123456',
+				account: '',
+				password: '',
 				userInfo: {} as UTSJSONObject
 			}
 		},
@@ -180,7 +180,12 @@
 							
 						},
 						fail: () => {
-							
+							uni.hideLoading();
+							uni.showToast({
+								icon: 'none',
+								title: '网络连接失败',
+								duration: 2000,
+							})
 						}
 					});
 				} catch (err){
@@ -208,11 +213,6 @@
 					uni.hideLoading();
 					console.log(err)
 				}
-			},
-			handleRouteGoto(route: string){
-				uni.navigateTo({
-					url: route
-				});
 			},
 			handleLogout(){
 				const { setToken, setLoginUser}  = useState()
