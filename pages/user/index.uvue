@@ -104,8 +104,8 @@
 			return {
 				popupLogin: false,
 				opacity: 0,
-				account: 'business_admin',
-				password: '123456',
+				account: '',
+				password: '',
 				userInfo: {} as UTSJSONObject
 			}
 		},
@@ -152,8 +152,6 @@
 										const token = d['token'] as String; 
 										
 										setToken(token);
-										// uni.setStorageSync('token', token);
-										// this.getAccountInfo(userId, token);
 										this.getAccountInfo(userId).catch((err: any) => {
 										uni.showToast({ icon: "none", title: "获取用户信息失败" });
 									});
@@ -198,7 +196,6 @@
 					console.log(err)
 				}
 			},
-			// async getAccountInfo(id: Number, token: String){
 			async getAccountInfo(id: Number){
 				try {
 					uni.showLoading({

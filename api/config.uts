@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://1.255.226.145:12106';
+export const BASE_URL = 'https://1.255.226.145:12106';
 
 export type ApiEndpoints = {
   login: string;
