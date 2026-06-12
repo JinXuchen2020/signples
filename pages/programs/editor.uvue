@@ -16,7 +16,7 @@
 				@touchstart="handleTouchStart"
 			    @touchmove="handleTouchMove"
 				@touchend="handleTouchEnd"
-				:style="'width:'+canvasWidth+'px;height:'+canvasHeight+'px;'" />
+				:style="'width:'+(parseInt(canvasWidth) * zoomLevel)+'px;height:'+(parseInt(canvasHeight) * zoomLevel)+'px;'" />
 		</view>
 		<view class="top-button">
 			<view class="item">
@@ -396,14 +396,14 @@
 		if (activeComponent.value == null) {
 			uni.showToast({
 				icon: 'none',
-				title: '请先选择组件'
+				title: i18n.global.t('program.SelectComponentFirst', null, defl)
 			});
 			return;
 		}
 		clipboardComponent.value = activeComponent.value.toModel();
 		uni.showToast({
 			icon: 'success',
-			title: '已复制'
+			title: i18n.global.t('program.Copied', null, defl)
 		});
 	};
 
@@ -411,14 +411,14 @@
 		if (clipboardComponent.value == null || activePage.value == null) {
 			uni.showToast({
 				icon: 'none',
-				title: '没有可粘贴的组件'
+				title: i18n.global.t('program.NothingToPaste', null, defl)
 			});
 			return;
 		}
 		if (activePage.value!.components.length >= 5) {
 			uni.showToast({
 				icon: 'none',
-				title: '组件数量超出最大限制'
+				title: i18n.global.t('program.ComponentExceed', null, defl)
 			});
 			return;
 		}
@@ -468,7 +468,7 @@
 		await drawPage();
 	};
 
-	let lastDrawTime = 0;
+	let drawTimer: number | null = null;
 	const drawThrottleMs = 16;
 	
 	const createComponentByType = (type: string, data: UTSJSONObject): BaseComponent | null => {
@@ -505,18 +505,6 @@
 			.exec();
 	}
 	
-	const handleIsHasValidityChange = () => {
-		if (activePage.value != null) {
-			activePage.value!.isHasValidity = !activePage.value!.isHasValidity;
-		}
-	}
-	
-	const handleTypeChange = (event: UniRadioGroupChangeEvent) => {
-		if (activePage.value != null) {
-			activePage.value.type = event.detail.value;
-		}
-	};
-	
 	const handleScheduleDayChange = (event: UniCheckboxGroupChangeEvent) => {
 		if (activePage.value != null) {
 			const selectedValues = event.detail.value as string [];
@@ -531,13 +519,12 @@
 	}
 	
 	async function drawPage() :Promise<void> {
-		const now = Date.now();
-		if (now - lastDrawTime < drawThrottleMs) {
-			return;
-		}
-		lastDrawTime = now;
-		await activePage.value?.draw(uCanvas);
-	    uCanvas.render();
+		if (drawTimer != null) return;
+		drawTimer = setTimeout(async () => {
+			drawTimer = null;
+			await activePage.value?.draw(uCanvas);
+			uCanvas.render();
+		}, drawThrottleMs);
 	}
 	
 	const addPage = async () => {
@@ -562,8 +549,8 @@
 	
 	const deletePage = async (e: UniPointerEvent, index: number) => {
 		uni.showModal({
-			title: '确认删除',
-			content: '确定要删除这个页面吗？',
+			title: i18n.global.t('program.ConfirmDelete', null, defl),
+			content: i18n.global.t('program.ConfirmDeletePage', null, defl),
 			success: async (res) => {
 				if (res.confirm && mediaConfig.value) {
 					saveState();
@@ -775,8 +762,8 @@
 		e.preventDefault();
 		
 		uni.showModal({
-			title: '确认删除',
-			content: '确定要删除这个组件吗？',
+			title: i18n.global.t('program.ConfirmDelete', null, defl),
+			content: i18n.global.t('program.ConfirmDeleteComponent', null, defl),
 			success: (res) => {
 				if (res.confirm && activePage.value) {
 					saveState();
@@ -963,8 +950,6 @@
 		if (e['height'] != null){
 			canvasHeight.value = e['height'] as string;
 		}
-		
-		const defl = uni.getStorageSync('language') as string
 		
 		let defaultLang = 'zh-CN'
 		if(defl != ''){

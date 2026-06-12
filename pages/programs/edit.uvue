@@ -112,7 +112,7 @@
 				console.log(index);
 				uni.showToast({
 					icon: 'none',
-					title: '开发中，请等待',
+					title: this.$t('error.UnderDevelopment'),
 					duration: 3000,
 					success: () => { 
 					}

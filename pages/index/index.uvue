@@ -141,9 +141,7 @@
 	export default {
 		data() {
 			return {
-				title: 'Hello',
 				createPopup: false,
-				checkLayoutIndex: 0,
 				userInfo: {} as UTSJSONObject,
 				activeUser: {} as UTSJSONObject,
 				activeDevice: {} as UTSJSONObject,
@@ -200,6 +198,11 @@
 				} catch (err){
 					uni.hideLoading();
 					console.log(err)
+					uni.showToast({
+						icon: 'none',
+						title: '获取用户信息失败',
+						duration: 2000,
+					})
 				}
 			},
 			handleSubmit(){
@@ -207,7 +210,7 @@
 				routeGoto('/pages/programs/editor?name=' + this.newProgram['name'] + '&width=' + this.newProgram['width'] + '&height=' + this.newProgram['height'] );
 			},
 			handleGotoEditDevice(){
-				if(JSON.stringify(this.activeDevice) != '{}'){
+				if(Object.keys(this.activeDevice).length > 0){
 					routeGoto('/pages/devices/edit?device_id=' + this.activeDevice.id);
 				}else{
 					uni.showModal({

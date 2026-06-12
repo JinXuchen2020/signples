@@ -178,7 +178,7 @@ export default {
 		DevicePassword:"设备密码",
 		MonitorInfo:"监控信息",
 		DeviceInfo:"设备信息",
-		DarkMode:"深色模式"
+		DarkMode:"深色模式",
 	error: {
 		NotLogin: "尚未登录，请您先登录???"
 		ReLogin: "状态过期，请重新登录???",
@@ -192,7 +192,7 @@ export default {
 		NotConnected: "设备未连接，不可操作",
 		ActivateDevice: "确定要激活该设备吗?",
 		ActivateSuccess: "激活成功",
-		DisableDevice: "确定要停用该设备吗?"
+		DisableDevice: "确定要停用该设备吗?",
 		DisableSuccess: "停用成功",
 		BrightnessFailure: "亮度调节命令执行失败",
 		BrightnessSuccess: "亮度更新成功",
@@ -208,6 +208,9 @@ export default {
 		RestartSuccess: "立即重启成功",
 		TimerControlPrompt: "字段不能为空",
 		TimerControlSaveSuccess: "定时任务保存成功",
+		FieldRequired: "字段不能为空",
+		SaveSuccess: "保存成功",
+		UnderDevelopment: "开发中，请等待",
 	},
 	program: {
 		Normal: "常规节目",
@@ -227,8 +230,8 @@ export default {
 		ValidDate: "有效期",
 		StartDate: "开始日期",
 		EndDate: "结束日期",
-		Scheduler: "执行计划表"
-		AdType: "广告"
+		Scheduler: "执行计划表",
+		AdType: "广告",
 		Video: "视频",
 		Image: "图片",
 		Text: "文字",
@@ -282,7 +285,15 @@ export default {
 		Uploading: "上传中...",
 		Publishing: "发布中...",
 		SetPlayTimeFailure: "设置播放时间命令执行失败",
-		PublishFailure: "节目发布失败"		
+		PublishFailure: "节目发布失败",
+		SelectComponentFirst: "请先选择组件",
+		Copied: "已复制",
+		NothingToPaste: "没有可粘贴的组件",
+		ConfirmDelete: "确认删除",
+		ConfirmDeletePage: "确定要删除这个页面吗？",
+		ConfirmDeleteComponent: "确定要删除这个组件吗？",
+		ConfirmDeleteDraft: "确定要删除这个草稿吗？",
+		Deleted: "已删除",
 	}
 
 } as UTSJSONObject

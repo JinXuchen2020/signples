@@ -223,15 +223,15 @@
 			},
 			handleDeleteDraft(item: UTSJSONObject, index: number){
 				uni.showModal({
-					title: '确认删除',
-					content: '确定要删除这个草稿吗？',
+					title: this.$t('program.ConfirmDelete'),
+					content: this.$t('program.ConfirmDeleteDraft'),
 					success: (res) => {
 						if (res.confirm) {
 							this.drafts.splice(index, 1);
 							this.saveDrafts();
 							uni.showToast({
 								icon: 'success',
-								title: '已删除'
+								title: this.$t('program.Deleted')
 							});
 						}
 					}
@@ -371,7 +371,6 @@
 			border-radius: $uni-border-radius-lg;
 			background-color: $uni-bg-color;
 			padding: 0rpx 32rpx;
-			border-radius: $uni-border-radius-lg;
 			
 			.uc-menus-item{
 				flex-direction: row;

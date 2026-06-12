@@ -94,13 +94,13 @@
 		</view>
 		
 		<view class="cg-btns-box">
-			<button class="btn defaultyle" :class="{upgrade: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleUpgrade(deviceInfo)">
+			<button class="btn default-style" :class="{upgrade: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleUpgrade(deviceInfo)">
 				{{deviceInfo['status'] == 0 ? $t('index.Activate') : $t('device.Upgrade')}}
 			</button>
-			<button class="btn defaultyle" :class="{stopdevice: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleStop(deviceInfo)">
+			<button class="btn default-style" :class="{stopdevice: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleStop(deviceInfo)">
 				{{$t('device.Deactivate')}}
 			</button>
-			<button v-if="deviceInfo['status'] == 1" class="btn defaultyle" size="mini" @click="handleDelete(deviceInfo)">
+			<button v-if="deviceInfo['status'] == 1" class="btn default-style" size="mini" @click="handleDelete(deviceInfo)">
 				{{$t('device.Delete')}}
 			</button>
 		</view>
@@ -135,7 +135,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
+				if(currentDate > daynum){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -452,7 +452,7 @@
 			background-color: $uni-color-error;
 			border: 1px solid $uni-color-error;
 		}
-		.defaultyle{
+		.default-style{
 			width: 31.4%;
 			color: $uni-text-color-placeholder;
 			background-color: $uni-bg-color;

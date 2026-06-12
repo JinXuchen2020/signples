@@ -238,6 +238,11 @@
 			  } catch (error) {
 				uni.hideLoading();
 			    console.error(error)
+				uni.showToast({
+					icon: 'none',
+					title: '获取设备列表失败',
+					duration: 2000,
+				})
 			  }
 			},
 			async handleDelete(device: UTSJSONObject){
@@ -262,6 +267,11 @@
 							} catch (err){
 								uni.hideLoading();
 								console.log(err)
+								uni.showToast({
+									icon: 'none',
+									title: '删除设备失败',
+									duration: 2000,
+								})
 							}
 						}
 					}
@@ -303,6 +313,11 @@
 							} catch (err){
 								uni.hideLoading();
 								console.log(err);
+								uni.showToast({
+									icon: 'none',
+									title: '批量删除失败',
+									duration: 2000,
+								});
 							}
 						}
 					}
