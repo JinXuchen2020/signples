@@ -75,6 +75,8 @@
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
+ 	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
+ 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	export default {
 		name:"timer-controls",
 		props: {
@@ -142,8 +144,8 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlFailure")}`,
-							duration: 3000,
+							title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlFailure")}`,
+							duration: DEFAULT_TOAST_DURATION,
 							success: () => { 
 							}
 						})
@@ -158,30 +160,30 @@
 					this.$emit("refresh");
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlSuccess")}`,
-						duration: 3000,
+						title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlSuccess")}`,
+						duration: DEFAULT_TOAST_DURATION,
 						success: () => { 
 						}
 					})
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					if((typeof JSON.parse(JSON.stringify(err))) == 'string') {
+					if((typeof safeCloneError(err)) == 'string') {
 						const errObj = JSON.stringify(err)
 						console.log(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj}`,
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 						})
 					}
 					else {						
-						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						const errObj = safeCloneError(err);
 						console.log(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 						})
 					}
 				}
@@ -207,12 +209,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					const errObj = safeCloneError(err);
 					console.log(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: 3000,
+						duration: DEFAULT_TOAST_DURATION,
 					})
 				}
 			}

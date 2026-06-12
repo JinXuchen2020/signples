@@ -1,4 +1,4 @@
-import { useAuth } from '@/store/index.uts';
+import { isUserLoggedIn } from '@/common/auth-utils.uts';
 
 const ROUTES = {
 	HOME: '/pages/index/index',
@@ -30,10 +30,11 @@ export const publicRoutes = [
 ];
 
 export function routeGoto(route: string, options?: UniApp.NavigateToOptions): void {
-	console.log('routeGoto=', route);
-	const { isLoggedIn } = useAuth();
+	if (__DEV__) {
+		console.log('routeGoto=', route);
+	}
 	
-	if (!publicRoutes.includes(route) && !isLoggedIn.value) {
+	if (!publicRoutes.includes(route) && !isUserLoggedIn()) {
 		uni.showModal({
 			title: '请先登录',
 			content: '登录后才能访问该页面',
@@ -60,8 +61,7 @@ export function routeSwitchTab(url: string, options?: UniApp.SwitchTabOptions): 
 }
 
 export function routeRedirectTo(url: string, options?: UniApp.RedirectToOptions): void {
-	const { isLoggedIn } = useAuth();
-	if (!publicRoutes.includes(url) && !isLoggedIn.value) {
+	if (!publicRoutes.includes(url) && !isUserLoggedIn()) {
 		uni.switchTab({ url: ROUTES.USER });
 		return;
 	}

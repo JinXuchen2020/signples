@@ -1,7 +1,9 @@
 import type { UTSJSONObject } from '@dcloudio/uni-app';
+import { getProgramFolder } from './media-config/index.uts';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/common/config.uts';
 
-const CANVAS_WIDTH = 256;
-const CANVAS_HEIGHT = 192;
+const CANVAS_W = CANVAS_WIDTH;
+const CANVAS_H = CANVAS_HEIGHT;
 
 export function handlePositionUpdate(
     formData: any, 
@@ -13,27 +15,27 @@ export function handlePositionUpdate(
     switch (type) {
         case 'left':
             formData.left = value;
-            if (formData.width + value > CANVAS_WIDTH) {
-                formData.width = CANVAS_WIDTH - value;
+            if (formData.width + value > CANVAS_W) {
+                formData.width = CANVAS_W - value;
             }
             break;
         case 'top':
             formData.top = value;
-            if (formData.height + value > CANVAS_HEIGHT) {
-                formData.height = CANVAS_HEIGHT - value;
+            if (formData.height + value > CANVAS_H) {
+                formData.height = CANVAS_H - value;
             }
             break;
         case 'width':
             let widthVal = value;
-            if (formData.left + value > CANVAS_WIDTH) {
-                widthVal = CANVAS_WIDTH - formData.left;
+            if (formData.left + value > CANVAS_W) {
+                widthVal = CANVAS_W - formData.left;
             }
             formData.width = widthVal;
             break;
         case 'height':
             let heightVal = value;
-            if (formData.top + value > CANVAS_HEIGHT) {
-                heightVal = CANVAS_HEIGHT - formData.top;
+            if (formData.top + value > CANVAS_H) {
+                heightVal = CANVAS_H - formData.top;
             }
             formData.height = heightVal;
             break;
@@ -65,10 +67,6 @@ export function updateComponentProperty(
     }
 }
 
-export function getProgramFolder(): string {
-    return uni.getStorageSync("program-folder") as string;
-}
-
 export function getFileDestinationPath(
     programName: string,
     pageName: string,
@@ -81,15 +79,6 @@ export function getFileDestinationPath(
 export function extractFileName(filePath: string): string {
     const parts = filePath.split("/");
     return parts[parts.length - 1];
-}
-
-export function formatDuration(seconds: number): string {
-    const secs = Math.round(seconds % 60);
-    const mins = Math.round((seconds / 60) % 60);
-    let hrs = Math.round(seconds / 60 / 60);
-    if (hrs > 23) hrs = 23;
-
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 export function mapOptionsToNames(options: UTSJSONObject[]): string[] {

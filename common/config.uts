@@ -1,0 +1,48 @@
+/**
+ * 应用配置
+ * 集中管理所有需要变化的常量，便于环境切换和维护
+ */
+
+/** API 基础 URL - 按环境切换 */
+export const API_BASE_URL = 'http://1.255.226.145:12106';
+
+/** 请求超时时间 (毫秒) */
+export const REQUEST_TIMEOUT = 30000;
+
+/** Toast 提示默认持续时间 (毫秒) */
+export const DEFAULT_TOAST_DURATION = 3000;
+
+/** Canvas 默认尺寸 */
+export const CANVAS_WIDTH = 256;
+export const CANVAS_HEIGHT = 192;
+
+/** 时间常量 (毫秒) */
+export const SECONDS_PER_MINUTE = 60;
+export const MINUTES_PER_HOUR = 60;
+export const MILLISECONDS_PER_HOUR = 3600000;
+export const SECONDS_PER_HOUR = 3600;
+
+/** 日期选择器默认年份范围 */
+export const MIN_YEAR = 2025;
+export const MAX_YEAR = 2030;
+
+/** 暗黑模式开关缩放比例 */
+export const DARK_MODE_SCALE = 0.8;
+
+/** 存储键名常量 */
+export const STORAGE_KEYS = {
+    TOKEN: 'token',
+    ACTIVE_USER: 'activeUser',
+    LOGIN_USER: 'loginUser',
+    PROGRAM_FOLDER: 'program-folder',
+    LANGUAGE: 'language',
+    DARK_MODE: 'dark-mode',
+    PROGRAM: 'program',
+    ACTIVE_DEVICE: 'activeDevice',
+} as const;
+
+/** 语言选项 */
+export const LANGUAGES = ['zh-CN', 'en', 'kr', 'jp'] as const;
+
+/** 角色选项 */
+export const ROLES = ['admin', 'agent', 'user'] as const;

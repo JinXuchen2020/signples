@@ -42,6 +42,7 @@
 </template>
 
 <script lang="uts">
+ 	import { MIN_YEAR, MAX_YEAR, DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	export default {
 		name:"picker-date",
 		props: {
@@ -60,12 +61,12 @@
 		},
 		data() {
 			const _years : number[] = []
-			const _year = 2030
+			const _year = MAX_YEAR
 			const _months : number[] = []
 			const _month : number = 1
 			const _days : number[] = []
 			const _day = 12
-			for (let i = 2025; i <= _year; i++) {
+			for (let i = MIN_YEAR; i <= _year; i++) {
 				_years.push(i)
 			}
 			for (let i = 1; i <= 12; i++) {
@@ -133,7 +134,7 @@
 						uni.showToast({
 							icon: 'none',
 							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 							success: () => {
 								that.day = maxDay
 							}
@@ -148,7 +149,7 @@
 						uni.showToast({
 							icon: 'none',
 							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',
-							duration: 3000,
+							duration: DEFAULT_TOAST_DURATION,
 							success: () => {
 								that.day = maxDay
 							}

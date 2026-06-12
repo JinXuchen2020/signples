@@ -293,16 +293,41 @@
 								uni.showLoading({
 									title: ''
 								});
-								for (const snCode of that.selectedDevices) {
-									await request('DELETE', APIS.deleteDevice as string + snCode, {});
+								const CONCURRENT_LIMIT = 3;
+								const promises: Promise<any>[] = [];
+								const failures: string[] = [];
+								
+								for (let i = 0; i < that.selectedDevices.length; i++) {
+									const snCode = that.selectedDevices[i];
+									const p = request('DELETE', APIS.deleteDevice as string + snCode, {}).then(() => {
+										// success
+									}).catch(() => {
+										failures.push(snCode);
+									});
+									promises.push(p);
+									
+									if (promises.length >= CONCURRENT_LIMIT || i === that.selectedDevices.length - 1) {
+										await Promise.allSettled(promises);
+										promises.length = 0;
+									}
 								}
+								
 								uni.hideLoading();
 								that.selectedDevices = [];
-								that.getDeviceList();
-								uni.showToast({
-									icon: 'success',
-									title: that.$t('common.OperationSuccess')
-								});
+								await that.getDeviceList();
+								
+								if (failures.length > 0) {
+									uni.showToast({
+										icon: 'none',
+										title: '部分删除失败(' + failures.length + ')',
+										duration: 2000,
+									});
+								} else {
+									uni.showToast({
+										icon: 'success',
+										title: that.$t('common.OperationSuccess')
+									});
+								}
 							} catch (err){
 								uni.hideLoading();
 								console.log(err);

@@ -1,4 +1,4 @@
-export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
+import { SECONDS_PER_HOUR } from '@/common/config.uts';(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
     let d: Date;
     if (typeof date === 'string') {
         d = new Date(date.replace(/-/g, '/'));
@@ -39,7 +39,7 @@ export function parseDuration(duration: string): number {
     const minutes = parseInt(parts[1]) || 0;
     const seconds = parseInt(parts[2]) || 0;
     
-    return hours * 3600 + minutes * 60 + seconds;
+    return hours * SECONDS_PER_HOUR + minutes * 60 + seconds;
 }
 
 export function debounce(fn: Function, delay: number): Function {
@@ -90,12 +90,36 @@ export function truncate(str: string, maxLength: number, suffix: string = '...')
 
 export function deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== 'object') return obj;
-    if (obj instanceof Date) return new Date(obj.getTime()) as T;
-    if (Array.isArray(obj)) return obj.map(item => deepClone(item)) as T;
-    return Object.keys(obj).reduce((acc, key) => {
-        acc[key] = deepClone((obj as any)[key]);
-        return acc;
-    }, {} as T);
+    if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
+    if (obj instanceof RegExp) return new RegExp(obj.source, obj.flags) as unknown as T;
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepClone(item)) as unknown as T;
+    }
+    if (typeof structuredClone === 'function') {
+        return structuredClone(obj) as T;
+    }
+    return JSON.parse(JSON.stringify(obj)) as T;
+}
+
+/**
+ * 安全克隆错误对象，避免循环引用导致的序列化失败
+ */
+export function safeCloneError(err: any): any {
+    try {
+        return JSON.parse(JSON.stringify(err));
+    } catch {
+        return { message: String(err) };
+    }
+}
+
+/**
+ * 统一格式化错误消息
+ */
+export function formatErrorMessage(err: any): string {
+    if (typeof err === 'string') return err;
+    if (err && err.message) return err.message;
+    if (err && err.msg) return err.msg;
+    return '未知错误';
 }
 
 export function isEmpty(obj: any): boolean {

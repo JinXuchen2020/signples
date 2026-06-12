@@ -84,6 +84,7 @@
 		ImagePixel,
 		Point,
 	} from "@/uni_modules/u-canvas";
+	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	const uCanvas = new UCanvas({ canvasId: "ucanvas" });
 	
@@ -113,7 +114,7 @@
 				uni.showToast({
 					icon: 'none',
 					title: this.$t('error.UnderDevelopment'),
-					duration: 3000,
+					duration: DEFAULT_TOAST_DURATION,
 					success: () => { 
 					}
 				})

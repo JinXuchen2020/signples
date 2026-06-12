@@ -1,4 +1,6 @@
-export const BASE_URL = 'http://1.255.226.145:12106';
+import { API_BASE_URL } from '@/common/config.uts';
+
+export const BASE_URL = API_BASE_URL;
 
 export type ApiEndpoints = {
   login: string;

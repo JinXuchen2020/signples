@@ -1,0 +1,9 @@
+/**
+ * Auth utility functions for checking login state.
+ * Pure functions that read from store state without Vue computed dependencies.
+ */
+import { state } from '@/store/index.uts';
+
+export function isUserLoggedIn(): boolean {
+	return state.token !== '' && Object.keys(state.loginUser).length > 0;
+}
