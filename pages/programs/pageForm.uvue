@@ -80,8 +80,8 @@
 	</scroll-view>
 </template>
 
-<script>
-	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
+<script lang="uts">
+	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './shared/media-config/index.uts'
 	export default {
 		props: {
 			item: {

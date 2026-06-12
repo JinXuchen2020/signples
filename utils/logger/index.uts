@@ -1,0 +1,88 @@
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+type LogEntry = {
+	level: LogLevel;
+	message: string;
+	timestamp: number;
+	data?: any;
+};
+
+class Logger {
+	private static instance: Logger;
+	private logs: LogEntry[] = [];
+	private maxLogs: number = 100;
+	private isDevelopment: boolean = true;
+
+	private constructor() {
+	}
+
+	static getInstance(): Logger {
+		if (!Logger.instance) {
+			Logger.instance = new Logger();
+		}
+		return Logger.instance;
+	}
+
+	private log(level: LogLevel, message: string, data?: any): void {
+		const entry: LogEntry = {
+			level,
+			message,
+			timestamp: Date.now(),
+			data
+		};
+
+		this.logs.push(entry);
+		if (this.logs.length > this.maxLogs) {
+			this.logs.shift();
+		}
+
+		if (this.isDevelopment) {
+			const prefix = `[${level.toUpperCase()}]`;
+			switch (level) {
+				case 'debug':
+					console.debug(prefix, message, data || '');
+					break;
+				case 'info':
+					console.info(prefix, message, data || '');
+					break;
+				case 'warn':
+					console.warn(prefix, message, data || '');
+					break;
+				case 'error':
+					console.error(prefix, message, data || '');
+					break;
+			}
+		}
+	}
+
+	debug(message: string, data?: any): void {
+		this.log('debug', message, data);
+	}
+
+	info(message: string, data?: any): void {
+		this.log('info', message, data);
+	}
+
+	warn(message: string, data?: any): void {
+		this.log('warn', message, data);
+	}
+
+	error(message: string, data?: any): void {
+		this.log('error', message, data);
+	}
+
+	getLogs(level?: LogLevel): LogEntry[] {
+		if (level) {
+			return this.logs.filter(log => log.level === level);
+		}
+		return [...this.logs];
+	}
+
+	clearLogs(): void {
+		this.logs = [];
+	}
+}
+
+export const logger = Logger.getInstance();
+
+export default logger;

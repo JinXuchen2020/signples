@@ -96,7 +96,7 @@
 				} as UTSJSONObject
 			}
 		},
-		onLoad(e: OnLoadOptions): void {
+		onLoad(e: UTSJSONObject): void {
 		  console.log('new program=', e);
 		  this.canvasOption['width'] = e['width']
 		  this.canvasOption['height'] = e['height']

@@ -15,7 +15,7 @@
 				userId: ''
 			};
 		},
-		onLoad(e: OnLoadOptions): void {
+		onLoad(e: UTSJSONObject): void {
 		    this.userId = e['user_id'] as string;
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.userManagement')

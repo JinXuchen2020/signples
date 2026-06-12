@@ -1,0 +1,49 @@
+<template>
+	<view class="base-input">
+		<text class="base-input__label">{{ label }}</text>
+		<input class="base-input__field" :value="modelValue" :placeholder="placeholder" @input="handleInput" />
+	</view>
+</template>
+
+<script setup lang="uts">
+defineProps({
+	label: {
+		type: String,
+		default: ''
+	},
+	modelValue: {
+		type: String,
+		default: ''
+	},
+	placeholder: {
+		type: String,
+		default: '请输入'
+	}
+});
+
+const emit = defineEmits(['update:modelValue']);
+
+const handleInput = (e: InputEvent) => {
+	emit('update:modelValue', e.detail.value);
+};
+</script>
+
+<style lang="scss" scoped>
+.base-input {
+	flex-direction: row;
+	align-items: center;
+	padding: 24rpx 0;
+	border-bottom: 1px solid #eeeeee;
+
+	&__label {
+		width: 160rpx;
+		font-size: 28rpx;
+		color: #333333;
+	}
+
+	&__field {
+		flex: 1;
+		font-size: 28rpx;
+	}
+}
+</style>

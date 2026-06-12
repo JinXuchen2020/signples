@@ -1,0 +1,65 @@
+<template>
+	<view class="loading-overlay" v-if="visible">
+		<view class="loading-overlay__content">
+			<view class="loading-overlay__spinner"></view>
+			<text class="loading-overlay__text">{{ text || '加载中...' }}</text>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+defineProps({
+	visible: {
+		type: Boolean,
+		default: false
+	},
+	text: {
+		type: String,
+		default: '加载中...'
+	}
+});
+</script>
+
+<style lang="scss" scoped>
+.loading-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	align-items: center;
+	justify-content: center;
+	z-index: 99999;
+
+	&__content {
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background-color: #ffffff;
+		border-radius: 24rpx;
+		padding: 48rpx 72rpx;
+	}
+
+	&__spinner {
+		width: 64rpx;
+		height: 64rpx;
+		border: 4rpx solid #f5f5f5;
+		border-top-color: $uni-color-primary;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	&__text {
+		margin-top: 24rpx;
+		font-size: 28rpx;
+		color: #666666;
+	}
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+</style>

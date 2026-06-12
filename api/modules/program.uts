@@ -1,0 +1,37 @@
+import { request, get, post } from '@/utils/http/index.uts';
+import { APIS } from '@/api/config.uts';
+
+export interface MediaInfo {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  [key: string]: any;
+}
+
+export async function getAllMedia(config?: any) {
+  return await get(APIS.mediaAll, {}, config);
+}
+
+export async function uploadProgramZip(formData: any, config?: any) {
+  return await post(APIS.uploadZip, formData, {
+    ...config,
+    showLoading: true,
+    loadingText: '上传中...'
+  });
+}
+
+export async function getPlaybackRecords(config?: any) {
+  return await get((APIS.playbackRecord as any).getAll, {}, config);
+}
+
+export async function savePlaybackRecord(record: any, config?: any) {
+  return await post((APIS.playbackRecord as any).save, record, config);
+}
+
+export default {
+  getAllMedia,
+  uploadProgramZip,
+  getPlaybackRecords,
+  savePlaybackRecord
+};

@@ -23,7 +23,7 @@
   </view>
 </template>
 
-<script setup>
+<script setup lang="uts">
 import { ref } from 'vue'
 
 // 定义组件属性

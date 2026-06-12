@@ -1,0 +1,77 @@
+<template>
+	<view class="status-badge" :class="[`status-badge--${status}`]">
+		<view class="status-badge__dot"></view>
+		<text class="status-badge__text">{{ statusText }}</text>
+	</view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps({
+	status: {
+		type: String,
+		default: 'unknown',
+		validator: (v) => ['online', 'offline', 'unknown', 'active', 'inactive'].includes(v)
+	}
+});
+
+const statusText = computed(() => {
+	const map: Record<string, string> = {
+		online: '在线',
+		offline: '离线',
+		unknown: '未知',
+		active: '已激活',
+		inactive: '未激活'
+	};
+	return map[props.status] || '未知';
+});
+</script>
+
+<style lang="scss" scoped>
+.status-badge {
+	flex-direction: row;
+	align-items: center;
+	padding: 4rpx 12rpx;
+	border-radius: 20rpx;
+
+	&--online {
+		background-color: #e8f5e9;
+		.status-badge__dot { background-color: #4caf50; }
+		.status-badge__text { color: #4caf50; }
+	}
+
+	&--offline {
+		background-color: #ffebee;
+		.status-badge__dot { background-color: #f44336; }
+		.status-badge__text { color: #f44336; }
+	}
+
+	&--unknown {
+		background-color: #f5f5f5;
+		.status-badge__dot { background-color: #999999; }
+		.status-badge__text { color: #999999; }
+	}
+
+	&--active {
+		background-color: #e8f5e9;
+		.status-badge__dot { background-color: #4caf50; }
+		.status-badge__text { color: #4caf50; }
+	}
+
+	&--inactive {
+		background-color: #fff3e0;
+		.status-badge__dot { background-color: #ff9800; }
+		.status-badge__text { color: #ff9800; }
+	}
+
+	&__dot {
+		width: 12rpx;
+		height: 12rpx;
+		border-radius: 50%;
+		margin-right: 8rpx;
+	}
+
+	&__text {
+		font-size: 22rpx;
+	}
+}
+</style>

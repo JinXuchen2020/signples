@@ -71,10 +71,10 @@
 	</view>
 </template>
 
-<script>
+<script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	export default {
 		name:"timer-controls",
 		props: {

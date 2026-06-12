@@ -93,7 +93,7 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	import { useState } from '@/store/index.uts'
 	export default {
 		data() {
@@ -196,7 +196,7 @@
 				powerOffTime: '00:00:00',
 			};
 		},
-		onLoad(e: OnLoadOptions) {
+		onLoad(e: UTSJSONObject) {
 			this.controlId = e['control_id'] as string;
 			this.controlType = e['control_type'] as string;
 			const { state } = useState();

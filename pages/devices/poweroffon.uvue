@@ -61,7 +61,7 @@
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	
 	export default {
 		data() {

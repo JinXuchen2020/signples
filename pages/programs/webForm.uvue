@@ -61,7 +61,7 @@
 </template>
 
 <script lang="uts" >
-	import  { BaseComponent, WebComponent } from './mediaConfig.uts'
+	import  { BaseComponent, WebComponent } from './shared/media-config/index.uts';
 	export default {
 		props: {
 			item: {

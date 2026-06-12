@@ -77,8 +77,16 @@
 </template>
 
 <script lang="uts" >
-	import { FileManager } from './fileManager.uts';
-	import { BaseComponent,VideoComponent } from './mediaConfig.uts'
+	import { FileManager} from './shared/file-manager/index.uts'
+	import { BaseComponent, VideoComponent } from './shared/media-config/index.uts';
+	import { 
+		handlePositionUpdate, 
+		updateComponentProperty, 
+		getFileDestinationPath,
+		extractFileName,
+		formatDuration 
+	} from './shared/form-utils/index.uts';
+	
 	export default {
 		props: {
 			item: {
@@ -113,8 +121,7 @@
 				if (newValue instanceof VideoComponent) {	
 					this.formData = newValue as VideoComponent;
 					this.activeTab = 0;
-				}
-				else {
+				} else {
 					this.formData = null;
 				}
 			}
@@ -123,150 +130,94 @@
 			if (this.item instanceof VideoComponent) {
 				this.formData = this.item as VideoComponent;
 				this.activeTab = 0;
-			}
-			else {
+			} else {
 				this.formData = null;
 			}
 		},
 		methods: {
-			updateProperty(propertyName: string, proValue: string){
-				if(propertyName == 'name') {
-					this.formData!.name = proValue;
-				}
-				
-				if(propertyName == 'zIndex') {
-					this.formData!.zIndex = parseInt(proValue);
-				}
-				
-				if(propertyName == 'playDuration') {
-					this.formData!.playDuration = proValue;
-				}
-				
-				if(propertyName == 'playCount') {
-					this.formData!.playCount = parseInt(proValue);
-				}
+			updateProperty(propertyName: string, proValue: string) {
+				updateComponentProperty(this.formData, propertyName, proValue);
 				const data = this.formData!.toModel();
 				this.$emit("refresh", data);
 			},
 			handleActiveTab(val: number) {
-				this.activeTab = val
+				this.activeTab = val;
 			},
 			onLeftChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "left")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'left');
+				this.emitUpdate();
 			},
 			onTopChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "top")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'top');
+				this.emitUpdate();
 			},
 			onWidthChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "width")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'width');
+				this.emitUpdate();
 			},
 			onHeightChange(e: UniInputChangeEvent) {
-				this.handleUpdate(parseInt(e.detail.value), "height")
+				handlePositionUpdate(this.formData, parseInt(e.detail.value), 'height');
+				this.emitUpdate();
 			},
-			handleUpdate(val: number, type: string) {
-				if(this.formData == null) return;
-				
-				switch(type) {
-					case 'left':
-						this.formData!.left = val;
-						if (this.formData!.width + val > 256) {
-							this.formData!.width = 256 - val;
-						}
-						break;
-					case 'top':
-						this.formData!.top = val;
-						if (this.formData!.height + val > 192) {
-							this.formData!.height = 192 - val;
-						}
-						break;
-					case 'width':
-						let widthVal = val;
-						if (this.formData!.left + val > 256) {
-							widthVal = 256 - this.formData!.left;
-						}
-						this.formData!.width = widthVal;
-						break;
-					case 'height':
-						let heightVal = val;
-						if (this.formData!.top + val > 256) {
-							heightVal = 192 - this.formData!.top;
-						}
-						this.formData!.height = heightVal;
-						break;					
+			emitUpdate() {
+				if (this.formData) {
+					const data = this.formData.toModel();
+					this.$emit("refresh", data);
 				}
-				
-				const data = this.formData!.toModel();
-				this.$emit("refresh", data);
-				
 			},
 			handleUpload() {
-				if(this.formData == null) return;
+				if (!this.formData) return;
 				uni.chooseMedia({
 					count: 1,
 					sourceType: ['album'],
 					mediaType: ['video'],
 					success: (res) => {
 						const tempFiles: ChooseMediaTempFile[] = res.tempFiles as ChooseMediaTempFile[];
-
-						for (let i = 0; i < tempFiles.length; i++) {
-							const tempFile : ChooseMediaTempFile = tempFiles[i];
-							const fileName = tempFile.tempFilePath.split("/")[tempFile.tempFilePath.split("/").length - 1];
-							const destPath =  `${uni.getStorageSync("program-folder") as string}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+						for (const tempFile of tempFiles) {
+							const fileName = extractFileName(tempFile.tempFilePath);
+							const destPath = getFileDestinationPath(this.programName, this.pageName, this.formData!.name, fileName);
 							this.fileManager!.copyFile(tempFile.tempFilePath, destPath).then(res => {
 								this.formData!.source = res;
-								this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string
+								this.formData!.thumbFilePath = tempFile.thumbTempFilePath as string;
 								this.formData!.timeLine = tempFile.duration as number;
-								this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
+								this.formData!.playDuration = formatDuration(this.formData!.timeLine);
 								this.formData!.isShowInfo = true;
 								this.formData!.width = 256;
 								this.formData!.height = 192;
-								const data = this.formData!.toModel();
-								this.$emit("refresh", data);
+								this.emitUpdate();
 							});
 						}
 					},
 					fail: (err) => {
 						console.log("err: ", JSON.stringify(err));
 						uni.showToast({
-						  title:"choose media error.code:" + err.errCode+";message:"+err.errMsg,
-						  position:"bottom"
-						})
+						  title: "choose media error.code:" + err.errCode + ";message:" + err.errMsg,
+						  position: "bottom"
+						});
 					}
-				})
+				});
 			},
 			selectMedia(item: UTSJSONObject) {
-				if(this.formData == null) return;
+				if (!this.formData) return;
 				if (item['type'] != 'Video') {
 					uni.showToast({
 						title: $t("program.VideoTypeLimit"),
 						icon: 'none'
-					})
+					});
 					return;
 				}
-				const fileName = item.getString('src')!.split("/")[item.getString('src')!.split("/").length - 1];
-				const destPath =  `${uni.getStorageSync("program-folder") as string}/${this.programName}/${this.pageName}/${this.formData!.name}/${fileName}`;
+				const fileName = extractFileName(item.getString('src')!);
+				const destPath = getFileDestinationPath(this.programName, this.pageName, this.formData!.name, fileName);
 				this.fileManager!.copyFile(item.getString('src')!, destPath).then((res: string) => {
 					this.formData!.source = res;
 					this.formData!.thumbFilePath = item.src as string;
 					this.formData!.timeLine = 10;
-					this.formData!.playDuration = this.getPlayDuration(this.formData!.timeLine);
-					this.formData!.isShowInfo = true;						  
+					this.formData!.playDuration = formatDuration(this.formData!.timeLine);
+					this.formData!.isShowInfo = true;
 					this.formData!.width = 256;
 					this.formData!.height = 192;
-					const data = this.formData!.toModel();
-					this.$emit("refresh", data);
+					this.emitUpdate();
 				});
-			},
-			getPlayDuration: (timeLine: number)=> {
-				const seconds = Math.round(timeLine % 60);
-				const minutes = Math.round((timeLine / 60) % 60);
-				let hours = Math.round(timeLine / 60 / 60);
-				if (hours > 23){
-				    hours = 23;
-				}
-				
-				const result = `${hours < 10 ? '0'+ hours : hours}:${minutes < 10 ? '0'+ minutes : minutes}:${seconds < 10 ? '0'+ seconds : seconds}`;
-				return result;
 			}
 		}
 	}

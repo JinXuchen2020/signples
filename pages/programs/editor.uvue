@@ -1,5 +1,13 @@
 <template>
 	<view class="app flex-space-between">
+		<input
+			class="shortcut-input"
+			type="text"
+			:focus="shortcutInputFocused"
+			@blur="shortcutInputFocused = false"
+			@keyup="handleKeyUp"
+			placeholder=""
+		/>
 		<view class="canvas-component">
 			<canvas 
 				canvas-id="ucanvas" 
@@ -11,6 +19,54 @@
 				:style="'width:'+canvasWidth+'px;height:'+canvasHeight+'px;'" />
 		</view>
 		<view class="top-button">
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" :class="{disabled: !canUndo}" @click="handleUndo">
+					<image class="icon" src="/static/svg/undo.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" :class="{disabled: !canRedo}" @click="handleRedo">
+					<image class="icon" src="/static/svg/redo.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" @click="handleCopy">
+					<image class="icon" src="/static/svg/copy.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" @click="handlePaste">
+					<image class="icon" src="/static/svg/paste.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" :class="{disabled: !canMoveUp}" @click="handleMoveUp">
+					<image class="icon" src="/static/svg/arrow-up.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" :class="{disabled: !canMoveDown}" @click="handleMoveDown">
+					<image class="icon" src="/static/svg/arrow-down.png" mode="widthFix"></image>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" @click="handleZoomOut">
+					<text class="zoom-text">-</text>
+				</view>
+			</view>
+			<view class="item">
+				<text class="zoom-value">{{Math.round(zoomLevel * 100)}}%</text>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" @click="handleZoomIn">
+					<text class="zoom-text">+</text>
+				</view>
+			</view>
+			<view class="item">
+				<view class="icon-box icon-box-big no-margin" @click="handleZoomReset">
+					<text class="zoom-text">1x</text>
+				</view>
+			</view>
 			<view class="item">
 				<view class="icon-box icon-box-big no-margin" @click="handleSave" >
 					<image class="icon" src="/static/svg/save.png" mode="widthFix"></image>
@@ -142,27 +198,21 @@
 	</view>
 </template>
 <script lang="uts" setup>
+    import { ref, computed } from 'vue';
     import {
         UCanvas,
         Composition,
         Text,
         Rectangle,
-        Polyline,
-        Ring,
-        Pie,
-        Circle,
-        Polygon,
         Picture,
-        ImagePixel,
-        Point,
     } from "@/uni_modules/u-canvas";
 	
-	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './mediaConfig.uts'
+	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler, historyManager } from './shared/media-config/index.uts'
 	
 	import { routeGoto } from '@/common/router.uts'
-	import { FileManager, MediaStoreFolder } from './fileManager.uts'
+	import { FileManager, MediaStoreFolder } from './shared/file-manager/index.uts'
 	import { APIS } from '@/api/config.uts'
-	import { request } from '@/utils/http/index'
+	import { request } from '@/utils/http/index.uts'
 	import { useState }  from '@/store/index.uts'
 	
 	import VideoForm from './videoForm.uvue'
@@ -175,27 +225,260 @@
 	import i18n from '@/locale'
 	
 	const fileManager = new FileManager();
-	
+
     const uCanvas = new UCanvas({ canvasId: "ucanvas" });
-	
+
 	const canvasWidth = ref('256');
 	const canvasHeight = ref('192');
 	const mediaList = ref<UTSJSONObject[]>([]);
 	const deviceList = ref<UTSJSONObject[]>([]);
 	const selectedDevices = ref<string[]>([]);
-	
+
 	const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
 	const programName = ref('');
 	const pushPopup = ref(false);
 	const mediaConfig = ref<MediaConfig | null>(null);
-	
+
 	const activePage = ref<MediaPage | null>(null);
 	const currentPageIndex = ref<number | null>(null);
-	
+
 	const activeComponent = ref<BaseComponent | null>(null);
 	const currentComponentIndex = ref<number | null>(null);
-	
+
 	const activeTab = ref(1);
+
+	const canUndo = ref(false);
+	const canRedo = ref(false);
+
+	const clipboardComponent = ref<UTSJSONObject | null>(null);
+
+	const zoomLevel = ref(1);
+	const shortcutInputFocused = ref(false);
+	const minZoom = 0.5;
+	const maxZoom = 2;
+	const zoomStep = 0.25;
+
+	const handleZoomIn = () => {
+		if (zoomLevel.value < maxZoom) {
+			zoomLevel.value = Math.min(maxZoom, zoomLevel.value + zoomStep);
+		}
+	};
+
+	const handleZoomOut = () => {
+		if (zoomLevel.value > minZoom) {
+			zoomLevel.value = Math.max(minZoom, zoomLevel.value - zoomStep);
+		}
+	};
+
+	const handleZoomReset = () => {
+		zoomLevel.value = 1;
+	};
+
+	const handleKeyUp = (e: UniInputEvent) => {
+		const keyCode = e.keyCode;
+		if (e.ctrlKey || e.metaKey) {
+			switch (keyCode) {
+				case 90:
+					handleUndo();
+					break;
+				case 89:
+					handleRedo();
+					break;
+				case 67:
+					handleCopy();
+					break;
+				case 86:
+					handlePaste();
+					break;
+				case 83:
+					handleSave();
+					break;
+			}
+		} else {
+			switch (keyCode) {
+				case 38:
+					handleMoveUp();
+					break;
+				case 40:
+					handleMoveDown();
+					break;
+				case 27:
+					activeComponent.value = null;
+					currentComponentIndex.value = null;
+					break;
+			}
+		}
+	};
+
+	const focusShortcutInput = () => {
+		shortcutInputFocused.value = true;
+	};
+
+	let autoSaveTimer: number | null = null;
+	const autoSaveIntervalMs = 30000;
+	let hasUnsavedChanges = false;
+
+	const saveState = () => {
+		if (mediaConfig.value == null) return;
+		historyManager.record({
+			pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+			activePageIndex: currentPageIndex.value ?? 0,
+			activeComponentIndex: currentComponentIndex.value
+		});
+		updateUndoRedoState();
+		hasUnsavedChanges = true;
+	};
+
+	const updateUndoRedoState = () => {
+		canUndo.value = historyManager.canUndo();
+		canRedo.value = historyManager.canRedo();
+	};
+
+	const handleUndo = async () => {
+		if (mediaConfig.value == null) return;
+		const state = historyManager.undo({
+			pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+			activePageIndex: currentPageIndex.value ?? 0,
+			activeComponentIndex: currentComponentIndex.value
+		});
+		if (state != null) {
+			historyManager.pause();
+			mediaConfig.value = new MediaConfig({
+				Left: 0,
+				Top: 0,
+				Ratio: 1,
+				Program: mediaConfig.value.program.toModel(),
+				Pages: state.pages
+			});
+			currentPageIndex.value = state.activePageIndex;
+			activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+			currentComponentIndex.value = state.activeComponentIndex;
+			activeComponent.value = state.activeComponentIndex != null
+				? activePage.value?.components[state.activeComponentIndex] ?? null
+				: null;
+			await drawPage();
+			historyManager.resume();
+			updateUndoRedoState();
+		}
+	};
+
+	const handleRedo = async () => {
+		if (mediaConfig.value == null) return;
+		const state = historyManager.redo({
+			pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+			activePageIndex: currentPageIndex.value ?? 0,
+			activeComponentIndex: currentComponentIndex.value
+		});
+		if (state != null) {
+			historyManager.pause();
+			mediaConfig.value = new MediaConfig({
+				Left: 0,
+				Top: 0,
+				Ratio: 1,
+				Program: mediaConfig.value.program.toModel(),
+				Pages: state.pages
+			});
+			currentPageIndex.value = state.activePageIndex;
+			activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+			currentComponentIndex.value = state.activeComponentIndex;
+			activeComponent.value = state.activeComponentIndex != null
+				? activePage.value?.components[state.activeComponentIndex] ?? null
+				: null;
+			await drawPage();
+			historyManager.resume();
+			updateUndoRedoState();
+		}
+	};
+
+	historyManager.onChange(updateUndoRedoState);
+
+	const handleCopy = () => {
+		if (activeComponent.value == null) {
+			uni.showToast({
+				icon: 'none',
+				title: '请先选择组件'
+			});
+			return;
+		}
+		clipboardComponent.value = activeComponent.value.toModel();
+		uni.showToast({
+			icon: 'success',
+			title: '已复制'
+		});
+	};
+
+	const handlePaste = async () => {
+		if (clipboardComponent.value == null || activePage.value == null) {
+			uni.showToast({
+				icon: 'none',
+				title: '没有可粘贴的组件'
+			});
+			return;
+		}
+		if (activePage.value!.components.length >= 5) {
+			uni.showToast({
+				icon: 'none',
+				title: '组件数量超出最大限制'
+			});
+			return;
+		}
+		saveState();
+		const data = clipboardComponent.value;
+		const maxId = Math.max(...activePage.value!.components.map(c => c.id), 0) + 1;
+		const newData = { ...data, Id: maxId, Name: `${data['Name']}_copy` };
+		const component = createComponentByType(data['Type'] as string, newData);
+		if (component != null) {
+			activePage.value?.components.push(component);
+			selectComponent(component, activePage.value!.components.length - 1);
+			await drawPage();
+		}
+	};
+
+	const canMoveUp = computed(() => {
+		if (currentComponentIndex.value == null || activePage.value == null) return false;
+		return currentComponentIndex.value > 0;
+	});
+
+	const canMoveDown = computed(() => {
+		if (currentComponentIndex.value == null || activePage.value == null) return false;
+		return currentComponentIndex.value < activePage.value!.components.length - 1;
+	});
+
+	const handleMoveUp = async () => {
+		if (currentComponentIndex.value == null || activePage.value == null || !canMoveUp.value) return;
+		saveState();
+		const index = currentComponentIndex.value;
+		const components = activePage.value!.components;
+		const temp = components[index];
+		components[index] = components[index - 1];
+		components[index - 1] = temp;
+		currentComponentIndex.value = index - 1;
+		await drawPage();
+	};
+
+	const handleMoveDown = async () => {
+		if (currentComponentIndex.value == null || activePage.value == null || !canMoveDown.value) return;
+		saveState();
+		const index = currentComponentIndex.value;
+		const components = activePage.value!.components;
+		const temp = components[index];
+		components[index] = components[index + 1];
+		components[index + 1] = temp;
+		currentComponentIndex.value = index + 1;
+		await drawPage();
+	};
+
+	let lastDrawTime = 0;
+	const drawThrottleMs = 16;
+	
+	const createComponentByType = (type: string, data: UTSJSONObject): BaseComponent | null => {
+		if (type == 'Video') return new VideoComponent(data);
+		if (type == 'Text') return new TextComponent(data);
+		if (type == 'Image') return new ImageComponent(data);
+		if (type == 'Web') return new WebComponent(data);
+		if (type == 'Word') return new WordComponent(data);
+		return null;
+	};
 	
 	const defl = uni.getStorageSync('language') as string
 	
@@ -205,16 +488,15 @@
 	
 	const getCanvasRect = () => {
 		uni.createSelectorQuery()
-			.in(this)
 			.select('.canvas')
 			.boundingClientRect(rect => {
 				if (rect instanceof NodeInfo) {
 					const node = rect as NodeInfo;
 					const data = {
-						left: node.left,
-						top: node.top,
-						width: node.width,
-						height: node.height
+						left: node.left ?? 0,
+						top: node.top ?? 0,
+						width: node.width ?? 0,
+						height: node.height ?? 0
 					}
 					
 					canvasRect.value = data;
@@ -249,6 +531,11 @@
 	}
 	
 	async function drawPage() :Promise<void> {
+		const now = Date.now();
+		if (now - lastDrawTime < drawThrottleMs) {
+			return;
+		}
+		lastDrawTime = now;
 		await activePage.value?.draw(uCanvas);
 	    uCanvas.render();
 	}
@@ -262,6 +549,7 @@
 			})
 			return;
 		}
+		saveState();
 		const maxId = mediaConfig.value!.pages.length == 0 ? 0 : Math.max(...mediaConfig.value!.pages.map(c => c.id)) + 0;
 		
 		const page = MediaPage.createInstance(maxId + 1);
@@ -272,27 +560,35 @@
 		await drawPage();
 	}
 	
-	const deletePage = async (e: UniPointerEvent,index: number) => {
-		mediaConfig.value!.pages.splice(index, 1);
-		if(mediaConfig.value!.pages.length > 0) {			
-			if (index == currentPageIndex.value) {
-				const newIndex = index == 0 ? index : index - 1;
-				activePage.value = mediaConfig.value!.pages[newIndex];
-				currentPageIndex.value = newIndex;
+	const deletePage = async (e: UniPointerEvent, index: number) => {
+		uni.showModal({
+			title: '确认删除',
+			content: '确定要删除这个页面吗？',
+			success: async (res) => {
+				if (res.confirm && mediaConfig.value) {
+					saveState();
+					mediaConfig.value.pages.splice(index, 1);
+					if (mediaConfig.value.pages.length > 0) {			
+						if (index == currentPageIndex.value) {
+							const newIndex = index == 0 ? index : index - 1;
+							activePage.value = mediaConfig.value.pages[newIndex];
+							currentPageIndex.value = newIndex;
+						}
+						else {
+							currentPageIndex.value = mediaConfig.value.pages.findIndex(c => c.name == activePage.value!.name);
+							activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+						}
+						activeComponent.value = null;
+					}
+					else {
+						activePage.value = null;
+						activeComponent.value = null;
+					}
+					
+					await drawPage();
+				}
 			}
-			else {
-				currentPageIndex.value = mediaConfig.value!.pages.findIndex(c => c.name == activePage.value!.name);
-				activePage.value = null;
-				activePage.value = mediaConfig.value!.pages[currentPageIndex.value];
-			}
-			activeComponent.value = null;
-		}
-		else {
-			activePage.value = null;
-			activeComponent.value = null;
-		}
-		
-		await drawPage();
+		});
 	}
 	
 	const updatePage = (newData: UTSJSONObject) => {
@@ -314,8 +610,10 @@
 	const handleTouchStart = async (e: TouchEvent) =>{
 		if(activePage.value == null) return;
 		const touch = e.touches[0];
-		const touchX = Math.round(touch.clientX - canvasRect.value["left"] as number);
-		const touchY = Math.round(touch.clientY - canvasRect.value["top"] as number);
+		const left = canvasRect.value.left ?? 0;
+		const top = canvasRect.value.top ?? 0;
+		const touchX = Math.round(touch.clientX - left);
+		const touchY = Math.round(touch.clientY - top);
 		// 取消所有选中状态
 		for (const component of activePage.value.components.filter(c => c.element != null)) 
 		{
@@ -351,19 +649,23 @@
 		let component = activeComponent.value;
 
 		const touch = e.touches[0];
-		const touchX = Math.round(touch.clientX - canvasRect.value["left"] as number);
-		const touchY = Math.round(touch.clientY - canvasRect.value["top"] as number);
+		const left = canvasRect.value.left ?? 0;
+		const top = canvasRect.value.top ?? 0;
+		const width = canvasRect.value.width ?? 0;
+		const height = canvasRect.value.height ?? 0;
+		const touchX = Math.round(touch.clientX - left);
+		const touchY = Math.round(touch.clientY - top);
 		const deltaX = touchX - component.element!.lastTouchX;
 		const deltaY = touchY - component.element!.lastTouchY;
 
 		if (component.element!.isDragging) {
 			// 拖拽移动
 			component.element!.x = Math.max(0, Math.min(
-				canvasRect.value["width"] as number - component.element!.width, 
+				width - component.element!.width, 
 				component.element!.x + deltaX
 			));
 		    component.element!.y = Math.max(0, Math.min(
-				canvasRect.value["height"] as number - component.element!.height, 
+				height - component.element!.height, 
 				component.element!.y + deltaY
 			));
 			component.left = component.element!.x;
@@ -372,12 +674,12 @@
 			// 改变大小
 			component.element!.width = Math.min(
 				Math.max(10, component.element!.width + deltaX),
-				canvasRect.value["width"] as number - component.element!.x
+				width - component.element!.x
 			);
 			
 			component.element!.height = Math.min(
 				Math.max(10, component.element!.height + deltaY),
-				canvasRect.value["height"] as number - component.element!.y
+				height - component.element!.y
 			);
 			
 			component.width = component.element!.width;
@@ -396,25 +698,7 @@
 			activeComponent.value!.element!.isResizing = false;
 			const data = activeComponent.value!.toModel() as UTSJSONObject;
 			const type = data['Type'] as string;
-			let newComponent : BaseComponent | null = null;
-			switch (type) {
-				case "Video":
-					newComponent = new VideoComponent(data);
-					break;
-				case "Text":
-					newComponent = new TextComponent(data);
-					break;
-				case "Image":
-					newComponent = new ImageComponent(data);
-					break;
-				case "Web":
-					newComponent = new WebComponent(data);
-					break;
-				case "Word":
-					newComponent = new WordComponent(data);
-					break;
-			}		
-			
+			const newComponent = createComponentByType(type, data);
 			activeComponent.value = newComponent;
 		}
 	}
@@ -443,6 +727,7 @@
 			
 			return;
 		}
+		saveState();
 		const maxId = activePage.value!.components.length == 0 ? 0 : Math.max(...activePage.value!.components.map(c => c.id)) + 0;
 		let component : BaseComponent | null = null;
 		switch(index) {
@@ -475,25 +760,9 @@
 	
 	async function updateComponent(data: UTSJSONObject) : Promise<void> {
 		if (activePage.value == null) return;
-		let component : BaseComponent | null = null;
+		saveState();
 		const type = data['Type'] as string;
-		switch (type) {
-			case "Video":
-				component = new VideoComponent(data);
-				break;
-			case "Text":
-				component = new TextComponent(data);
-				break;
-			case "Image":
-				component = new ImageComponent(data);
-				break;
-			case "Web":
-				component = new WebComponent(data);
-				break;
-			case "Word":
-				component = new WordComponent(data);
-				break;
-		}
+		const component = createComponentByType(type, data);
 		
 		if (component != null) {
 			activePage.value!.components.splice(currentComponentIndex.value!, 1, component!);
@@ -504,23 +773,32 @@
 	const deleteComponent = (e: UniPointerEvent, index: number) => {
 		e.bubbles = false;
 		e.preventDefault();
-		activePage.value!.components.splice(index, 1);
-		if(activePage.value!.components.length > 0) {
-			if (index == currentComponentIndex.value) {
-				const newIndex = index == 0 ? index : index - 1;
-				activeComponent.value = activePage.value!.components[newIndex];
-				currentComponentIndex.value = newIndex;
+		
+		uni.showModal({
+			title: '确认删除',
+			content: '确定要删除这个组件吗？',
+			success: (res) => {
+				if (res.confirm && activePage.value) {
+					saveState();
+					activePage.value.components.splice(index, 1);
+					if (activePage.value.components.length > 0) {
+						if (index == currentComponentIndex.value) {
+							const newIndex = index == 0 ? index : index - 1;
+							activeComponent.value = activePage.value.components[newIndex];
+							currentComponentIndex.value = newIndex;
+						}
+						else {
+							currentComponentIndex.value = activePage.value.components.findIndex(c => c.name == activeComponent.value!.name);
+							activeComponent.value = activePage.value.components[currentComponentIndex.value];
+						}
+					}
+					else {
+						activeComponent.value = null;
+						currentComponentIndex.value = null;
+					}
+				}
 			}
-			else {
-				currentComponentIndex.value = activePage.value!.components.findIndex(c => c.name == activeComponent.value!.name);
-				activeComponent.value = null;
-				activeComponent.value = activePage.value!.components[currentComponentIndex.value];
-			}
-		}
-		else {
-			activeComponent.value = null;
-			currentComponentIndex.value = null;
-		}
+		});
 	}
 	
     async function init() : Promise<void> {
@@ -538,7 +816,23 @@
 		await uCanvas.ensureInitialize();
 		await drawPage();
     }
-	
+
+	async function autoSaveDraft() :Promise<void> {
+		if (!hasUnsavedChanges || activePage.value == null) return;
+		try {
+			const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
+			activePage.value!.thumbnailFilePath = thunmbailFilePath;
+			const index = mediaConfig.value!.pages.findIndex(c=>c.name == activePage.value!.name);
+			mediaConfig.value!.pages.splice(index, 1, activePage.value);
+			const data = mediaConfig.value!.toModel();
+			await fileManager.saveProgram(programName.value, data);
+			hasUnsavedChanges = false;
+			console.log('自动保存草稿成功');
+		} catch (error) {
+			console.error('自动保存失败:', error);
+		}
+	}
+
 	async function handleSave() :Promise<void> {
 		if(activePage.value == null) return;
 		const thunmbailFilePath = await fileManager.capture(programName.value, activePage.value.name, uCanvas);
@@ -612,7 +906,8 @@
 			const person: UTSJSONObject = {}
 			const result = await request('GET', APIS.mediaAll as string, person);
 			const d = result as Array<UTSJSONObject>;
-			for (let media of d) {
+			
+			const downloadPromises = d.map(async (media) => {
 				const param = '?fileName=' + media.src;
 				const downloadResult = await new Promise<DownloadFileSuccess>((resolve: (value: DownloadFileSuccess) => void, reject: (reason?: any) => void) => {
 					uni.downloadFile({
@@ -629,8 +924,10 @@
 				const destPath =  `${MediaStoreFolder}/${media.getString('name')}/${media.src}`;
 				const filePath = await fileManager.copyFile(downloadResult.tempFilePath, destPath);
 				media.src = filePath;
-			}
-			mediaList.value = d
+				return media;
+			});
+			
+			mediaList.value = await Promise.all(downloadPromises);
 			uni.hideLoading();
 		} catch (error) {
 		  console.error(error)
@@ -646,7 +943,7 @@
 			const { state } = useState();
 			const activeUser = state.activeUser;
 			const person: UTSJSONObject = {}
-			const param = `?userAccount=${activeUser.account}&eanbled=1`;
+			const param = `?userAccount=${activeUser.account}&enabled=1`;
 			const result = await request('GET', APIS.deviceListPage as string + param, person)
 			const d = result as Array<UTSJSONObject>;
 			deviceList.value = d
@@ -657,7 +954,7 @@
 		}
 	}
 	
-	onLoad((e: OnLoadOptions): void => {		
+	onLoad((e: UTSJSONObject): void => {		
 		programName.value = e['name'] as string;
 		if (e['width'] != null){
 			canvasWidth.value = e['width'] as string;
@@ -665,6 +962,13 @@
 		
 		if (e['height'] != null){
 			canvasHeight.value = e['height'] as string;
+		}
+		
+		const defl = uni.getStorageSync('language') as string
+		
+		let defaultLang = 'zh-CN'
+		if(defl != ''){
+			defaultLang = defl
 		}
 		
 		uni.setNavigationBarTitle({
@@ -676,10 +980,34 @@
 		getCanvasRect();
 		getMedias();
 		getDevices();
+		autoSaveTimer = setInterval(() => {
+			autoSaveDraft();
+		}, autoSaveIntervalMs);
+
+		uni.onKeyboardHeightChange((res) => {
+			console.log('键盘高度:', res.height);
+		});
+    });
+    
+    onUnmounted(() => {
+        if (uCanvas && typeof uCanvas.dispose === 'function') {
+            uCanvas.dispose();
+        }
+        if (autoSaveTimer !== null) {
+            clearInterval(autoSaveTimer);
+            autoSaveTimer = null;
+        }
     });
 </script>
 
 <style lang="scss">
+	.shortcut-input {
+		position: fixed;
+		left: -9999px;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+	}
 	.flex-space-between {
 		justify-content: space-between;
 	}
@@ -793,6 +1121,17 @@
 			}
 			.t{
 				font-size: $uni-font-size-sm;
+			}
+			.zoom-text {
+				font-size: 28rpx;
+				font-weight: bold;
+				color: #333333;
+			}
+			.zoom-value {
+				font-size: 24rpx;
+				color: #666666;
+				min-width: 60rpx;
+				text-align: center;
 			}
 		}
 	}	

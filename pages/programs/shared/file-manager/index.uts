@@ -1,5 +1,5 @@
 import { UCanvas } from "@/uni_modules/u-canvas";
-import { MediaConfig } from './mediaConfig.uts';
+import { MediaConfig } from '../media-config/index.uts';
 import { APIS } from '@/api/config.uts';
 import { Ziper } from "@/uni_modules/ns-unzip";
 import { request } from '@/utils/http/index';
@@ -8,6 +8,7 @@ import i18n from '@/locale'
 const defl = uni.getStorageSync('language') as string
 
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
+
 export class FileManager {
 	fs: FileSystemManager;
 	token: string;
@@ -22,28 +23,44 @@ export class FileManager {
 		this.userAccount = state.activeUser['account'] as string;
 	}
 	
-	async getProgramList() {
-		let results: UTSJSONObject[] = [];
+	private convertPath(path: string): string {
+		if (path.startsWith("unifile://")) {
+			const packageName = UTSAndroid.getAppContext()?.packageName;
+			return path.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`);
+		}
+		return path;
+	}
+	
+	async getProgramList(): Promise<UTSJSONObject[]> {
+		const results: UTSJSONObject[] = [];
 		try {
 			const items = this.fs.readdirSync(this.programFolder);
 			
-			items?.forEach(item => {
-				const itemPath = `${this.programFolder}/${item}`;
-				this.fs.stat({
-					path: itemPath,
-					recursive: false,
-					success: res => {
-						if(!res.stats[0].stats.mIsFile) {
-							const data = {
-								name: item,
-								path: itemPath
+			const statPromises = items?.map(item => {
+				return new Promise<void>((resolve) => {
+					const itemPath = `${this.programFolder}/${item}`;
+					this.fs.stat({
+						path: itemPath,
+						recursive: false,
+						success: res => {
+							if (!res.stats[0].stats.mIsFile) {
+								results.push({
+									name: item,
+									path: itemPath
+								});
 							}
-							
-							results.push(data)
+							resolve();
+						},
+						fail: () => {
+							resolve();
 						}
-					}
+					});
 				});
 			});
+			
+			if (statPromises && statPromises.length > 0) {
+				await Promise.all(statPromises);
+			}
 		} catch (err) {
 			console.error(err);
 		}
@@ -51,7 +68,7 @@ export class FileManager {
 		return results;
 	}
 	
-	async IsExist(filePath: string) {
+	async IsExist(filePath: string): Promise<boolean> {
 		try {
 			this.fs.accessSync(filePath);
 			return true;
@@ -60,23 +77,31 @@ export class FileManager {
 		}
 	}
 	
-	async createFolder(folderPath: string) {
+	async createFolder(folderPath: string): Promise<void> {
 		if(!await this.IsExist(folderPath)){
 			this.fs.mkdirSync(folderPath, true);
 		}	
 	}
 	
-	async deleteProgram(programName: string) {
-		const destPath = `${this.programFolder}/${programName}`;
-		this.fs.rmdirSync(destPath, true);
+	async deleteProgram(programName: string): Promise<boolean> {
+		try {
+			const destPath = `${this.programFolder}/${programName}`;
+			if (await this.IsExist(destPath)) {
+				this.fs.rmdirSync(destPath, true);
+			}
+			return true;
+		} catch (err) {
+			console.error('删除节目失败:', err);
+			return false;
+		}
 	}
 	
-	async copyFile(srcPath: string, destFilePath: string) {
+	async copyFile(srcPath: string, destFilePath: string): Promise<string> {
 		this.fs.copyFileSync(srcPath, destFilePath);
 		return destFilePath;
 	}
 	
-	async getProgramConfig(programName: string, width: string, height: string) {
+	async getProgramConfig(programName: string, width: string, height: string): Promise<MediaConfig> {
 		const newProgramFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
@@ -111,43 +136,30 @@ export class FileManager {
 		return new MediaConfig(configFileContent);
 	}
 	
-	async saveProgram(programName: string, data: UTSJSONObject) {
+	async saveProgram(programName: string, data: UTSJSONObject): Promise<void> {
 		const programFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
-	async zipProgram(programName: string) {
-		let sourcePath = `${this.programFolder}/${programName}`;
-		let packageName = UTSAndroid.getAppContext()?.packageName
-		if (sourcePath.startsWith("unifile://")) {
-			sourcePath = sourcePath.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
-		}
-		let zipFile = `${this.programFolder}/${programName}.zip`;
-		if(await this.IsExist(zipFile)){
+	async zipProgram(programName: string): Promise<void> {
+		let sourcePath = this.convertPath(`${this.programFolder}/${programName}`);
+		let zipFile = this.convertPath(`${this.programFolder}/${programName}.zip`);
+		
+		if (await this.IsExist(zipFile)) {
 			this.fs.unlinkSync(zipFile);
 		}
-		if (zipFile.startsWith("unifile://")) {
-			zipFile = zipFile.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`)
-		}
 		
-		// const result = zipFolder(sourcePath, zipFile);
-		// console.log(result);
-		// console.log(result);
-		// const items = this.fs.readdirSync(`${this.tempDir}/${userAccount}`);
-		// console.log(items);
 		const ziper = new Ziper({
 			zipfilepath: zipFile
 		});
-		//设置编码，中文出现乱码时使用
-		ziper.setCharset("UTF8")
-		//其他方法实参同此方法
+		ziper.setCharset("UTF8");
 		ziper.addFolder({
 		    "path": sourcePath,
-		})
+		});
 	}	
 	
-	async readZipFile(programName: string) {
+	async readZipFile(programName: string): Promise<number> {
 		const destPath = `${this.programFolder}/${programName}.zip`;
 		
 		if(!await this.IsExist(destPath)){
@@ -165,12 +177,12 @@ export class FileManager {
 					reject(res)
 				}
 			});
-		})
+		});
 		
 		return res.stats[0].stats.size;
 	}
 	
-	async uploadProgram(programName: string) : Promise<UploadFileSuccess> {
+	async uploadProgram(programName: string): Promise<UploadFileSuccess> {
 		let zipFile = `${this.programFolder}/${programName}.zip`;
 		
 		const fileExists = await this.IsExist(zipFile);
@@ -179,110 +191,101 @@ export class FileManager {
 			uni.showToast({
 				title: i18n.global.t('program.NeedToZip', null, defl),
 				icon: 'none'
-			})
+			});
 			return {
 				data: null,
-				statusCode: -1;
-			}
+				statusCode: -1
+			} as UploadFileSuccess;
 		}
 		
-		const rightResult = await new Promise<boolean>((resolve, reject) => {
+		const rightResult = await new Promise<boolean>((resolve) => {
 			if (UTSAndroid.checkSystemPermissionGranted(UTSAndroid.getUniActivity()!, ['android.permission.READ_EXTERNAL_STORAGE'])) {
 				resolve(true);
-			}else {
+			} else {
 				UTSAndroid.requestSystemPermission(
 					UTSAndroid.getUniActivity()!, 
 					['android.permission.READ_EXTERNAL_STORAGE'],
-					(allRight : boolean, _grantedList : Array<string>) => {
+					(allRight: boolean, _grantedList: Array<string>) => {
 						resolve(allRight);
 					},
-					(doNotAskAgain : boolean, _grantedList: Array<string>) => {
+					(_doNotAskAgain: boolean, _grantedList: Array<string>) => {
 						resolve(false);
-						reject(doNotAskAgain);
 					},
-				)
+				);
 			}
-		})
+		});
 		
 		if (!rightResult) {
 			uni.showToast({
 				title: i18n.global.t('program.NoRight', null, defl),
 				icon: 'none'
-			})
+			});
 			
 			return {
 				data: null,
-				statusCode: -1;
-			}
-		}		
+				statusCode: -1
+			} as UploadFileSuccess;
+		}			
 		
 		try {
 			uni.showLoading({
 				title: i18n.global.t('program.Uploading', null, defl)
 			});
 			const res = await new Promise<UploadFileSuccess>((resolve, reject) => {
-				uni.downloadFile({
-					url: "https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/uni-app.png",
-				    filePath: `${uni.env.USER_DATA_PATH}/uni-app.png`,
-					success: (_res) => {					
-						uni.uploadFile({
-							url: APIS.uploadZip,
-							filePath: zipFile,
-							name: 'file',
-							header: {
-								'Authorization': "Bearer " + this.token
-							},
-							success(res){
-								resolve(res);
-							},
-							fail(res){
-								console.error("fail to upload:", JSON.stringify(res, null, 2));
-								reject(res);
-							}
-						})
+				uni.uploadFile({
+					url: APIS.uploadZip,
+					filePath: zipFile,
+					name: 'file',
+					header: {
+						'Authorization': "Bearer " + this.token
+					},
+					success: (res) => {
+						resolve(res);
+					},
+					fail: (res) => {
+						console.error("上传失败:", JSON.stringify(res, null, 2));
+						reject(res);
 					}
-				})
-			})
+				});
+			});
 			
 			uni.hideLoading();
 			return res;
-		}
-		catch (err){
+		} catch (err) {
 			uni.hideLoading();
 			return {
 				data: null,
-				statusCode: -1;
-			}
-		}		
+				statusCode: -1
+			} as UploadFileSuccess;
+		}			
 	}
 	
-	async sendProgram(program: UTSJSONObject, snCode: string){
+	async sendProgram(program: UTSJSONObject, snCode: string): Promise<boolean> {
 		try {
 			uni.showLoading({
 				title: i18n.global.t('program.Publishing', null, defl)
 			});
 			const dataObj = {
 				cmd: 'CMD|SendProgram|',
-				data: program
+				data: program,
 				deviceSnCode: snCode
-			} as UTSJSONObject
+			} as UTSJSONObject;
 			
 			const res = await request("POST", APIS.sendCMD as string, dataObj);
-			uni.hideLoading();
 			return res as boolean;
-		} 
-		catch (err){
-			console.log('sendCMD program err', err)
-			uni.hideLoading();
+		} catch (err) {
+			console.log('sendCMD program err', err);
 			return false;
 		}
 	}
 	
-	async pushProgram(programData: UTSJSONObject, snCodes: string[]){
-		let pushResult = true;
+	async pushProgram(programData: UTSJSONObject, snCodes: string[]): Promise<boolean> {
+		if (snCodes.length === 0) {
+			return false;
+		}
 		
-		for (const snCode of snCodes) {
-			let playRecord = { 
+		const pushPromises = snCodes.map(async (snCode) => {
+			const playRecord = { 
 				mediaName: programData.name, 
 				mediaType: programData.mediaType, 
 				monitorSnCode: snCode, 
@@ -300,19 +303,20 @@ export class FileManager {
 				const result = await request('GET', apiUrl + params, {});
 				const playbackRecords = result as Array<UTSJSONObject>;
 				if (playbackRecords != null) {
-					for (let record of playbackRecords){
+					const updatePromises = playbackRecords.map(async (record) => {
 						record.playSuccess = false;
-						await request('POST', APIS.playbackRecord.save as string, record);
-					}
+						return request('POST', APIS.playbackRecord.save as string, record);
+					});
+					await Promise.all(updatePromises);
 				}
 				
 				await request('POST', APIS.playbackRecord.save as string, playRecord);
 				
 				const dataObj = {
 					cmd: 'CMD|PlayTime|',
-					data: playRecord
+					data: playRecord,
 					deviceSnCode: snCode
-				} as UTSJSONObject
+				} as UTSJSONObject;
 				
 				const res = await request("POST", APIS.sendCMD as string, dataObj) as Boolean;
 				
@@ -322,31 +326,111 @@ export class FileManager {
 						icon: 'none',
 						title: errorM,
 						duration: 3000,
-					})
+					});
 				}
-			}
-			else {
+				
+				return true;
+			} else {
 				uni.showToast({
 					icon: 'none',
 					title: `${i18n.global.t("index.Device", null, defl)}：${snCode} ${i18n.global.t("program.PublishFailure", null, defl)}`,
 					duration: 3000,
-					success: () => { 
-					}
-				})
+				});
 				
-				pushResult = false;
+				return false;
 			}
-		}
+		});
 		
-		return pushResult;
+		const results = await Promise.all(pushPromises);
+		return results.every(r => r);
 	}
 	
-	async capture(programName: string, pageName: string, canvas: UCanvas){
+	async capture(programName: string, pageName: string, canvas: UCanvas): Promise<string> {
 		const thumbnailPath = `${this.programFolder}/${programName}/${pageName}/thumbnail.png`;
 		const dataString = canvas.toDataURL();
 		const base64Data = dataString.split(',')[1];
 		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
 		this.fs.writeFileSync(thumbnailPath, dataBuffer,"utf-8");
 		return thumbnailPath;
+	}
+
+	async exportProgram(programName: string): Promise<string | null> {
+		try {
+			const programFolder = `${this.programFolder}/${programName}`;
+			const configFilePath = `${programFolder}/MediaConfig.json`;
+
+			if (!(await this.IsExist(configFilePath))) {
+				uni.showToast({
+					title: '节目不存在',
+					icon: 'none'
+				});
+				return null;
+			}
+
+			const content = this.fs.readFileSync(configFilePath, 'utf-8') as string;
+			const exportPath = `${this.programFolder}/${programName}_export.json`;
+
+			this.fs.writeFileSync(exportPath, content, 'utf-8');
+
+			uni.showToast({
+				title: '导出成功',
+				icon: 'success'
+			});
+
+			return exportPath;
+		} catch (error) {
+			console.error('导出失败:', error);
+			uni.showToast({
+				title: '导出失败',
+				icon: 'none'
+			});
+			return null;
+		}
+	}
+
+	async importProgram(importFilePath: string, newProgramName?: string): Promise<MediaConfig | null> {
+		try {
+			const content = this.fs.readFileSync(importFilePath, 'utf-8') as string;
+			const configData = JSON.parse(content) as UTSJSONObject;
+
+			const targetProgramName = newProgramName || configData['Program']?.['name'] as string || 'ImportedProgram';
+			const targetFolder = `${this.programFolder}/${targetProgramName}`;
+
+			if (await this.IsExist(targetFolder)) {
+				uni.showModal({
+					title: '提示',
+					content: '节目已存在，是否覆盖？',
+					success: async (res) => {
+						if (!res.confirm) return;
+						await this.doImport(configData, targetFolder, targetProgramName);
+					}
+				});
+			} else {
+				await this.doImport(configData, targetFolder, targetProgramName);
+			}
+
+			return new MediaConfig(configData);
+		} catch (error) {
+			console.error('导入失败:', error);
+			uni.showToast({
+				title: '导入失败',
+				icon: 'none'
+			});
+			return null;
+		}
+	}
+
+	private async doImport(configData: UTSJSONObject, targetFolder: string, programName: string): Promise<void> {
+		await this.createFolder(targetFolder);
+
+		const mediaConfig = new MediaConfig(configData);
+		mediaConfig.program.name = programName;
+
+		await this.saveProgram(programName, mediaConfig.toModel());
+
+		uni.showToast({
+			title: '导入成功',
+			icon: 'success'
+		});
 	}
 }

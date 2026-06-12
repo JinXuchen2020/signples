@@ -1,0 +1,195 @@
+type ValidationResult = string | null;
+
+type ValidatorFn = (value: any) => ValidationResult;
+
+class Validator {
+	private rules: Map<string, ValidatorFn[]>;
+
+	constructor() {
+		this.rules = new Map();
+	}
+
+	addRule(field: string, validator: ValidatorFn): this {
+		const existing = this.rules.get(field) || [];
+		this.rules.set(field, [...existing, validator]);
+		return this;
+	}
+
+	validate(data: Record<string, any>): Record<string, string> {
+		const errors: Record<string, string> = {};
+
+		this.rules.forEach((validators, field) => {
+			for (const validator of validators) {
+				const error = validator(data[field]);
+				if (error) {
+					errors[field] = error;
+					break;
+				}
+			}
+		});
+
+		return errors;
+	}
+
+	clear(): void {
+		this.rules.clear();
+	}
+}
+
+export const validators = {
+	required(message: string = '此字段必填'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (value === null || value === undefined || value === '') {
+				return message;
+			}
+			if (Array.isArray(value) && value.length === 0) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	minLength(min: number, message?: string): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			const len = typeof value === 'string' ? value.length : value;
+			if (len < min) {
+				return message || `至少需要 ${min} 个字符`;
+			}
+			return null;
+		};
+	},
+
+	maxLength(max: number, message?: string): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			const len = typeof value === 'string' ? value.length : value;
+			if (len > max) {
+				return message || `最多 ${max} 个字符`;
+			}
+			return null;
+		};
+	},
+
+	min(min: number, message?: string): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (value === null || value === undefined || value === '') return null;
+			if (Number(value) < min) {
+				return message || `值不能小于 ${min}`;
+			}
+			return null;
+		};
+	},
+
+	max(max: number, message?: string): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (value === null || value === undefined || value === '') return null;
+			if (Number(value) > max) {
+				return message || `值不能大于 ${max}`;
+			}
+			return null;
+		};
+	},
+
+	pattern(regex: RegExp, message: string = '格式不正确'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			if (!regex.test(value)) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	email(message: string = '邮箱格式不正确'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(value)) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	phone(message: string = '手机号格式不正确'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			const phoneRegex = /^1[3-9]\d{9}$/;
+			if (!phoneRegex.test(value)) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	url(message: string = 'URL 格式不正确'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			try {
+				new URL(value);
+				return null;
+			} catch {
+				return message;
+			}
+		};
+	},
+
+	number(message: string = '请输入数字'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			if (isNaN(Number(value))) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	integer(message: string = '请输入整数'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!value) return null;
+			if (!Number.isInteger(Number(value))) {
+				return message;
+			}
+			return null;
+		};
+	},
+
+	range(min: number, max: number, message?: string): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (value === null || value === undefined || value === '') return null;
+			const num = Number(value);
+			if (num < min || num > max) {
+				return message || `值必须在 ${min} - ${max} 之间`;
+			}
+			return null;
+		};
+	},
+
+	custom(fn: (value: any) => boolean, message: string = '验证失败'): ValidatorFn {
+		return (value: any): ValidationResult => {
+			if (!fn(value)) {
+				return message;
+			}
+			return null;
+		};
+	}
+};
+
+export function createValidator(): Validator {
+	return new Validator();
+}
+
+export function validateField(value: any, ...validatorFns: ValidatorFn[]): string | null {
+	for (const fn of validatorFns) {
+		const error = fn(value);
+		if (error) return error;
+	}
+	return null;
+}
+
+export default {
+	validators,
+	createValidator,
+	validateField
+};

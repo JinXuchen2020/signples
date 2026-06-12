@@ -1,0 +1,68 @@
+export type ApiResponse<T> = {
+	data: T;
+	statusCode: number;
+	message?: string;
+};
+
+export type ApiError = {
+	statusCode: number;
+	message: string;
+	data?: any;
+};
+
+export type LoginRequest = {
+	account: string;
+	password: string;
+};
+
+export type LoginResponse = {
+	token: string;
+	user: UserInfo;
+};
+
+export type UserInfo = {
+	id: string;
+	account: string;
+	name: string;
+	phone?: string;
+	role: 'admin' | 'agent' | 'user';
+	[key: string]: any;
+};
+
+export type DeviceInfo = {
+	id: string;
+	name: string;
+	sn: string;
+	width: number;
+	height: number;
+	status?: string;
+	connectionStatus?: string;
+	[key: string]: any;
+};
+
+export type ProgramInfo = {
+	id: number;
+	name: string;
+	mediaType: string;
+	resolution: string;
+	size: number;
+	monitorCount: number;
+	status: number;
+	lastUpdatedTime: string;
+	[key: string]: any;
+};
+
+export type MediaInfo = {
+	id: string;
+	name: string;
+	src: string;
+	type: string;
+	size?: number;
+	[key: string]: any;
+};
+
+export type ApiConfig = {
+	BASE_URL: string;
+	TIMEOUT: number;
+	[key: string]: any;
+};

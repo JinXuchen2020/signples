@@ -1,0 +1,102 @@
+import type { UTSJSONObject } from '@dcloudio/uni-app';
+
+const CANVAS_WIDTH = 256;
+const CANVAS_HEIGHT = 192;
+
+export function handlePositionUpdate(
+    formData: any, 
+    value: number, 
+    type: 'left' | 'top' | 'width' | 'height'
+): void {
+    if (!formData) return;
+
+    switch (type) {
+        case 'left':
+            formData.left = value;
+            if (formData.width + value > CANVAS_WIDTH) {
+                formData.width = CANVAS_WIDTH - value;
+            }
+            break;
+        case 'top':
+            formData.top = value;
+            if (formData.height + value > CANVAS_HEIGHT) {
+                formData.height = CANVAS_HEIGHT - value;
+            }
+            break;
+        case 'width':
+            let widthVal = value;
+            if (formData.left + value > CANVAS_WIDTH) {
+                widthVal = CANVAS_WIDTH - formData.left;
+            }
+            formData.width = widthVal;
+            break;
+        case 'height':
+            let heightVal = value;
+            if (formData.top + value > CANVAS_HEIGHT) {
+                heightVal = CANVAS_HEIGHT - formData.top;
+            }
+            formData.height = heightVal;
+            break;
+    }
+}
+
+export function updateComponentProperty(
+    formData: any,
+    propertyName: string,
+    value: string
+): void {
+    if (!formData) return;
+
+    const handlers: Record<string, (val: string) => void> = {
+        name: (val) => { formData.name = val; },
+        zIndex: (val) => { formData.zIndex = parseInt(val); },
+        playDuration: (val) => { formData.playDuration = val; },
+        playCount: (val) => { formData.playCount = parseInt(val); },
+        effectDuration: (val) => { formData.effectDuration = parseInt(val); },
+        rollingSpeed: (val) => { formData.rollingSpeed = parseInt(val); },
+        textSize: (val) => { formData.textSize = parseInt(val); },
+        letterSpacing: (val) => { formData.letterSpacing = parseInt(val); },
+        lineSpacing: (val) => { formData.lineSpacing = parseInt(val); },
+    };
+
+    const handler = handlers[propertyName];
+    if (handler) {
+        handler(value);
+    }
+}
+
+export function getProgramFolder(): string {
+    return uni.getStorageSync("program-folder") as string;
+}
+
+export function getFileDestinationPath(
+    programName: string,
+    pageName: string,
+    componentName: string,
+    fileName: string
+): string {
+    return `${getProgramFolder()}/${programName}/${pageName}/${componentName}/${fileName}`;
+}
+
+export function extractFileName(filePath: string): string {
+    const parts = filePath.split("/");
+    return parts[parts.length - 1];
+}
+
+export function formatDuration(seconds: number): string {
+    const secs = Math.round(seconds % 60);
+    const mins = Math.round((seconds / 60) % 60);
+    let hrs = Math.round(seconds / 60 / 60);
+    if (hrs > 23) hrs = 23;
+
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+export function mapOptionsToNames(options: UTSJSONObject[]): string[] {
+    return options.map((opt: UTSJSONObject) => opt.getString('name')!);
+}
+
+export function findOptionByKey(options: UTSJSONObject[], key: string): string | null {
+    const found = options.find((opt: UTSJSONObject) => opt['key'] === key);
+    return found ? found.getString('name')! : null;
+}

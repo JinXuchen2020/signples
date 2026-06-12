@@ -5,7 +5,7 @@
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>亮度</text>
+						<text>{{ $t('setting.Brightness') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -13,7 +13,7 @@
 				</list-item>
 				<list-item class="uc-menus-item end">
 					<view class="uc-menus-item-title">
-						<text>音量</text>
+						<text>{{ $t('setting.Volume') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -24,7 +24,7 @@
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>时间</text>
+						<text>{{ $t('setting.Time') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -32,7 +32,7 @@
 				</list-item>
 				<list-item class="uc-menus-item end">
 					<view class="uc-menus-item-title">
-						<text>网络设置</text>
+						<text>{{ $t('setting.Network') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -43,7 +43,7 @@
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>同步播放</text>
+						<text>{{ $t('setting.SyncPlay') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -51,7 +51,7 @@
 				</list-item>
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>单机播放</text>
+						<text>{{ $t('setting.LocalPlay') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -59,7 +59,7 @@
 				</list-item>
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>屏幕旋转</text>
+						<text>{{ $t('setting.ScreenRotation') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -67,7 +67,7 @@
 				</list-item>
 				<list-item class="uc-menus-item end">
 					<view class="uc-menus-item-title">
-						<text>软拼接</text>
+						<text>{{ $t('setting.SoftSplicing') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -78,7 +78,7 @@
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>重启</text>
+						<text>{{ $t('setting.Restart') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -86,7 +86,7 @@
 				</list-item>
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>开关机</text>
+						<text>{{ $t('setting.Power') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -94,7 +94,7 @@
 				</list-item>
 				<list-item class="uc-menus-item end">
 					<view class="uc-menus-item-title">
-						<text>还原</text>
+						<text>{{ $t('setting.Reset') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -105,7 +105,7 @@
 			<list-view class="uc-menus">
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>绑定上云</text>
+						<text>{{ $t('setting.BindCloud') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -113,7 +113,7 @@
 				</list-item>
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>设备密码</text>
+						<text>{{ $t('setting.DevicePassword') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -121,7 +121,7 @@
 				</list-item>
 				<list-item class="uc-menus-item">
 					<view class="uc-menus-item-title">
-						<text>监控信息</text>
+						<text>{{ $t('setting.MonitorInfo') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
@@ -129,11 +129,20 @@
 				</list-item>
 				<list-item class="uc-menus-item end">
 					<view class="uc-menus-item-title">
-						<text>设备信息</text>
+						<text>{{ $t('setting.DeviceInfo') }}</text>
 					</view>
 					<view class="icon-box">
 						<image class="icon" src="/static/svg/right.png" mode="widthFix"></image>
 					</view>
+				</list-item>
+			</list-view>
+			<view class="space-box"></view>
+			<list-view class="uc-menus">
+				<list-item class="uc-menus-item end">
+					<view class="uc-menus-item-title dark-mode-item">
+						<text>{{ $t('setting.DarkMode') }}</text>
+					</view>
+					<switch class="dark-mode-switch" :checked="isDarkMode" @change="toggleDarkMode" />
 				</list-item>
 			</list-view>
 		</view>
@@ -141,14 +150,26 @@
 </template>
 
 <script lang="uts">
+	import { themeManager } from '@/utils/theme/index.uts';
+
 	export default {
 		data() {
 			return {
-				
+				isDarkMode: false
 			}
 		},
+		onLoad() {
+			this.isDarkMode = themeManager.isDarkMode();
+			themeManager.onThemeChange((mode) => {
+				this.isDarkMode = mode === 'dark';
+			});
+		},
 		methods: {
-			
+			toggleDarkMode(e: UniSwitchChangeEvent) {
+				const isDark = e.detail.value;
+				themeManager.setMode(isDark ? 'dark' : 'light');
+				this.isDarkMode = isDark;
+			}
 		}
 	}
 </script>
@@ -161,7 +182,7 @@
 			background-color: $uni-bg-color;
 			padding: 0rpx 32rpx;
 			border-radius: $uni-border-radius-lg;
-			
+
 			.uc-menus-item{
 				flex-direction: row;
 				align-items: center;
@@ -182,5 +203,13 @@
 			}
 		}
 	}
-	
+
+	.dark-mode-item {
+		flex: 1;
+	}
+
+	.dark-mode-switch {
+		transform: scale(0.8);
+	}
+
 </style>

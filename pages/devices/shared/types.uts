@@ -1,0 +1,41 @@
+export interface DeviceInfo {
+	id: string;
+	name: string;
+	sn: string;
+	width: number;
+	height: number;
+	status?: string;
+	connectionStatus?: string;
+	[key: string]: any;
+}
+
+export interface DeviceControlParams {
+	cmd: string;
+	value: any;
+	deviceIds: string[];
+}
+
+export interface TimeSyncConfig {
+	id?: string;
+	deviceId?: string;
+	time?: string;
+	timeZone?: string;
+	[key: string]: any;
+}
+
+export interface TimerTask {
+	id: string;
+	name: string;
+	time: string;
+	action: 'powerOn' | 'powerOff' | 'restart';
+	repeatMode?: 'daily' | 'weekly' | 'monthly';
+	days?: number[];
+	enabled?: boolean;
+}
+
+export {
+	DeviceInfo as default,
+	DeviceControlParams,
+	TimeSyncConfig,
+	TimerTask
+};
