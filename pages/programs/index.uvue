@@ -269,35 +269,42 @@
 				this.preDevice = e.detail.value as Array<string>;
 			},
 			async handlePushProgram(){
-				const programName = this.prePushProgram.getString('name')!;
-				const currentConfig = await this.fileManager.getProgramConfig(programName, '256', '192');
-				currentConfig.program.status = 1;
-				const programData = currentConfig.program.toModel();
-				
-				const uploadResult = await this.fileManager.uploadProgram(programName);
-				if (uploadResult.statusCode != 200) {
-					uni.showToast({
-					  title: $t("program.UploadFailure"),
-					  icon: 'none',
-					  duration: 1000
-					})
-					return;
-				}
-				
-				const pushResult = await this.fileManager.pushProgram(programData, this.preDevice);
-				
-				if (pushResult) {
-					const data = currentConfig.toModel();
-					await this.fileManager.saveProgram(programName, data);
-					uni.showToast({
-						icon: 'none',
-						title: $t("program.UploadSuccess"),
-						duration: 3000,
-						success: () => {
-							this.pushPopup = false;
-							this.prePushProgram = {} as UTSJSONObject;
-						}
-					})
+				try {
+					const programName = this.prePushProgram.getString('name')!;
+					const currentConfig = await this.fileManager.getProgramConfig(programName, '256', '192');
+					currentConfig.program.status = 1;
+					const programData = currentConfig.program.toModel();
+
+					const uploadResult = await this.fileManager.uploadProgram(programName);
+					if (uploadResult.statusCode != 200) {
+						uni.showToast({
+						  title: $t("program.UploadFailure"),
+						  icon: 'none',
+						  duration: 1000
+						})
+						return;
+					}
+
+					const pushResult = await this.fileManager.pushProgram(programData, this.preDevice);
+
+					if (pushResult) {
+						const data = currentConfig.toModel();
+						await this.fileManager.saveProgram(programName, data);
+						uni.showToast({
+							icon: 'none',
+							title: $t("program.UploadSuccess"),
+							duration: 3000,
+							success: () => {
+								this.pushPopup = false;
+								this.prePushProgram = {} as UTSJSONObject;
+							}
+						})
+					}
+				} catch (err) {
+					uni.hideLoading();
+					console.error('推送节目失败:', err);
+					uni.showToast({ icon: 'none', title: '推送失败' });
+					this.pushPopup = false;
 				}
 			},
 			async handleDel(item: UTSJSONObject){

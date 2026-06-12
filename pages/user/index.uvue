@@ -154,7 +154,9 @@
 										setToken(token);
 										// uni.setStorageSync('token', token);
 										// this.getAccountInfo(userId, token);
-										this.getAccountInfo(userId);
+										this.getAccountInfo(userId).catch((err: any) => {
+										uni.showToast({ icon: "none", title: "获取用户信息失败" });
+									});
 									}
 								}else{
 									uni.showToast({
@@ -180,7 +182,15 @@
 							
 						},
 						fail: () => {
-							
+							uni.hideLoading();
+							uni.showToast({
+								icon: 'none',
+								title: $t("error.LoginFailure"),
+								duration: 2000,
+								success: () => {
+									this.popupLogin = false;
+								}
+							})
 						}
 					});
 				} catch (err){

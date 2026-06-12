@@ -396,20 +396,23 @@ export class FileManager {
 			const targetProgramName = newProgramName || configData['Program']?.['name'] as string || 'ImportedProgram';
 			const targetFolder = `${this.programFolder}/${targetProgramName}`;
 
+			let imported = false;
 			if (await this.IsExist(targetFolder)) {
 				uni.showModal({
 					title: '提示',
 					content: '节目已存在，是否覆盖？',
 					success: async (res) => {
-						if (!res.confirm) return;
-						await this.doImport(configData, targetFolder, targetProgramName);
+						if (res.confirm) {
+							await this.doImport(configData, targetFolder, targetProgramName);
+							imported = true;
+						}
 					}
 				});
+				return imported ? new MediaConfig(configData) : null;
 			} else {
 				await this.doImport(configData, targetFolder, targetProgramName);
+				return new MediaConfig(configData);
 			}
-
-			return new MediaConfig(configData);
 		} catch (error) {
 			console.error('导入失败:', error);
 			uni.showToast({

@@ -31,7 +31,7 @@ export function request(
             method: method,
             timeout: REQUEST_TIMEOUT,
             header: {
-                'Authorization': "Bearer " + state.token,
+                'Authorization': "Bearer " + (state.token ?? ''),
                 'Content-Type': 'application/json'
             },
             data: option,
