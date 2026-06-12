@@ -88,9 +88,17 @@ export function truncate(str: string, maxLength: number, suffix: string = '...')
     return str.slice(0, maxLength) + suffix;
 }
 
-export function deepClone(obj: any): any {
+export function deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== 'object') return obj;
-    return JSON.parse(JSON.stringify(obj));
+    if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
+    if (obj instanceof RegExp) return new RegExp(obj.source, obj.flags) as unknown as T;
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepClone(item)) as unknown as T;
+    }
+    if (typeof structuredClone === 'function') {
+        return structuredClone(obj) as T;
+    }
+    return JSON.parse(JSON.stringify(obj)) as T;
 }
 
 /**

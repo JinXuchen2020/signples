@@ -243,7 +243,9 @@ export class FileManager {
 						resolve(res);
 					},
 					fail: (res) => {
-						console.error("上传失败:", JSON.stringify(res, null, 2));
+						if (__DEV__) {
+							console.error("上传失败:", JSON.stringify(res, null, 2));
+						}
 						reject(res);
 					}
 				});

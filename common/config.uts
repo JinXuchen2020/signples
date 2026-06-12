@@ -37,6 +37,8 @@ export const STORAGE_KEYS = {
     PROGRAM_FOLDER: 'program-folder',
     LANGUAGE: 'language',
     DARK_MODE: 'dark-mode',
+    PROGRAM: 'program',
+    ACTIVE_DEVICE: 'activeDevice',
 } as const;
 
 /** 语言选项 */

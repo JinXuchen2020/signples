@@ -98,7 +98,7 @@
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
 	import { useState }  from '@/store/index.uts'
-	import { request } from '@/utils/http/index.uts'
+	import { request, post } from '@/utils/http/index.uts'
 	export default {
 		data() {
 			return {
@@ -127,69 +127,47 @@
 					url:"/pages/user/language"
 				})	
 			},
-			async handleLogin(){
+		async handleLogin(){
 				try {
 					uni.showLoading({
 						title: ''
 					});
 					
 					const { setToken } = useState()
-					uni.request({
-						url: APIS.login as string,
-						method: "POST",
-						data:{
-							account: this.account,
-							password: this.password
-						},
-						success: (res) => {
-							uni.hideLoading();
-							if(res.statusCode == 200){
-								const result = res.data as UTSJSONObject;
-								if(result['code'] == 200){
-									const d = result['data'] as UTSJSONObject;
-									if(d.hasOwnProperty('userId')){
-										const userId = parseInt(d['userId'] as string);
-										const token = d['token'] as String; 
-										
-										setToken(token);
-										// uni.setStorageSync('token', token);
-										// this.getAccountInfo(userId, token);
-										this.getAccountInfo(userId);
-									}
-								}else{
-									uni.showToast({
-										icon: 'none',
-										title: result['msg'] as string,
-										duration: 2000,
-										success: () => {
-											this.popupLogin = false;
-										}
-									})
-								}
-							}else{
-								this.popupLogin = false;
-								uni.showToast({
-									icon: 'none',
-									title: $t("error.LoginFailure"),
-									duration: 2000,
-									success: () => {
-										
-									}
-								})
-							}
+					const result = await post(APIS.login as string, {
+						account: this.account,
+						password: this.password
+					}) as UTSJSONObject;
+					
+					if(result && result['code'] == 200){
+						const d = result['data'] as UTSJSONObject;
+						if(d.hasOwnProperty('userId')){
+							const userId = parseInt(d['userId'] as string);
+							const token = d['token'] as String; 
 							
-						},
-						fail: () => {
-							uni.hideLoading();
-							uni.showToast({
-								icon: 'none',
-								title: '网络连接失败',
-								duration: 2000,
-							})
+							setToken(token);
+							this.getAccountInfo(userId);
 						}
-					});
+					}else{
+						this.popupLogin = false;
+						uni.showToast({
+							icon: 'none',
+							title: (result && result['msg']) as string || $t("error.LoginFailure"),
+							duration: 2000,
+							success: () => { 
+							}
+						})
+					}
+					
+					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
+					this.popupLogin = false;
+					uni.showToast({
+						icon: 'none',
+						title: '网络连接失败',
+						duration: 2000,
+					})
 					console.log(err)
 				}
 			},

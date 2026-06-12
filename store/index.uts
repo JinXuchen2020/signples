@@ -1,5 +1,6 @@
 import { reactive, computed } from 'vue';
 import { getStorage, setStorage } from '@/utils/index.uts';
+import { STORAGE_KEYS } from '@/common/config.uts';
 
 export type State = {
 	token: string;
@@ -9,15 +10,6 @@ export type State = {
 	activeDevice: UTSJSONObject;
 	activeUser: UTSJSONObject;
 }
-
-const STORAGE_KEYS = {
-	TOKEN: 'token',
-	LOGIN_USER: 'loginUser',
-	PROGRAM: 'program',
-	PROGRAM_FOLDER: 'programFolder',
-	ACTIVE_DEVICE: 'activeDevice',
-	ACTIVE_USER: 'activeUser'
-};
 
 const state = reactive<State>({
 	token: '',

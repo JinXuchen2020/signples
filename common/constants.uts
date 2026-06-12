@@ -38,15 +38,7 @@ export const COMPONENT_ICONS: Record<string, string> = {
 	Word: '/static/svg/component-8.png'
 };
 
-export const STORAGE_KEYS = {
-	TOKEN: 'token',
-	LOGIN_USER: 'loginUser',
-	PROGRAM: 'program',
-	PROGRAM_FOLDER: 'programFolder',
-	ACTIVE_DEVICE: 'activeDevice',
-	ACTIVE_USER: 'activeUser',
-	LANGUAGE: 'language'
-} as const;
+export { STORAGE_KEYS } from '@/common/config.uts';
 
 export const API_TIMEOUT = 30000;
 

@@ -83,6 +83,9 @@ export class HistoryManager {
 	}
 
 	private deepClone(state: HistoryState): HistoryState {
+		if (typeof structuredClone === 'function') {
+			return structuredClone(state) as HistoryState;
+		}
 		return JSON.parse(JSON.stringify(state)) as HistoryState;
 	}
 
