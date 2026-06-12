@@ -1,4 +1,4 @@
-const BASE_URL = 'http://1.255.226.145:12106';
+import { BASE_URL } from '@/api/config.uts';
 const REQUEST_TIMEOUT = 30000;
 import { useState } from '@/store/index.uts';
 

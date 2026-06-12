@@ -154,7 +154,7 @@
 					const person: UTSJSONObject = {}
 					const currentDate = Date.now();
 					const apiUrl = APIS.deviceControl.getString('getAll')!;
-					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
+					const param = `?deviceId=${encodeURIComponent(this.deviceInfo["snCode"])}&controlType=${encodeURIComponent(this.pageType)}&executionType=SCHEDULED`;
 					const result = await request('GET', apiUrl + param, person) 
 					this.deviceControls = result as UTSJSONObject[];
 					console.log(result);

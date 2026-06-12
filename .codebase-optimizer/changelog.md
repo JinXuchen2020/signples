@@ -1,5 +1,20 @@
 # Codebase Optimizer - 变更日志
 
+## Round 2
+
+### 2026-06-12
+- [R2-T1] 修复 | `pages/index/index.uvue` | 模板 JSON.stringify 改计算属性
+- [R2-T2] 修复 | `pages/programs/shared/history.uts` | 历史深克隆改结构化浅拷贝
+- [R2-T3] 修复 | `pages/programs/editor.uvue` | 6 表单改 v-if 按需挂载
+- [R2-T4] 修复 | `pages/index/devices.uvue` | 设备过滤器合并为单次遍历
+- [R2-T5] 修复 | `pages/programs/editor.uvue` | TouchMove 属性写入节流
+- [R2-T6] 修复 | `api/config.uts`, `utils/http/index.uts` | BASE_URL 去重，导入统一配置
+- [R2-T7] 修复 | 6 处 | 不安全 URL 拼接加 encodeURIComponent
+- [R2-T8] 修复 | 4 处 | API {id} 路径数字校验
+- [R2-T9] 修复 | 5 处 | 表单输入前端验证
+- [R2-T10] 修复 | `file-manager/index.uts`, `wordForm.uvue` | 文件系统路径遍历防护
+- [R2-T13] 修复 | `README.md` | 补充项目描述文档
+
 ## Round 1
 
 ### 2026-06-12

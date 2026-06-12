@@ -142,39 +142,32 @@
 		},
 		computed: {
 			filteredDeviceList(): Array<UTSJSONObject> {
-				let list = this.deviceList;
-				if (this.searchKeyword) {
-					const keyword = this.searchKeyword.toLowerCase();
-					list = list.filter((item: UTSJSONObject) => {
+				return this.deviceList.filter((item: UTSJSONObject) => {
+					if (this.searchKeyword) {
+						const keyword = this.searchKeyword.toLowerCase();
 						const name = (item['name'] as string)?.toLowerCase() || '';
 						const sn = (item['snCode'] as string)?.toLowerCase() || '';
-						return name.includes(keyword) || sn.includes(keyword);
-					});
-				}
-				if (this.groupFilter !== 'all') {
-					list = list.filter((item: UTSJSONObject) => {
+						if (!name.includes(keyword) && !sn.includes(keyword)) return false;
+					}
+					if (this.groupFilter !== 'all') {
 						const type = (item['deviceType'] as string) || 'other';
 						if (this.groupFilter === 'display') {
-							return type.includes('display') || type.includes('screen');
+							if (!type.includes('display') && !type.includes('screen')) return false;
 						} else if (this.groupFilter === 'wall') {
-							return type.includes('wall') || type.includes('拼接');
+							if (!type.includes('wall') && !type.includes('拼接')) return false;
 						} else if (this.groupFilter === 'other') {
-							return !type.includes('display') && !type.includes('screen') && !type.includes('wall') && !type.includes('拼接');
+							if (type.includes('display') || type.includes('screen') || type.includes('wall') || type.includes('拼接')) return false;
 						}
-						return true;
-					});
-				}
-				if (this.statusFilter !== 'all') {
-					list = list.filter((item: UTSJSONObject) => {
+					}
+					if (this.statusFilter !== 'all') {
 						if (this.statusFilter === 'online') {
-							return item['connectStatus'] == 1;
+							if (item['connectStatus'] != 1) return false;
 						} else if (this.statusFilter === 'offline') {
-							return item['connectStatus'] == 0;
+							if (item['connectStatus'] != 0) return false;
 						}
-						return true;
-					});
-				}
-				return list;
+					}
+					return true;
+				});
 			}
 		},
 		onLoad(): void {
@@ -217,7 +210,7 @@
 				  	title: ''
 				});
 				const person: UTSJSONObject = {}
-				const param = '?userAccount=' + this.userAccount;
+				const param = '?userAccount=' + encodeURIComponent(this.userAccount);
 			    const result = await request('GET', APIS.deviceListPage as string + param, person)
 				const currentDate = new Date().getTime()
 				const d = result as Array<UTSJSONObject>;
