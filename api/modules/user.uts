@@ -15,19 +15,19 @@ export interface LoginParams {
 }
 
 export async function login(params: LoginParams, config?: any) {
-  return await post(APIS.login, params, config);
+  return await post<UTSJSONObject>(APIS.login, params, config);
 }
 
 export async function getUserInfo(userId: string, config?: any) {
-  return await get(`${APIS.userInfo}${userId}`, {}, config);
+  return await get<UTSJSONObject>(`${APIS.userInfo}${userId}`, {}, config);
 }
 
 export async function getAllUsers(config?: any) {
-  return await get(APIS.usersAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.usersAll, {}, config);
 }
 
 export async function saveUser(user: UserInfo, config?: any) {
-  return await post((APIS.user ).save, user, config);
+  return await post<UTSJSONObject>(APIS.user.save, user, config);
 }
 
 export default {

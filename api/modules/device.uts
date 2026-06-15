@@ -17,47 +17,47 @@ export interface CMDParams {
 }
 
 export async function getAllDevices(config?: any) {
-  return await get(APIS.deviceListPage, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.deviceListPage, {}, config);
 }
 
 export async function getDeviceInfo(deviceId: string, config?: any) {
-  return await get(`${APIS.deviceInfo}${deviceId}`, {}, config);
+  return await get<UTSJSONObject>(`${APIS.deviceInfo}${deviceId}`, {}, config);
 }
 
 export async function createDevice(device: DeviceInfo, config?: any) {
-  return await post(APIS.createDevice, device, config);
+  return await post<UTSJSONObject>(APIS.createDevice, device, config);
 }
 
 export async function updateDevice(device: DeviceInfo, config?: any) {
-  return await put(APIS.updateDevice, device, config);
+  return await put<UTSJSONObject>(APIS.updateDevice, device, config);
 }
 
 export async function deleteDevice(deviceId: string, config?: any) {
-  return await del(`${APIS.deleteDevice}${deviceId}`, {}, config);
+  return await del<UTSJSONObject>(`${APIS.deleteDevice}${deviceId}`, {}, config);
 }
 
 export async function sendCMD(cmd: CMDParams, config?: any) {
-  return await post(APIS.sendCMD, cmd, config);
+  return await post<boolean>(APIS.sendCMD, cmd, config);
 }
 
 export async function getDeviceControls(config?: any) {
-  return await get((APIS.deviceControl ).getAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.deviceControl.getAll, {}, config);
 }
 
 export async function saveDeviceControl(control: any, config?: any) {
-  return await post((APIS.deviceControl ).save, control, config);
+  return await post<UTSJSONObject>(APIS.deviceControl.save, control, config);
 }
 
 export async function getTimeSyncConfigs(config?: any) {
-  return await get((APIS.timeSyncConfig ).getAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.timeSyncConfig.getAll, {}, config);
 }
 
-export async function saveTimeSyncConfig(config: any, configOpts?: any) {
-  return await post((APIS.timeSyncConfig ).save, config, configOpts);
+export async function saveTimeSyncConfig(cfg: any, configOpts?: any) {
+  return await post<UTSJSONObject>(APIS.timeSyncConfig.save, cfg, configOpts);
 }
 
 export async function getMonitorInfo(config?: any) {
-  return await get((APIS.monitor ).getAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.monitor.getAll, {}, config);
 }
 
 export default {

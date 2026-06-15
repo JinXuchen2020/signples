@@ -10,11 +10,11 @@ export interface MediaInfo {
 }
 
 export async function getAllMedia(config?: any) {
-  return await get(APIS.mediaAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.mediaAll, {}, config);
 }
 
 export async function uploadProgramZip(formData: any, config?: any) {
-  return await post(APIS.uploadZip, formData, {
+  return await post<UTSJSONObject>(APIS.uploadZip, formData, {
     ...config,
     showLoading: true,
     loadingText: '上传中...'
@@ -22,11 +22,11 @@ export async function uploadProgramZip(formData: any, config?: any) {
 }
 
 export async function getPlaybackRecords(config?: any) {
-  return await get((APIS.playbackRecord ).getAll, {}, config);
+  return await get<Array<UTSJSONObject>>(APIS.playbackRecord.getAll, {}, config);
 }
 
 export async function savePlaybackRecord(record: any, config?: any) {
-  return await post((APIS.playbackRecord ).save, record, config);
+  return await post<UTSJSONObject>(APIS.playbackRecord.save, record, config);
 }
 
 export default {
