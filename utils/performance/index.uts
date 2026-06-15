@@ -135,7 +135,7 @@ export function measureAsyncFunction<T extends (...args: any[]) => Promise<any>>
 			return result;
 		} catch (error) {
 			const duration = Date.now() - start;
-			console.error(`[Performance] ${name} failed after ${duration}ms:`, error);
+			logger.error(`[Performance] ${name} failed after ${duration}ms:`, error);
 			throw error;
 		}
 	}) as T;

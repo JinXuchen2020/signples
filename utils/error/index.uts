@@ -35,7 +35,7 @@ class ErrorHandler {
 			this.errorLogs.shift();
 		}
 
-		console.error(`[Error] ${context || 'Unknown'}:`, error);
+		logger.error(`[Error] ${context || 'Unknown'}:`, error);
 
 		this.notifyHandlers(error, context);
 	}

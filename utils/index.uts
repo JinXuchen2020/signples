@@ -119,7 +119,7 @@ export function setStorage<T>(key: string, value: T): void {
     try {
         uni.setStorageSync(key, JSON.stringify(value));
     } catch (e) {
-        console.error('Storage error:', e);
+        logger.error('Storage error:', e);
     }
 }
 
@@ -138,6 +138,6 @@ export function removeStorage(key: string): void {
     try {
         uni.removeStorageSync(key);
     } catch (e) {
-        console.error('Storage remove error:', e);
+        logger.error('Storage remove error:', e);
     }
 }
