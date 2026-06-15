@@ -110,7 +110,7 @@
 <script lang="uts">
 	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectDevice } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
 	import { useState } from '@/store/index.uts'
 	
@@ -145,14 +145,7 @@
 				that.deviceId = that.deviceInfo['id'] as number;
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectDevice"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/devices');
-						}
-					}
-				})
+				promptSelectDevice($t);
 			}
 		},
 		methods: {

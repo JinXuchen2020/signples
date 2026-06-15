@@ -141,7 +141,7 @@
 
 <script lang="uts">
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectUser } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
 	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
 	import { FileManager} from './shared/file-manager/index.uts'
@@ -183,14 +183,7 @@
 				this.getDevices();
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectUser"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/users');
-						}
-					}
-				})
+				promptSelectUser($t);
 			}
 		},
 		methods: {
