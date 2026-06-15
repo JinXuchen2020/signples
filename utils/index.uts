@@ -1,3 +1,5 @@
+import logger from '@/utils/logger/index.uts';
+
 export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
     let d: Date;
     if (typeof date === 'string') {

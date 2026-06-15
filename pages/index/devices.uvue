@@ -238,7 +238,7 @@
 				uni.hideLoading();
 			  } catch (error) {
 				uni.hideLoading();
-			    console.error(error)
+			    logger.error(error)
 			  }
 			},
 			async handleDelete(device: UTSJSONObject){
@@ -257,11 +257,10 @@
 								const person: UTSJSONObject = {}
 								const param = device.id;
 								request('DELETE', APIS.deleteDevice as string + param, person).then(()=> {
-								request('DELETE', APIS.deleteDevice as string + param, person).then(()=> {
 									uni.hideLoading();
 									that.getDeviceList();
 								}).catch((err: any) => {
-									console.error('删除设备失败:', err);
+									logger.error('删除设备失败:', err);
 									uni.showToast({ icon: 'none', title: '删除失败' });
 								})
 							} catch (err){

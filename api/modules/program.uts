@@ -22,11 +22,11 @@ export async function uploadProgramZip(formData: any, config?: any) {
 }
 
 export async function getPlaybackRecords(config?: any) {
-  return await get((APIS.playbackRecord as any).getAll, {}, config);
+  return await get((APIS.playbackRecord ).getAll, {}, config);
 }
 
 export async function savePlaybackRecord(record: any, config?: any) {
-  return await post((APIS.playbackRecord as any).save, record, config);
+  return await post((APIS.playbackRecord ).save, record, config);
 }
 
 export default {

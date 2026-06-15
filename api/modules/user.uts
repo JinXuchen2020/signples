@@ -27,7 +27,7 @@ export async function getAllUsers(config?: any) {
 }
 
 export async function saveUser(user: UserInfo, config?: any) {
-  return await post((APIS.user as any).save, user, config);
+  return await post((APIS.user ).save, user, config);
 }
 
 export default {

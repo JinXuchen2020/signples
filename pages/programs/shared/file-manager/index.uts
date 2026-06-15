@@ -5,22 +5,23 @@ import { Ziper } from "@/uni_modules/ns-unzip";
 import { request } from '@/utils/http/index';
 import { useState }  from '@/store/index.uts'
 import i18n from '@/locale'
+import logger from '@/utils/logger/index.uts'
 const defl = uni.getStorageSync('language') as string
 
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 
 export class FileManager {
-	fs: FileSystemManager;
-	token: string;
-	programFolder: string;
-	userAccount: string;
-	
-	constructor(){
+	private get token(): string {
 		const { state } = useState();
-		this.fs = uni.getFileSystemManager();
-		this.token = state.token;
-		this.programFolder = state.programFolder;
-		this.userAccount = state.activeUser['account'] as string;
+		return state.token;
+	}
+	private get programFolder(): string {
+		const { state } = useState();
+		return state.programFolder;
+	}
+	private get userAccount(): string {
+		const { state } = useState();
+		return state.activeUser['account'] as string;
 	}
 	
 	private convertPath(path: string): string {
@@ -62,7 +63,7 @@ export class FileManager {
 				await Promise.all(statPromises);
 			}
 		} catch (err) {
-			console.error(err);
+			logger.error(err);
 		}
 		
 		return results;
@@ -91,7 +92,7 @@ export class FileManager {
 			}
 			return true;
 		} catch (err) {
-			console.error('删除节目失败:', err);
+			logger.error('删除节目失败:', err);
 			return false;
 		}
 	}
@@ -243,7 +244,7 @@ export class FileManager {
 						resolve(res);
 					},
 					fail: (res) => {
-						console.error("上传失败:", JSON.stringify(res, null, 2));
+						logger.error("上传失败:", JSON.stringify(res, null, 2));
 						reject(res);
 					}
 				});
@@ -379,7 +380,7 @@ export class FileManager {
 
 			return exportPath;
 		} catch (error) {
-			console.error('导出失败:', error);
+			logger.error('导出失败:', error);
 			uni.showToast({
 				title: '导出失败',
 				icon: 'none'
@@ -414,7 +415,7 @@ export class FileManager {
 				return new MediaConfig(configData);
 			}
 		} catch (error) {
-			console.error('导入失败:', error);
+			logger.error('导入失败:', error);
 			uni.showToast({
 				title: '导入失败',
 				icon: 'none'

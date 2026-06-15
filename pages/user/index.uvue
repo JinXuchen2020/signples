@@ -96,6 +96,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { useState }  from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
@@ -173,7 +174,7 @@
 									title: $t("error.LoginFailure"),
 									duration: 2000,
 									success: () => {
-										
+										this.popupLogin = false;
 									}
 								})
 							}
@@ -193,7 +194,7 @@
 					});
 				} catch (err){
 					uni.hideLoading();
-					console.error("getAccountInfo error:", err)
+					logger.error("getAccountInfo error:", err)
 				}
 			},
 			async getAccountInfo(id: Number){
@@ -213,7 +214,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.error("getAccountInfo error:", err)
+					logger.error("getAccountInfo error:", err)
 				}
 			},
 			handleRouteGoto(route: string){

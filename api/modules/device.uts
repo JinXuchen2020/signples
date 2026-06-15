@@ -41,23 +41,23 @@ export async function sendCMD(cmd: CMDParams, config?: any) {
 }
 
 export async function getDeviceControls(config?: any) {
-  return await get((APIS.deviceControl as any).getAll, {}, config);
+  return await get((APIS.deviceControl ).getAll, {}, config);
 }
 
 export async function saveDeviceControl(control: any, config?: any) {
-  return await post((APIS.deviceControl as any).save, control, config);
+  return await post((APIS.deviceControl ).save, control, config);
 }
 
 export async function getTimeSyncConfigs(config?: any) {
-  return await get((APIS.timeSyncConfig as any).getAll, {}, config);
+  return await get((APIS.timeSyncConfig ).getAll, {}, config);
 }
 
 export async function saveTimeSyncConfig(config: any, configOpts?: any) {
-  return await post((APIS.timeSyncConfig as any).save, config, configOpts);
+  return await post((APIS.timeSyncConfig ).save, config, configOpts);
 }
 
 export async function getMonitorInfo(config?: any) {
-  return await get((APIS.monitor as any).getAll, {}, config);
+  return await get((APIS.monitor ).getAll, {}, config);
 }
 
 export default {
