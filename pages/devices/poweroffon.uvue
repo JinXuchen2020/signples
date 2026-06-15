@@ -58,6 +58,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
@@ -141,7 +142,7 @@
 				} catch (err){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
@@ -153,7 +154,7 @@
 				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
 			},
 			handleEdit(item: UTSJSONObject) {
-				console.log(item);
+				logger.debug(item);
 				routeGoto(`/pages/devices/timercontrol?control_id=${item.id}&control_type=${this.pageType}`);
 			}
 		}

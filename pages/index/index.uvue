@@ -133,6 +133,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { getCurrentTimeYYMMDDHHmmss } from '@/utils/index.uts'
 	import { useState } from '@/store/index.uts'
 	import { routeGoto } from '@/common/router.uts'
@@ -199,7 +200,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					logger.debug(err)
 				}
 			},
 			isEmpty(obj: UTSJSONObject): boolean {

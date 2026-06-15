@@ -72,6 +72,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
@@ -114,7 +115,7 @@
 						item['isEnabled'] = 1;
 					}
 					
-					console.log(selectedItems);
+					logger.debug(selectedItems);
 					const controlData = JSON.stringify(selectedItems);
 						
 					const dataObj = {
@@ -168,7 +169,7 @@
 					uni.hideLoading();
 					if((typeof JSON.parse(JSON.stringify(err))) == 'string') {
 						const errObj = JSON.stringify(err)
-						console.log(errObj);
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj}`,
@@ -177,7 +178,7 @@
 					}
 					else {						
 						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-						console.log(errObj);
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
@@ -194,12 +195,12 @@
 					});
 					
 					for(const item of selectedItems) {
-						console.log(item);
+						logger.debug(item);
 						const person: UTSJSONObject = {}
 						let apiUrl = APIS.deviceControl.getString('deleteById')!;
 						const id = item['id'].toString();
 						apiUrl = apiUrl.replace("{id}", id);
-						console.log(apiUrl);
+						logger.debug(apiUrl);
 						await request('DELETE', apiUrl, person);
 					}
 					
@@ -208,7 +209,7 @@
 				} catch (err){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,

@@ -88,6 +88,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
@@ -157,7 +158,7 @@
 					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
 					const result = await request('GET', apiUrl + param, person) 
 					this.deviceControls = result as UTSJSONObject[];
-					console.log(result);
+					logger.debug(result);
 					this.deviceControls.forEach((item: UTSJSONObject) => {
 						const nitem = item as UTSJSONObject;
 						const day = item['validDateEnd'] as string;
@@ -172,7 +173,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					logger.debug(err)
 				}
 			},
 			handleCreate(){
@@ -240,7 +241,7 @@
 				} catch (err){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,

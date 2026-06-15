@@ -366,7 +366,7 @@
 						this.emitUpdate();
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				};
 				uni.showActionSheet(options);
@@ -395,7 +395,7 @@
 						this.emitUpdate();
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				};
 				uni.showActionSheet(options);
@@ -409,7 +409,7 @@
 						this.emitUpdate();
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				};
 				uni.showActionSheet(options);

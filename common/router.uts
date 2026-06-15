@@ -30,7 +30,7 @@ export const publicRoutes = [
 ];
 
 export function routeGoto(route: string, options?: UniApp.NavigateToOptions): void {
-	console.log('routeGoto=', route);
+	
 	const { isLoggedIn } = useAuth();
 	
 	if (!publicRoutes.includes(route) && !isLoggedIn.value) {

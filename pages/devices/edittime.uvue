@@ -89,6 +89,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
@@ -197,7 +198,7 @@
 						this.currentTimeZone = this.timeZones[selectedIndex].getString('name')!;
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				}
 				uni.showActionSheet(options)
@@ -249,7 +250,7 @@
 				} catch (err){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,

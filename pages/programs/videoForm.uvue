@@ -189,7 +189,7 @@
 						}
 					},
 					fail: (err) => {
-						console.log("err: ", JSON.stringify(err));
+						logger.debug("err: ", JSON.stringify(err));
 						uni.showToast({
 						  title: "choose media error.code:" + err.errCode + ";message:" + err.errMsg,
 						  position: "bottom"

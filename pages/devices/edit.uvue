@@ -108,6 +108,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
@@ -179,7 +180,7 @@
 							} catch (err){
 								uni.hideLoading();
 								const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-								console.log(errObj);
+								logger.debug(errObj);
 								uni.showToast({
 									icon: 'none',
 									title: `${errObj.message}`,
@@ -226,7 +227,7 @@
 									} catch (err){
 										uni.hideLoading();
 										const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-										console.log(errObj);
+										logger.debug(errObj);
 										uni.showToast({
 											icon: 'none',
 											title: `${errObj.message}`,
@@ -278,7 +279,7 @@
 								} catch (err){
 									uni.hideLoading();
 									const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-									console.log(errObj);
+									logger.debug(errObj);
 									uni.showToast({
 										icon: 'none',
 										title: `${errObj.message}`,

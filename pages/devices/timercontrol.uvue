@@ -91,6 +91,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
@@ -220,7 +221,7 @@
 				this.currentRepeatMode = this.repeatModes.find(c => c.getString('key') == this.formData.getString('repeatMode'))?.getString('name')!;
 			}
 			
-			console.log(this.formData);
+			logger.debug(this.formData);
 			this.dayList = [] as UTSJSONObject[]
 			for (let i = 0; i < 30; i++) {
 				this.dayList.push({
@@ -237,7 +238,7 @@
 					});
 					const apiUrl = APIS.deviceControl.getString('getById')!;
 					const result = await request('GET', apiUrl.replace("{id}", `${this.controlId}`), {}) as UTSJSONObject;
-					console.log(result);
+					logger.debug(result);
 					this.formData = result as UTSJSONObject;
 					const executionString = result.getString('execution')!;
 					if (executionString.includes("|")) {						
@@ -259,7 +260,7 @@
 				} catch (err){
 					uni.hideLoading();
 					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-					console.log(errObj);
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
@@ -268,9 +269,9 @@
 				}
 			},
 			async repeatStringChange(e: CheckboxGroupChangeEvent) {
-				console.log(e.detail);
+				logger.debug(e.detail);
 				this.repeatString = e.detail.value.map(c => `${c}#`).join('');
-				console.log(this.repeatString);
+				logger.debug(this.repeatString);
 			},
 			changing(event: UniSliderChangeEvent){
 				this.formData.value = event.detail.value
@@ -306,7 +307,7 @@
 							execution: this.getExecuteTime(),
 						};
 						
-						console.log(controlData);
+						logger.debug(controlData);
 						
 						const apiUrl = APIS.deviceControl.getString('save')!;
 						await request("POST", apiUrl, controlData);
@@ -322,7 +323,7 @@
 					} catch (err){
 						uni.hideLoading();
 						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
-						console.log(errObj);
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
@@ -342,7 +343,7 @@
 						this.repeatString = '';
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				}
 				uni.showActionSheet(options)

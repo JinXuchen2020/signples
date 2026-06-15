@@ -111,6 +111,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
@@ -265,7 +266,7 @@
 								})
 							} catch (err){
 								uni.hideLoading();
-								console.log(err)
+								logger.debug(err)
 							}
 						}
 					}
@@ -306,7 +307,7 @@
 								});
 							} catch (err){
 								uni.hideLoading();
-								console.log(err);
+								logger.debug(err);
 							}
 						}
 					}

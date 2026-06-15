@@ -274,7 +274,7 @@ export class FileManager {
 			const res = await request("POST", APIS.sendCMD as string, dataObj);
 			return res as boolean;
 		} catch (err) {
-			console.log('sendCMD program err', err);
+			logger.debug('sendCMD program err', err);
 			return false;
 		}
 	}
