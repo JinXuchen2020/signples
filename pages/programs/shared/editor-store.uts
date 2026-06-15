@@ -1,0 +1,44 @@
+import { ref, computed } from 'vue';
+import { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, createComponentByType } from './shared/media-config/index.uts';
+import { FileManager, MediaStoreFolder } from './shared/file-manager/index.uts';
+
+// ── Core Refs ──────────────────────────────────────────────────────────
+export const fileManager = new FileManager();
+export const mediaList = ref<UTSJSONObject[]>([]);
+export const deviceList = ref<UTSJSONObject[]>([]);
+export const selectedDevices = ref<string[]>([]);
+export const mediaConfig = ref<MediaConfig | null>(null);
+export const activePage = ref<MediaPage | null>(null);
+export const currentPageIndex = ref<number | null>(null);
+export const activeComponent = ref<BaseComponent | null>(null);
+export const currentComponentIndex = ref<number | null>(null);
+export const canUndo = ref(false);
+export const canRedo = ref(false);
+export const clipboardComponent = ref<UTSJSONObject | null>(null);
+export const zoomLevel = ref(1);
+export const programName = ref('');
+export const canvasWidth = ref('256');
+export const canvasHeight = ref('192');
+export const pushPopup = ref(false);
+export const activeTab = ref(1);
+export const shortcutInputFocused = ref(false);
+export const canvasRect = ref({ left: 0, top: 0, width: 0, height: 0 });
+
+// ── Constants ──────────────────────────────────────────────────────────
+export const minZoom = 0.5;
+export const maxZoom = 2;
+export const zoomStep = 0.25;
+export const autoSaveIntervalMs = 30000;
+export const drawThrottleMs = 16;
+export const defl = uni.getStorageSync('language') as string;
+
+// ── Computed ───────────────────────────────────────────────────────────
+export const canMoveUp = computed(() => {
+	if (currentComponentIndex.value == null || activePage.value == null) return false;
+	return currentComponentIndex.value > 0;
+});
+
+export const canMoveDown = computed(() => {
+	if (currentComponentIndex.value == null || activePage.value == null) return false;
+	return currentComponentIndex.value < activePage.value!.components.length - 1;
+});
