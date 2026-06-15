@@ -441,9 +441,7 @@ onReady(() => {
     startAutoSave(async () => {
         await autoSaveDraft(fileManager, uCanvas, () => {}, (err) => {});
     });
-    uni.onKeyboardHeightChange((res) => {
-        console.log('键盘高度:', res.height);
-    });
+    uni.onKeyboardHeightChange(() => {});
 });
 
 onUnmounted(() => {
