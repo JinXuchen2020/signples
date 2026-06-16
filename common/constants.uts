@@ -38,15 +38,7 @@ export const COMPONENT_ICONS: Record<string, string> = {
 	Word: '/static/svg/component-8.png'
 };
 
-export const STORAGE_KEYS = {
-	TOKEN: 'token',
-	LOGIN_USER: 'loginUser',
-	PROGRAM: 'program',
-	PROGRAM_FOLDER: 'programFolder',
-	ACTIVE_DEVICE: 'activeDevice',
-	ACTIVE_USER: 'activeUser',
-	LANGUAGE: 'language'
-} as const;
+export { STORAGE_KEYS } from '@/common/config.uts';
 
 export const API_TIMEOUT = 30000;
 
@@ -104,6 +96,6 @@ export const DEFAULT_LANGUAGE = 'zh-CN';
 export const SUPPORTED_LANGUAGES = [
 	{ code: 'zh-CN', name: '简体中文' },
 	{ code: 'en', name: 'English' },
-	{ code: 'jp', name: '日本語' },
-	{ code: 'kr', name: '한국어' }
+	{ code: 'ja', name: '日本語' },
+	{ code: 'ko', name: '한국어' }
 ] as const;

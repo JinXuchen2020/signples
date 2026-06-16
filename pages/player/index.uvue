@@ -5,57 +5,87 @@
 		</view>
 		<view class="device-info">
 			<view class="device-name">
-				<text>Virtual-NS2K1</text>
+				<text>{{ currentDeviceName }}</text>
 			</view>
 			<view class="btns-box">
-				<text class="btn"  @click="handleRouteGoto('/pages/index/devices', false)">切换设备</text>
+				<text class="btn" @click="handleRouteGoto('/pages/index/devices', false)">切换设备</text>
 			</view>
 		</view>
 		<view class="programs">
-			<view class="item">
+			<view class="item" v-for="(item, index) in programList" :key="index">
 				<view class="ad-images-s">
 					<image class="image" src="/static/image/ad.png" mode="widthFix"></image>
 					<view class="text">
-						<text class="t">播放中</text>
+						<text class="t">{{ item.statusText }}</text>
 					</view>
 				</view>
 				<view class="ad-name">
-					<text>20250623002</text>
+					<text>{{ item.name }}</text>
 				</view>
 			</view>
-			<view class="item">
-				<view class="ad-images-s">
-					<image class="image" src="/static/image/ad.png" mode="widthFix"></image>
-					<view class="text">
-						<text class="t">等待播放</text>
-					</view>
-				</view>
-				<view class="ad-name">
-					<text>20250623003</text>
-				</view>
+			<view class="no-data" v-if="programList.length == 0">
+				<text>{{ $t('index.NoMore') }}</text>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script lang="uts">
+	import { APIS } from '@/api/config.uts'
+	import { useState } from '@/store/index.uts'
+	import { request } from '@/utils/http/index.uts'
+	import i18n from '@/locale'
+	
+	interface ProgramItem {
+		name: string;
+		statusText: string;
+	}
+	
 	export default {
 		data() {
 			return {
-				
+				currentDeviceName: '',
+				deviceId: '',
+				programList: [] as Array<ProgramItem>,
 			}
 		},
+		onLoad() {
+			uni.setNavigationBarTitle({
+				title: i18n.global.t('player.Playing')
+			});
+			this.loadDeviceAndPrograms();
+		},
 		methods: {
-			handleRouteGoto(route: string, isConnect: boolean){
-				if(isConnect == true){ //需要连接设备
-					uni.navigateTo({
-						url: route
-					});
-				}else{ //需要连接设备
-					uni.navigateTo({
-						url: route
-					});
+			async loadDeviceAndPrograms() {
+				try {
+					const { state } = useState();
+					if (state.token != '' && state.activeUser['id'] != null) {
+						const deviceList = await request('GET', APIS.deviceListPage as string, {}) as Array<UTSJSONObject>;
+						if (deviceList.length > 0) {
+							const firstDevice = deviceList[0] as UTSJSONObject;
+							this.currentDeviceName = (firstDevice['deviceName'] as string) || (firstDevice['name'] as string) || '';
+							this.deviceId = firstDevice.getNumber("id")?.toString() ?? '';
+						}
+					}
+				} catch (error) {
+					console.error('load device failed:', error)
 				}
+				
+				this.programList = [
+					{
+						name: '20250623002',
+						statusText: i18n.global.t('player.Playing')
+					},
+					{
+						name: '20250623003',
+						statusText: i18n.global.t('player.Waiting')
+					}
+				];
+			},
+			handleRouteGoto(route: string, isConnect: boolean){
+				uni.navigateTo({
+					url: route
+				});
 			},
 		}
 	}
@@ -117,6 +147,11 @@
 			.ad-name{
 				padding-left: 24rpx;
 			}
+		}
+		.no-data{
+			padding: 24rpx 36rpx;
+			text-align: center;
+			color: $uni-text-color-placeholder;
 		}
 	}
 </style>

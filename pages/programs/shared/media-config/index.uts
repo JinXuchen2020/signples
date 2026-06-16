@@ -1,10 +1,9 @@
+import { STORAGE_KEYS, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/common/config.uts';
 import { UCanvas } from "@/uni_modules/u-canvas";
 import { DraggableImage } from "../draggable-rect/index.uts";
 
-const PROGRAM_FOLDER_KEY = "program-folder";
-
 function getProgramFolder(): string {
-    return uni.getStorageSync(PROGRAM_FOLDER_KEY) as string;
+    return uni.getStorageSync(STORAGE_KEYS.PROGRAM_FOLDER) as string;
 }
 
 export function createComponentByType(data: UTSJSONObject): BaseComponent | null {
@@ -473,8 +472,8 @@ export class TextComponent extends BaseComponent {
 			Name: `文字${id}`,
 			ZIndex: id,
 			Type: "Text",
-			Width: 256,
-			Height: 192,
+			Width: CANVAS_WIDTH,
+			Height: CANVAS_HEIGHT,
 			Source: "Hello World",
 			PlayCount: 1,
 			PlayDuration: "00:00:05",
@@ -556,8 +555,8 @@ export class WebComponent extends BaseComponent {
 			Id: id,
 			Name: `网页${id}`,
 			ZIndex:  id,
-			Width: 256,
-			Height: 192,
+			Width: CANVAS_WIDTH,
+			Height: CANVAS_HEIGHT,
 			PlayCount:  1,
 			Timeline:  5,
 			PlayDuration: "00:00:05",
@@ -615,8 +614,8 @@ export class WordComponent extends BaseComponent {
 			Name: `文档${id}`,
 			ZIndex: id,
 			PlayCount: 1,
-			Width: 256,
-			Height: 192,
+			Width: CANVAS_WIDTH,
+			Height: CANVAS_HEIGHT,
 			Timeline: 30,
 			PlayDuration: "00:00:30",
 			PageDuration: 10,

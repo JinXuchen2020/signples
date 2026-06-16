@@ -14,7 +14,7 @@
 				<text class="label">{{ $t('user.Role') }}</text>
 				<picker :range="roleOptions" @change="onRoleChange">
 					<view class="picker-value">
-						<text>{{ selectedRole || formData.role }}</text>
+						<text>{{ selectedRole || $t('user.SelectRole') }}</text>
 						<image class="arrow" src="/static/svg/arrow-down.png" mode="widthFix"></image>
 					</view>
 				</picker>
@@ -32,7 +32,7 @@
 				<switch :checked="formData.connectStatus == 1" @change="onConnectStatusChange" />
 			</view>
 			<button class="submit-btn" type="primary" @click="handleSubmit">
-				{{ $t('user.Save') }}
+				{{ $t('user.Create') }}
 			</button>
 		</view>
 	</scroll-view>
@@ -48,7 +48,6 @@
 	export default {
 		data() {
 			return {
-				userId: '',
 				formData: {
 					account: '',
 					password: '',
@@ -61,34 +60,12 @@
 				selectedRole: '',
 			}
 		},
-		onLoad(e: UTSJSONObject): void {
-			this.userId = e['user_id'] as string;
+		onLoad() {
 			uni.setNavigationBarTitle({
-				title: i18n.global.t('user.EditUser')
+				title: i18n.global.t('user.CreateUser')
 			});
-			this.loadUserInfo();
 		},
 		methods: {
-			async loadUserInfo() {
-				try {
-					const apiUrl = APIS.user.getString("getById") as string;
-					const result = await request('GET', `${apiUrl}${this.userId}`, {})
-					const user = result as UTSJSONObject;
-					this.formData['account'] = user['account'] as string;
-					this.formData['role'] = user['role'] as string;
-					this.formData['company'] = user['company'] as string;
-					this.formData['region'] = user['region'] as string;
-					this.formData['connectStatus'] = user.getNumber("connectStatus") ?? 1;
-					this.selectedRole = this.formData['role'] as string;
-				} catch (error) {
-					console.error('load user info failed:', error)
-					uni.showToast({
-						icon: 'none',
-						title: i18n.global.t('user.LoadFailed'),
-						duration: 2000,
-					})
-				}
-			},
 			onAccountInput(e: UniInputBlurEvent) {
 				this.formData['account'] = e.detail.value as string;
 			},
@@ -118,6 +95,14 @@
 					})
 					return
 				}
+				if (!this.formData['password'] || (this.formData['password'] as string).trim() == '') {
+					uni.showToast({
+						icon: 'none',
+						title: i18n.global.t('user.EnterPassword'),
+						duration: 2000,
+					})
+					return
+				}
 				if (!this.selectedRole) {
 					uni.showToast({
 						icon: 'none',
@@ -129,14 +114,14 @@
 				
 				try {
 					uni.showLoading({
-						title: i18n.global.t('user.Saving')
+						title: i18n.global.t('user.Creating')
 					});
 					
 					const result = await request('POST', APIS.user.getString("save") as string, this.formData)
 					uni.hideLoading();
 					uni.showToast({
 						icon: 'success',
-						title: i18n.global.t('user.SaveSuccess'),
+						title: i18n.global.t('user.CreateSuccess'),
 						duration: 2000,
 					})
 					setTimeout(() => {
@@ -144,10 +129,10 @@
 					}, 2000)
 				} catch (error) {
 					uni.hideLoading();
-					console.error('update user failed:', error)
+					console.error('create user failed:', error)
 					uni.showToast({
 						icon: 'none',
-						title: i18n.global.t('user.SaveFailed'),
+						title: i18n.global.t('user.CreateFailed'),
 						duration: 2000,
 					})
 				}

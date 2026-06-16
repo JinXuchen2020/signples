@@ -99,6 +99,10 @@
 		methods: {
 			updateProperty(propertyName: string, proValue: string){
 				if(propertyName == 'name') {
+					if (proValue.trim() == '') {
+						uni.showToast({ icon: 'none', title: this.$t('error.FieldRequired'), duration: 2000 });
+						return;
+					}
 					this.formData!.name = proValue;
 				}
 				
@@ -115,6 +119,10 @@
 				}
 				
 				if(propertyName == 'source') {
+					if (proValue != '' && !proValue.startsWith('http://') && !proValue.startsWith('https://')) {
+						uni.showToast({ icon: 'none', title: 'URL需以http://或https://开头', duration: 2000 });
+						return;
+					}
 					this.formData!.source = proValue;
 				}
 				const data = this.formData!.toModel();
