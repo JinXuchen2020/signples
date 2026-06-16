@@ -88,12 +88,11 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectDevice } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
- 	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
- 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -111,7 +110,7 @@
 			if (state.token != '' && state.activeUser['id'] != null) {
 				that.userInfo = state.activeUser;
 				that.deviceInfo = state.activeDevice;
-				console.log(that.deviceInfo);
+				logger.debug(that.deviceInfo);
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
@@ -128,14 +127,7 @@
 				}
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectDevice"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/devices');
-						}
-					}
-				})
+				promptSelectDevice($t);
 			}
 			uni.setNavigationBarTitle({
 				title: this.$t('pages.brightnessAdjustment')
@@ -175,12 +167,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},
@@ -221,8 +213,8 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.BrightnessFailure")}`,
-							duration: DEFAULT_TOAST_DURATION,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessFailure")}`,
+							duration: 3000,
 							success: () => { 
 							}
 						})
@@ -241,19 +233,19 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.BrightnessSuccess")}`,
-						duration: DEFAULT_TOAST_DURATION,
+						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.BrightnessSuccess")}`,
+						duration: 3000,
 					})
 					
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			}

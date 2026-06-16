@@ -1,4 +1,7 @@
-import { SECONDS_PER_HOUR } from '@/common/config.uts';(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
+import logger from '@/utils/logger/index.uts';
+import { SECONDS_PER_HOUR } from '@/common/config.uts';
+
+export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
     let d: Date;
     if (typeof date === 'string') {
         d = new Date(date.replace(/-/g, '/'));
@@ -143,7 +146,7 @@ export function setStorage<T>(key: string, value: T): void {
     try {
         uni.setStorageSync(key, JSON.stringify(value));
     } catch (e) {
-        console.error('Storage error:', e);
+        logger.error('Storage error:', e);
     }
 }
 
@@ -162,6 +165,6 @@ export function removeStorage(key: string): void {
     try {
         uni.removeStorageSync(key);
     } catch (e) {
-        console.error('Storage remove error:', e);
+        logger.error('Storage remove error:', e);
     }
 }

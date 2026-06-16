@@ -1,6 +1,4 @@
-import { API_BASE_URL } from '@/common/config.uts';
-
-export const BASE_URL = API_BASE_URL;
+export const BASE_URL = 'https://1.255.226.145:12106';
 
 export type ApiEndpoints = {
   login: string;
@@ -15,11 +13,11 @@ export type ApiEndpoints = {
   createDevice: string;
   uploadZip: string;
   sendCMD: string;
-  playbackRecord: UTSJSONObject;
-  user: UTSJSONObject;
-  deviceControl: UTSJSONObject; 
-  timeSyncConfig: UTSJSONObject;
-  monitor: UTSJSONObject; 
+  playbackRecord: Record<string, string>;
+  user: Record<string, string>;
+  deviceControl: Record<string, string>;
+  timeSyncConfig: Record<string, string>;
+  monitor: Record<string, string>; 
 };
 
 export const APIS: ApiEndpoints = {

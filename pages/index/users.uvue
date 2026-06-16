@@ -53,6 +53,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { useState } from '@/store/index.uts'
 	import { routeGoto } from '@/common/router.uts'	
@@ -94,12 +95,7 @@
 				const d = result as Array<UTSJSONObject>;
 				this.userList = d
 			  } catch (error) {
-			    console.error(error)
-				uni.showToast({
-					icon: 'none',
-					title: '获取用户列表失败',
-					duration: 2000,
-				})
+			    console.error( error)
 			  }
 			},
 			
@@ -116,19 +112,14 @@
 									title: ''
 								});
 								
-								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${Number(user.id)}`);
+								const apiUrl = APIS.user.getString("deleteById")!.replace("{id}", `${user.id}`);
 								request('DELETE', apiUrl, {}).then(()=> {
 									uni.hideLoading();
 									that.getUserList();
 								})
 							} catch (err){
 								uni.hideLoading();
-								console.log(err)
-								uni.showToast({
-									icon: 'none',
-									title: '删除用户失败',
-									duration: 2000,
-								})
+								logger.debug(err)
 							}
 						}
 					}

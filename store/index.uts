@@ -1,3 +1,4 @@
+import logger from "@/utils/logger/index.uts"
 import { reactive, computed } from 'vue';
 import { getStorage, setStorage } from '@/utils/index.uts';
 import { STORAGE_KEYS } from '@/common/config.uts';
@@ -44,7 +45,7 @@ export function useAuth() {
 			uni.removeStorageSync(STORAGE_KEYS.TOKEN);
 			uni.removeStorageSync(STORAGE_KEYS.LOGIN_USER);
 		} catch (e) {
-			console.error('Failed to logout:', e);
+			logger.error('Failed to logout:', e);
 		}
 	};
 	
@@ -118,7 +119,7 @@ export function useState() {
 			state.programFolder = getStorage(STORAGE_KEYS.PROGRAM_FOLDER, '');
 			state.program = getStorage(STORAGE_KEYS.PROGRAM, {});
 		} catch (e) {
-			console.error('Failed to load state from storage', e);
+			logger.error('Failed to load state from storage', e);
 		}
 	};
 	
@@ -138,7 +139,7 @@ export function useState() {
 			try {
 				uni.removeStorageSync(key);
 			} catch (e) {
-				console.error('Failed to remove storage:', key, e);
+				logger.error('Failed to remove storage:', key, e);
 			}
 		});
 	};

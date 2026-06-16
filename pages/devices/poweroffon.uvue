@@ -58,12 +58,11 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectDevice } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
-\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
-	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -99,14 +98,7 @@
 				that.getDeviceControls();
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectDevice"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/devices');
-						}
-					}
-				})
+				promptSelectDevice($t);
 			}
 		},
 		methods: {
@@ -142,12 +134,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},
@@ -155,7 +147,7 @@
 				routeGoto(`/pages/devices/timercontrol?control_id=-1&control_type=${this.pageType}`);
 			},
 			handleEdit(item: UTSJSONObject) {
-				console.log(item);
+				logger.debug(item);
 				routeGoto(`/pages/devices/timercontrol?control_id=${item.id}&control_type=${this.pageType}`);
 			}
 		}

@@ -72,11 +72,10 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
- 	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
- 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	export default {
 		name:"timer-controls",
 		props: {
@@ -116,7 +115,7 @@
 						item['isEnabled'] = 1;
 					}
 					
-					console.log(selectedItems);
+					logger.debug(selectedItems);
 					const controlData = JSON.stringify(selectedItems);
 						
 					const dataObj = {
@@ -144,8 +143,8 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlFailure")}`,
-							duration: DEFAULT_TOAST_DURATION,
+							title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlFailure")}`,
+							duration: 3000,
 							success: () => { 
 							}
 						})
@@ -160,30 +159,30 @@
 					this.$emit("refresh");
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}�?{snCode} ${$t("error.TimerControlSuccess")}`,
-						duration: DEFAULT_TOAST_DURATION,
+						title: `${$t("index.Device")}：${snCode} ${$t("error.TimerControlSuccess")}`,
+						duration: 3000,
 						success: () => { 
 						}
 					})
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					if((typeof safeCloneError(err)) == 'string') {
+					if((typeof JSON.parse(JSON.stringify(err))) == 'string') {
 						const errObj = JSON.stringify(err)
-						console.log(errObj);
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj}`,
-							duration: DEFAULT_TOAST_DURATION,
+							duration: 3000,
 						})
 					}
 					else {						
-						const errObj = safeCloneError(err);
-						console.log(errObj);
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
-							duration: DEFAULT_TOAST_DURATION,
+							duration: 3000,
 						})
 					}
 				}
@@ -196,12 +195,12 @@
 					});
 					
 					for(const item of selectedItems) {
-						console.log(item);
+						logger.debug(item);
 						const person: UTSJSONObject = {}
 						let apiUrl = APIS.deviceControl.getString('deleteById')!;
 						const id = item['id'].toString();
 						apiUrl = apiUrl.replace("{id}", id);
-						console.log(apiUrl);
+						logger.debug(apiUrl);
 						await request('DELETE', apiUrl, person);
 					}
 					
@@ -209,12 +208,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			}

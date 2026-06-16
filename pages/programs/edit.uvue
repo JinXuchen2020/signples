@@ -69,6 +69,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import * as ucan from "@/uni_modules/u-canvas";
 	import {
 		UCanvas,
@@ -98,7 +99,7 @@
 			}
 		},
 		onLoad(e: UTSJSONObject): void {
-		  console.log('new program=', e);
+		  logger.debug('new program=', e);
 		  this.canvasOption['width'] = e['width']
 		  this.canvasOption['height'] = e['height']
 		  uni.setNavigationBarTitle({
@@ -110,7 +111,7 @@
 		},
 		methods: {
 			handleCheckComponent(index: Number){
-				console.log(index);
+				logger.debug(index);
 				uni.showToast({
 					icon: 'none',
 					title: this.$t('error.UnderDevelopment'),

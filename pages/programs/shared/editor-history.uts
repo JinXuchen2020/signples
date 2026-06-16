@@ -1,0 +1,123 @@
+import { historyManager } from './history.uts';
+import { mediaConfig, currentPageIndex, currentComponentIndex, canUndo, canRedo, activePage, activeComponent, programName, canvasWidth, canvasHeight } from './editor-store.uts';
+import { MediaStoreFolder } from './file-manager/index.uts';
+import { mediaConfig, currentPageIndex, currentComponentIndex, canUndo, canRedo, activePage, activeComponent } from './editor-store.uts';
+import { MediaConfig, MediaPage } from './media-config/index.uts';
+
+let autoSaveTimer: number | null = null;
+let hasUnsavedChanges = false;
+let lastDrawTime = 0;
+
+export function setupHistory() {
+	return historyManager.onChange(updateUndoRedoState);
+}
+
+export function startAutoSave(onSave: () => Promise<void>) {
+	autoSaveTimer = setInterval(() => {
+		if (hasUnsavedChanges && activePage.value != null) {
+			onSave();
+		}
+	}, autoSaveIntervalMs);
+}
+
+export function stopAutoSave() {
+	if (autoSaveTimer !== null) {
+		clearInterval(autoSaveTimer);
+		autoSaveTimer = null;
+	}
+}
+
+export function saveState() {
+	if (mediaConfig.value == null) return;
+	historyManager.record({
+		pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+		activePageIndex: currentPageIndex.value ?? 0,
+		activeComponentIndex: currentComponentIndex.value
+	});
+	updateUndoRedoState();
+	hasUnsavedChanges = true;
+}
+
+function updateUndoRedoState() {
+	canUndo.value = historyManager.canUndo();
+	canRedo.value = historyManager.canRedo();
+}
+
+export async function handleUndo(drawPage: () => Promise<void>) {
+	if (mediaConfig.value == null) return;
+	const state = historyManager.undo({
+		pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+		activePageIndex: currentPageIndex.value ?? 0,
+		activeComponentIndex: currentComponentIndex.value
+	});
+	if (state != null) {
+		historyManager.pause();
+		mediaConfig.value = new MediaConfig({
+			Left: 0, Top: 0, Ratio: 1,
+			Program: mediaConfig.value.program.toModel(),
+			Pages: state.pages
+		});
+		currentPageIndex.value = state.activePageIndex;
+		activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+		currentComponentIndex.value = state.activeComponentIndex;
+		activeComponent.value = state.activeComponentIndex != null
+			? activePage.value?.components[state.activeComponentIndex] ?? null
+			: null;
+		await drawPage();
+		historyManager.resume();
+		updateUndoRedoState();
+	}
+}
+
+export async function handleRedo(drawPage: () => Promise<void>) {
+	if (mediaConfig.value == null) return;
+	const state = historyManager.redo({
+		pages: mediaConfig.value.pages.map(p => p.toModel() as UTSJSONObject),
+		activePageIndex: currentPageIndex.value ?? 0,
+		activeComponentIndex: currentComponentIndex.value
+	});
+	if (state != null) {
+		historyManager.pause();
+		mediaConfig.value = new MediaConfig({
+			Left: 0, Top: 0, Ratio: 1,
+			Program: mediaConfig.value.program.toModel(),
+			Pages: state.pages
+		});
+		currentPageIndex.value = state.activePageIndex;
+		activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+		currentComponentIndex.value = state.activeComponentIndex;
+		activeComponent.value = state.activeComponentIndex != null
+			? activePage.value?.components[state.activeComponentIndex] ?? null
+			: null;
+		await drawPage();
+		historyManager.resume();
+		updateUndoRedoState();
+	}
+}
+
+export async function autoSaveDraft(
+	fileManager: any,
+	uCanvas: any,
+	onSaveComplete: () => void,
+	onSaveError: (err: any) => void
+) {
+	if (!hasUnsavedChanges || activePage.value == null) return;
+	try {
+		const thumbnailFilePath = await fileManager.capture(
+			programName.value, activePage.value.name, uCanvas
+		);
+		activePage.value!.thumbnailFilePath = thumbnailFilePath;
+		const index = mediaConfig.value!.pages.findIndex(
+			c => c.name == activePage.value!.name
+		);
+		mediaConfig.value!.pages.splice(index, 1, activePage.value);
+		const data = mediaConfig.value!.toModel();
+		await fileManager.saveProgram(programName.value, data);
+		hasUnsavedChanges = false;
+		logger.debug('自动保存草稿成功');
+		onSaveComplete();
+	} catch (error) {
+		console.error('自动保存失败:', error);
+		onSaveError(error);
+	}
+}

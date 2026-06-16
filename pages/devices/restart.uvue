@@ -71,12 +71,11 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectDevice } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
 	import { request } from '@/utils/http/index.uts'
-\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
-	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -109,14 +108,7 @@
 				that.getDeviceControls();
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectDevice"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/devices');
-						}
-					}
-				})
+				promptSelectDevice($t);
 			}
 		},
 		methods: {
@@ -152,7 +144,7 @@
 					if(!res) {
 						uni.showToast({
 							icon: 'none',
-							title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.RestartFailure")}`,
+							title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.RestartFailure")}`,
 							success: () => { 
 							}
 						})
@@ -163,7 +155,7 @@
 					await request("POST", apiUrl, controlData);
 					uni.showToast({
 						icon: 'none',
-						title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.RestartSuccess")}`,
+						title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.RestartSuccess")}`,
 						success: () => {
 							
 						}
@@ -172,12 +164,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},
@@ -193,7 +185,7 @@
 					const param = `?deviceId=${this.deviceInfo["snCode"]}&controlType=${this.pageType}&executionType=SCHEDULED`;
 					const result = await request('GET', apiUrl + param, person) 
 					this.deviceControls = result as UTSJSONObject[];
-					console.log(result);
+					logger.debug(result);
 					this.deviceControls.forEach((item: UTSJSONObject) => {
 						const nitem = item as UTSJSONObject;
 						const day = item['validDateEnd'] as string;
@@ -208,12 +200,12 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},

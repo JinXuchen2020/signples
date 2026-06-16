@@ -1,0 +1,267 @@
+import {
+	activePage, activeComponent, currentPageIndex, currentComponentIndex,
+	mediaConfig, canMoveUp, canMoveDown, clipboardComponent,
+	drawThrottleMs, lastDrawTime
+} from './editor-store.uts';
+import { UCanvas } from "@/uni_modules/u-canvas";
+import {
+	MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent,
+	WebComponent, WordComponent, createComponentByType
+} from './media-config/index.uts';
+
+export async function drawPage(uCanvas: UCanvas): Promise<void> {
+	const now = Date.now();
+	if (now - lastDrawTime < drawThrottleMs) {
+		return;
+	}
+	lastDrawTime = now;
+	await activePage.value?.draw(uCanvas);
+	uCanvas.render();
+}
+
+// ── Page Management ────────────────────────────────────────────────────
+
+export async function addPage(
+	saveState: () => void,
+	drawPage: () => Promise<void>,
+	onToast: (msg: string) => void
+) {
+	if (mediaConfig.value!.pages.length >= 5) {
+		onToast('页面数量超出最大限制');
+		return;
+	}
+	saveState();
+	const maxId = mediaConfig.value!.pages.length == 0
+		? 0 : Math.max(...mediaConfig.value!.pages.map(c => c.id)) + 0;
+	const page = MediaPage.createInstance(maxId + 1);
+	mediaConfig.value!.pages.push(page);
+	activePage.value = page;
+	currentPageIndex.value = mediaConfig.value!.pages.length - 1;
+	activeComponent.value = null;
+	await drawPage();
+}
+
+export async function deletePage(
+	index: number,
+	saveState: () => void,
+	drawPage: () => Promise<void>,
+	onConfirm: (confirmed: boolean) => void
+) {
+	uni.showModal({
+		title: '确认删除',
+		content: '确定要删除这个页面吗？',
+		success: async (res) => {
+			if (!res.confirm || !mediaConfig.value) return;
+			saveState();
+			mediaConfig.value.pages.splice(index, 1);
+			if (mediaConfig.value.pages.length > 0) {
+				if (index == currentPageIndex.value) {
+					const newIndex = index == 0 ? index : index - 1;
+					activePage.value = mediaConfig.value.pages[newIndex];
+					currentPageIndex.value = newIndex;
+				} else {
+					currentPageIndex.value = mediaConfig.value.pages.findIndex(
+						c => c.name == activePage.value!.name
+					);
+					activePage.value = mediaConfig.value.pages[currentPageIndex.value];
+				}
+				activeComponent.value = null;
+			} else {
+				activePage.value = null;
+				activeComponent.value = null;
+			}
+			await drawPage();
+			onConfirm(true);
+		}
+	});
+}
+
+export function updatePage(newData: UTSJSONObject) {
+	activePage.value = new MediaPage(newData);
+}
+
+export async function selectPage(
+	item: MediaPage, index: number,
+	fileManager: any, uCanvas: any, programName: string,
+	drawPage: () => Promise<void>
+) {
+	if (activePage.value != null) {
+		const thumbnailFilePath = await fileManager.capture(
+			programName, activePage.value.name, uCanvas
+		);
+		activePage.value!.thumbnailFilePath = thumbnailFilePath;
+	}
+	activePage.value = item;
+	currentPageIndex.value = index;
+	activeComponent.value = null;
+	await drawPage();
+}
+
+// ── Component Management ───────────────────────────────────────────────
+
+export async function selectComponent(
+	item: BaseComponent, index: number,
+	drawPage: () => Promise<void>
+) {
+	activeComponent.value = item;
+	currentComponentIndex.value = index;
+	if (activeComponent.value != null && activeComponent.value!.element != null) {
+		for (const component of activePage.value!.components.filter(
+			c => c.element != null
+		)) {
+			component.element!.isSelected = false;
+		}
+		activeComponent.value!.element.isSelected = true;
+		await drawPage();
+	}
+}
+
+export async function createComponent(
+	index: number,
+	saveState: () => void,
+	selectComponent: (comp: BaseComponent, idx: number) => Promise<void>,
+	onToast: (msg: string) => void
+) {
+	if (activePage.value == null) return;
+	if (activePage.value!.components.length >= 5) {
+		onToast('组件数量超出最大限制');
+		return;
+	}
+	saveState();
+	const maxId = activePage.value!.components.length == 0
+		? 0 : Math.max(...activePage.value!.components.map(c => c.id)) + 0;
+	let component: BaseComponent | null = null;
+	switch (index) {
+		case 1: component = VideoComponent.createInstance(maxId + 1); break;
+		case 2: component = ImageComponent.createInstance(maxId + 1); break;
+		case 3: component = TextComponent.createInstance(maxId + 1); break;
+		case 4: component = WebComponent.createInstance(maxId + 1); break;
+		case 5: component = WordComponent.createInstance(maxId + 1); break;
+	}
+	if (component != null) {
+		activePage.value?.components.push(component);
+		if (!component.hasFile) {
+			await selectComponent(component, activePage.value!.components.length - 1);
+		} else {
+			activeComponent.value = component;
+			currentComponentIndex.value = activePage.value!.components.length - 1;
+		}
+	}
+}
+
+export async function updateComponent(
+	data: UTSJSONObject,
+	saveState: () => void,
+	selectComponent: (comp: BaseComponent, idx: number) => Promise<void>
+) {
+	if (activePage.value == null) return;
+	saveState();
+	const component = createComponentByType(data);
+	if (component != null) {
+		activePage.value!.components.splice(
+			currentComponentIndex.value!, 1, component!
+		);
+		await selectComponent(component!, currentComponentIndex.value!);
+	}
+}
+
+export function deleteComponent(
+	e: UniPointerEvent, index: number,
+	saveState: () => void
+) {
+	e.bubbles = false;
+	e.preventDefault();
+	uni.showModal({
+		title: '确认删除',
+		content: '确定要删除这个组件吗？',
+		success: (res) => {
+			if (!res.confirm || !activePage.value) return;
+			saveState();
+			activePage.value.components.splice(index, 1);
+			if (activePage.value.components.length > 0) {
+				if (index == currentComponentIndex.value) {
+					const newIndex = index == 0 ? index : index - 1;
+					activeComponent.value = activePage.value.components[newIndex];
+					currentComponentIndex.value = newIndex;
+				} else {
+					currentComponentIndex.value = activePage.value.components.findIndex(
+						c => c.name == activeComponent.value!.name
+					);
+					activeComponent.value = activePage.value.components[currentComponentIndex.value];
+				}
+			} else {
+				activeComponent.value = null;
+				currentComponentIndex.value = null;
+			}
+		}
+	});
+}
+
+// ── Clipboard ──────────────────────────────────────────────────────────
+
+export function handleCopy(onToast: (msg: string, icon: string) => void) {
+	if (activeComponent.value == null) {
+		onToast('请先选择组件', 'none');
+		return;
+	}
+	clipboardComponent.value = activeComponent.value.toModel();
+	onToast('已复制', 'success');
+}
+
+export async function handlePaste(
+	saveState: () => void,
+	selectComponent: (comp: BaseComponent, idx: number) => Promise<void>,
+	drawPage: () => Promise<void>,
+	onToast: (msg: string, icon: string) => void
+) {
+	if (clipboardComponent.value == null || activePage.value == null) {
+		onToast('没有可粘贴的组件', 'none');
+		return;
+	}
+	if (activePage.value!.components.length >= 5) {
+		onToast('组件数量超出最大限制', 'none');
+		return;
+	}
+	saveState();
+	const data = clipboardComponent.value;
+	const maxId = Math.max(...activePage.value!.components.map(c => c.id), 0) + 1;
+	const newData = { ...data, Id: maxId, Name: `${data['Name']}_copy` };
+	const component = createComponentByType(newData);
+	if (component != null) {
+		activePage.value?.components.push(component);
+		await selectComponent(component, activePage.value!.components.length - 1);
+		await drawPage();
+	}
+}
+
+// ── Move Up/Down ───────────────────────────────────────────────────────
+
+export async function handleMoveUp(
+	saveState: () => void,
+	drawPage: () => Promise<void>
+) {
+	if (currentComponentIndex.value == null || activePage.value == null || !canMoveUp.value) return;
+	saveState();
+	const index = currentComponentIndex.value;
+	const components = activePage.value!.components;
+	const temp = components[index];
+	components[index] = components[index - 1];
+	components[index - 1] = temp;
+	currentComponentIndex.value = index - 1;
+	await drawPage();
+}
+
+export async function handleMoveDown(
+	saveState: () => void,
+	drawPage: () => Promise<void>
+) {
+	if (currentComponentIndex.value == null || activePage.value == null || !canMoveDown.value) return;
+	saveState();
+	const index = currentComponentIndex.value;
+	const components = activePage.value!.components;
+	const temp = components[index];
+	components[index] = components[index + 1];
+	components[index + 1] = temp;
+	currentComponentIndex.value = index + 1;
+	await drawPage();
+}

@@ -1,6 +1,6 @@
 <template>
 	<scroll-view class="app">
-		<form class="default-form" @submit="onFormSubmit">
+		<form class="defalut-form" @submit="onFormSubmit">
 			<view class="item">
 				<view class="label"><text class="t">{{ $t('device.DisplayName') }}</text></view>
 				<view class="input-box">
@@ -51,12 +51,11 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
-\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
- 	import { useState } from '@/store/index.uts'
- 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts'
+	import { useState } from '@/store/index.uts'
 	export default {
 		data() {
 			return {
@@ -114,29 +113,23 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},
 			async onFormSubmit(){
-				if(this.formData['name'] == null || (this.formData['name'] as string).trim() == ''){
+				if(this.formData['name'] == null){
 					uni.showToast({
 						icon: 'none',
-						title: this.$t('error.FieldRequired'),
-						duration: DEFAULT_TOAST_DURATION,
+						title: '字段不能为空',
+						duration: 3000,
 						success: () => {
 						}
-					})
-				}else if(this.formData['snCode'] == null || (this.formData['snCode'] as string).trim() == ''){
-					uni.showToast({
-						icon: 'none',
-						title: this.$t('error.FieldRequired'),
-						duration: 3000
 					})
 				}else{
 					try {
@@ -149,7 +142,7 @@
 						
 						uni.showToast({
 							icon: 'none',
-							title: this.$t('error.SaveSuccess'),
+							title: '保存成功',
 							duration: 2000,
 						})
 						
@@ -161,12 +154,12 @@
 						uni.navigateBack();
 					} catch (err){
 						uni.hideLoading();
-						const errObj = safeCloneError(err);
-						console.log(errObj);
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
-							duration: DEFAULT_TOAST_DURATION,
+							duration: 3000,
 						})
 					}
 				}
@@ -176,7 +169,7 @@
 </script>
 
 <style lang="scss">
-	.default-form{
+	.defalut-form{
 		padding: 18rpx 36rpx;
 		.item{
 			padding: 18rpx 0;

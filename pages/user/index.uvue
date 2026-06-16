@@ -96,6 +96,7 @@
 </template>
 
 <script lang="uts">
+import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { useState }  from '@/store/index.uts'
 	import { request, post } from '@/utils/http/index.uts'
@@ -176,7 +177,7 @@
 						title: '网络连接失败',
 						duration: 2000,
 					})
-					console.log(err)
+					logger.error(err)
 				}
 			},
 			// async getAccountInfo(id: Number, token: String){
@@ -197,7 +198,7 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					console.log(err)
+					logger.error(err)
 				}
 			},
 			handleLogout(){

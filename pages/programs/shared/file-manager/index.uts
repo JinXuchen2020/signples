@@ -5,22 +5,23 @@ import { Ziper } from "@/uni_modules/ns-unzip";
 import { request } from '@/utils/http/index';
 import { useState }  from '@/store/index.uts'
 import i18n from '@/locale'
+import logger from '@/utils/logger/index.uts'
 const defl = uni.getStorageSync('language') as string
 
 export const MediaStoreFolder = `${uni.env.USER_DATA_PATH}/temp/program/mediaStore`;
 
 export class FileManager {
-	fs: FileSystemManager;
-	token: string;
-	programFolder: string;
-	userAccount: string;
-	
-	constructor(){
+	private get token(): string {
 		const { state } = useState();
-		this.fs = uni.getFileSystemManager();
-		this.token = state.token;
-		this.programFolder = state.programFolder;
-		this.userAccount = state.activeUser['account'] as string;
+		return state.token;
+	}
+	private get programFolder(): string {
+		const { state } = useState();
+		return state.programFolder;
+	}
+	private get userAccount(): string {
+		const { state } = useState();
+		return state.activeUser['account'] as string;
 	}
 	
 	private convertPath(path: string): string {
@@ -29,10 +30,6 @@ export class FileManager {
 			return path.replace("unifile://usr/", `/storage/emulated/0/Android/data/${packageName}/files`);
 		}
 		return path;
-	}
-
-	private sanitizeName(name: string): string {
-		return name.replace(/\.\./g, '').replace(/[/\\]/g, '').trim();
 	}
 	
 	async getProgramList(): Promise<UTSJSONObject[]> {
@@ -66,7 +63,7 @@ export class FileManager {
 				await Promise.all(statPromises);
 			}
 		} catch (err) {
-			console.error(err);
+			logger.error(err);
 		}
 		
 		return results;
@@ -89,15 +86,13 @@ export class FileManager {
 	
 	async deleteProgram(programName: string): Promise<boolean> {
 		try {
-			const safeName = this.sanitizeName(programName);
-			if (safeName == '') return false;
-			const destPath = `${this.programFolder}/${safeName}`;
+			const destPath = `${this.programFolder}/${programName}`;
 			if (await this.IsExist(destPath)) {
 				this.fs.rmdirSync(destPath, true);
 			}
 			return true;
 		} catch (err) {
-			console.error('删除节目失败:', err);
+			logger.error('删除节目失败:', err);
 			return false;
 		}
 	}
@@ -108,8 +103,7 @@ export class FileManager {
 	}
 	
 	async getProgramConfig(programName: string, width: string, height: string): Promise<MediaConfig> {
-		const safeName = this.sanitizeName(programName);
-		const newProgramFolder = `${this.programFolder}/${safeName}`;
+		const newProgramFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${newProgramFolder}/MediaConfig.json`;
 		let configFileContent : UTSJSONObject = {}; 
 		if (await this.IsExist(configFilePath)) {
@@ -144,16 +138,14 @@ export class FileManager {
 	}
 	
 	async saveProgram(programName: string, data: UTSJSONObject): Promise<void> {
-		const safeName = this.sanitizeName(programName);
-		const programFolder = `${this.programFolder}/${safeName}`;
+		const programFolder = `${this.programFolder}/${programName}`;
 		const configFilePath = `${programFolder}/MediaConfig.json`;
 		this.fs.writeFileSync(configFilePath, JSON.stringify(data),"utf-8");
 	}
 	
 	async zipProgram(programName: string): Promise<void> {
-		const safeName = this.sanitizeName(programName);
-		let sourcePath = this.convertPath(`${this.programFolder}/${safeName}`);
-		let zipFile = this.convertPath(`${this.programFolder}/${safeName}.zip`);
+		let sourcePath = this.convertPath(`${this.programFolder}/${programName}`);
+		let zipFile = this.convertPath(`${this.programFolder}/${programName}.zip`);
 		
 		if (await this.IsExist(zipFile)) {
 			this.fs.unlinkSync(zipFile);
@@ -169,8 +161,7 @@ export class FileManager {
 	}	
 	
 	async readZipFile(programName: string): Promise<number> {
-		const safeName = this.sanitizeName(programName);
-		const destPath = `${this.programFolder}/${safeName}.zip`;
+		const destPath = `${this.programFolder}/${programName}.zip`;
 		
 		if(!await this.IsExist(destPath)){
 			await this.zipProgram(programName);
@@ -253,9 +244,7 @@ export class FileManager {
 						resolve(res);
 					},
 					fail: (res) => {
-						if (__DEV__) {
-							console.error("上传失败:", JSON.stringify(res, null, 2));
-						}
+						logger.error("上传失败:", JSON.stringify(res, null, 2));
 						reject(res);
 					}
 				});
@@ -286,7 +275,7 @@ export class FileManager {
 			const res = await request("POST", APIS.sendCMD as string, dataObj);
 			return res as boolean;
 		} catch (err) {
-			console.log('sendCMD program err', err);
+			logger.debug('sendCMD program err', err);
 			return false;
 		}
 	}
@@ -358,9 +347,7 @@ export class FileManager {
 	}
 	
 	async capture(programName: string, pageName: string, canvas: UCanvas): Promise<string> {
-		const safeName = this.sanitizeName(programName);
-		const safePage = this.sanitizeName(pageName);
-		const thumbnailPath = `${this.programFolder}/${safeName}/${safePage}/thumbnail.png`;
+		const thumbnailPath = `${this.programFolder}/${programName}/${pageName}/thumbnail.png`;
 		const dataString = canvas.toDataURL();
 		const base64Data = dataString.split(',')[1];
 		const dataBuffer = uni.base64ToArrayBuffer(base64Data);
@@ -370,9 +357,7 @@ export class FileManager {
 
 	async exportProgram(programName: string): Promise<string | null> {
 		try {
-			const safeName = this.sanitizeName(programName);
-			if (safeName == '') { uni.showToast({ title: '无效节目名', icon: 'none' }); return null; }
-			const programFolder = `${this.programFolder}/${safeName}`;
+			const programFolder = `${this.programFolder}/${programName}`;
 			const configFilePath = `${programFolder}/MediaConfig.json`;
 
 			if (!(await this.IsExist(configFilePath))) {
@@ -395,7 +380,7 @@ export class FileManager {
 
 			return exportPath;
 		} catch (error) {
-			console.error('导出失败:', error);
+			logger.error('导出失败:', error);
 			uni.showToast({
 				title: '导出失败',
 				icon: 'none'
@@ -412,22 +397,25 @@ export class FileManager {
 			const targetProgramName = newProgramName || configData['Program']?.['name'] as string || 'ImportedProgram';
 			const targetFolder = `${this.programFolder}/${targetProgramName}`;
 
+			let imported = false;
 			if (await this.IsExist(targetFolder)) {
 				uni.showModal({
 					title: '提示',
 					content: '节目已存在，是否覆盖？',
 					success: async (res) => {
-						if (!res.confirm) return;
-						await this.doImport(configData, targetFolder, targetProgramName);
+						if (res.confirm) {
+							await this.doImport(configData, targetFolder, targetProgramName);
+							imported = true;
+						}
 					}
 				});
+				return imported ? new MediaConfig(configData) : null;
 			} else {
 				await this.doImport(configData, targetFolder, targetProgramName);
+				return new MediaConfig(configData);
 			}
-
-			return new MediaConfig(configData);
 		} catch (error) {
-			console.error('导入失败:', error);
+			logger.error('导入失败:', error);
 			uni.showToast({
 				title: '导入失败',
 				icon: 'none'

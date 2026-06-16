@@ -42,7 +42,8 @@
 </template>
 
 <script lang="uts">
- 	import { MIN_YEAR, MAX_YEAR, DEFAULT_TOAST_DURATION } from '@/common/config.uts';
+	import logger from "@/utils/logger/index.uts"
+	import { MIN_YEAR, MAX_YEAR, DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	export default {
 		name:"picker-date",
 		props: {
@@ -123,14 +124,14 @@
 			},
 			handleValidDate(){
 				let that = this
-				console.log('this.result=', this.year, this.month, this.day)
+				logger.debug('this.result=', this.year, this.month, this.day)
 				const maxDay = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.month - 1];
 				if (this.month == 2 && (this.year % 400 == 0 || (this.year % 100 != 0 && this.year % 4 == 0))) {
 					if(this.day <= 29){
 						//正常
 					}else{
-						console.log('maxDay', maxDay)
-						console.log('2e', this.day)
+						logger.debug('maxDay', maxDay)
+						logger.debug('2e', this.day)
 						uni.showToast({
 							icon: 'none',
 							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',
@@ -144,8 +145,8 @@
 					if(this.day <= maxDay){
 						//正常
 					}else{
-						console.log('maxDay', maxDay)
-						console.log(this.day)
+						logger.debug('maxDay', maxDay)
+						logger.debug(this.day)
 						uni.showToast({
 							icon: 'none',
 							title: this.month+'月最后一天是' + maxDay + '日，已为您自动选择',

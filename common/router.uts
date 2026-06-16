@@ -1,4 +1,4 @@
-import { isUserLoggedIn } from '@/common/auth-utils.uts';
+import { useAuth } from '@/store/index.uts';
 
 const ROUTES = {
 	HOME: '/pages/index/index',
@@ -30,11 +30,10 @@ export const publicRoutes = [
 ];
 
 export function routeGoto(route: string, options?: UniApp.NavigateToOptions): void {
-	if (__DEV__) {
-		console.log('routeGoto=', route);
-	}
 	
-	if (!publicRoutes.includes(route) && !isUserLoggedIn()) {
+	const { isLoggedIn } = useAuth();
+	
+	if (!publicRoutes.includes(route) && !isLoggedIn.value) {
 		uni.showModal({
 			title: '请先登录',
 			content: '登录后才能访问该页面',
@@ -61,7 +60,8 @@ export function routeSwitchTab(url: string, options?: UniApp.SwitchTabOptions): 
 }
 
 export function routeRedirectTo(url: string, options?: UniApp.RedirectToOptions): void {
-	if (!publicRoutes.includes(url) && !isUserLoggedIn()) {
+	const { isLoggedIn } = useAuth();
+	if (!publicRoutes.includes(url) && !isLoggedIn.value) {
 		uni.switchTab({ url: ROUTES.USER });
 		return;
 	}
@@ -92,6 +92,38 @@ export function goPrograms() {
 	routeGoto(ROUTES.PROGRAMS);
 }
 
+/**
+ * Shows a modal prompting the user to select a device first.
+ * Returns true if user confirmed and navigated, false otherwise.
+ */
+export function promptSelectDevice(t: (key: string, ...args: any[]) => string): boolean {
+	uni.showModal({
+		title: t("error.SelectDevice"),
+		confirmText: t("index.Confirm"),
+		cancelText: t("index.Cancel"),
+		success: (res: UniShowModalResult) => {
+			if (res.confirm) {
+				routeGoto(ROUTES.DEVICES);
+			}
+		}
+	});
+	return false;
+}
+
+export function promptSelectUser(t: (key: string, ...args: any[]) => string): boolean {
+	uni.showModal({
+		title: t("error.SelectUser"),
+		confirmText: t("index.Confirm"),
+		cancelText: t("index.Cancel"),
+		success: (res: UniShowModalResult) => {
+			if (res.confirm) {
+				routeGoto(ROUTES.INDEX_USERS);
+			}
+		}
+	});
+	return false;
+}
+
 export default {
 	ROUTES,
 	publicRoutes,
@@ -103,5 +135,6 @@ export default {
 	goHome,
 	goUser,
 	goDevices,
-	goPrograms
+	goPrograms,
+	promptSelectDevice
 }

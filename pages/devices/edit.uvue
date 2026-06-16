@@ -94,13 +94,13 @@
 		</view>
 		
 		<view class="cg-btns-box">
-			<button class="btn default-style" :class="{upgrade: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleUpgrade(deviceInfo)">
+			<button class="btn defaultyle" :class="{upgrade: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleUpgrade(deviceInfo)">
 				{{deviceInfo['status'] == 0 ? $t('index.Activate') : $t('device.Upgrade')}}
 			</button>
-			<button class="btn default-style" :class="{stopdevice: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleStop(deviceInfo)">
+			<button class="btn defaultyle" :class="{stopdevice: deviceInfo['connectStatus'] == 1}" size="mini"  @click="handleStop(deviceInfo)">
 				{{$t('device.Deactivate')}}
 			</button>
-			<button v-if="deviceInfo['status'] == 1" class="btn default-style" size="mini" @click="handleDelete(deviceInfo)">
+			<button v-if="deviceInfo['status'] == 1" class="btn defaultyle" size="mini" @click="handleDelete(deviceInfo)">
 				{{$t('device.Delete')}}
 			</button>
 		</view>
@@ -108,12 +108,11 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
-	import { routeGoto } from '@/common/router.uts'
+	import { routeGoto, promptSelectDevice } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
 	import { useState } from '@/store/index.uts'
- 	import { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
- 	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	
 	export default {
 		data() {
@@ -137,7 +136,7 @@
 				const currentDate = new Date().getTime()
 				const day = this.deviceInfo['validEnd'] as string;
 				const daynum = new Date(day).getTime() as number;
-				if(currentDate > daynum){
+				if(currentDate > daynum && currentDate - daynum > 24 * 60 * 60 * 1000){
 					that.deviceInfo['isvalidEnd'] = true;
 				}else {
 					that.deviceInfo['isvalidEnd'] = false;
@@ -146,14 +145,7 @@
 				that.deviceId = that.deviceInfo['id'] as number;
 			}
 			else {
-				uni.showModal({
-					title: $t("error.SelectDevice"),
-					success: (res: UniShowModalResult) => {
-						if(res.confirm){
-							routeGoto('/pages/index/devices');
-						}
-					}
-				})
+				promptSelectDevice($t);
 			}
 		},
 		methods: {
@@ -180,12 +172,12 @@
 								})
 							} catch (err){
 								uni.hideLoading();
-								const errObj = safeCloneError(err);
-								console.log(errObj);
+								const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+								logger.debug(errObj);
 								uni.showToast({
 									icon: 'none',
 									title: `${errObj.message}`,
-									duration: DEFAULT_TOAST_DURATION,
+									duration: 3000,
 								})
 							}
 						}
@@ -220,19 +212,19 @@
 											}).then(() => {
 												uni.showToast({
 													icon: 'none',
-													title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.ActivateSuccess")}`,
-													duration: DEFAULT_TOAST_DURATION,
+													title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.ActivateSuccess")}`,
+													duration: 3000,
 												})
 											});
 										
 									} catch (err){
 										uni.hideLoading();
-								const errObj = safeCloneError(err);
-										console.log(errObj);
+										const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+										logger.debug(errObj);
 										uni.showToast({
 											icon: 'none',
 											title: `${errObj.message}`,
-											duration: DEFAULT_TOAST_DURATION,
+											duration: 3000,
 										})
 									}
 								}
@@ -273,18 +265,18 @@
 										}).then(() => {
 											uni.showToast({
 												icon: 'none',
-												title: `${$t("index.Device")}�?{this.deviceInfo['snCode']} ${$t("error.DisableSuccess")}`,
-												duration: DEFAULT_TOAST_DURATION,
+												title: `${$t("index.Device")}：${this.deviceInfo['snCode']} ${$t("error.DisableSuccess")}`,
+												duration: 3000,
 											})
 										});									
 								} catch (err){
 									uni.hideLoading();
-									const errObj = safeCloneError(err);
-									console.log(errObj);
+									const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+									logger.debug(errObj);
 									uni.showToast({
 										icon: 'none',
 										title: `${errObj.message}`,
-										duration: DEFAULT_TOAST_DURATION,
+										duration: 3000,
 									})
 								}
 							}
@@ -454,7 +446,7 @@
 			background-color: $uni-color-error;
 			border: 1px solid $uni-color-error;
 		}
-		.default-style{
+		.defaultyle{
 			width: 31.4%;
 			color: $uni-text-color-placeholder;
 			background-color: $uni-bg-color;

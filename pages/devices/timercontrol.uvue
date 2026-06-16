@@ -91,11 +91,10 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { request } from '@/utils/http/index.uts'
-\timport { safeCloneError, formatErrorMessage } from '@/utils/index.uts';
-	import { DEFAULT_TOAST_DURATION } from '@/common/config.uts';
 	import { useState } from '@/store/index.uts'
 	export default {
 		data() {
@@ -222,7 +221,7 @@
 				this.currentRepeatMode = this.repeatModes.find(c => c.getString('key') == this.formData.getString('repeatMode'))?.getString('name')!;
 			}
 			
-			console.log(this.formData);
+			logger.debug(this.formData);
 			this.dayList = [] as UTSJSONObject[]
 			for (let i = 0; i < 30; i++) {
 				this.dayList.push({
@@ -238,8 +237,8 @@
 						title: ''
 					});
 					const apiUrl = APIS.deviceControl.getString('getById')!;
-					const result = await request('GET', apiUrl.replace("{id}", `${Number(this.controlId)}`), {}) as UTSJSONObject;
-					console.log(result);
+					const result = await request('GET', apiUrl.replace("{id}", `${this.controlId}`), {}) as UTSJSONObject;
+					logger.debug(result);
 					this.formData = result as UTSJSONObject;
 					const executionString = result.getString('execution')!;
 					if (executionString.includes("|")) {						
@@ -260,19 +259,19 @@
 					uni.hideLoading();
 				} catch (err){
 					uni.hideLoading();
-					const errObj = safeCloneError(err);
-					console.log(errObj);
+					const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+					logger.debug(errObj);
 					uni.showToast({
 						icon: 'none',
 						title: `${errObj.message}`,
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 					})
 				}
 			},
 			async repeatStringChange(e: CheckboxGroupChangeEvent) {
-				console.log(e.detail);
+				logger.debug(e.detail);
 				this.repeatString = e.detail.value.map(c => `${c}#`).join('');
-				console.log(this.repeatString);
+				logger.debug(this.repeatString);
 			},
 			changing(event: UniSliderChangeEvent){
 				this.formData.value = event.detail.value
@@ -293,7 +292,7 @@
 					uni.showToast({
 						icon: 'none',
 						title: $t("error.TimerControlPrompt"),
-						duration: DEFAULT_TOAST_DURATION,
+						duration: 3000,
 						success: () => {
 						}
 					})
@@ -308,7 +307,7 @@
 							execution: this.getExecuteTime(),
 						};
 						
-						console.log(controlData);
+						logger.debug(controlData);
 						
 						const apiUrl = APIS.deviceControl.getString('save')!;
 						await request("POST", apiUrl, controlData);
@@ -323,12 +322,12 @@
 						uni.navigateBack();
 					} catch (err){
 						uni.hideLoading();
-						const errObj = safeCloneError(err);
-						console.log(errObj);
+						const errObj = JSON.parse(JSON.stringify(err)) as UTSJSONObject;
+						logger.debug(errObj);
 						uni.showToast({
 							icon: 'none',
 							title: `${errObj.message}`,
-							duration: DEFAULT_TOAST_DURATION,
+							duration: 3000,
 						})
 					}
 				}
@@ -344,7 +343,7 @@
 						this.repeatString = '';
 					},
 					fail: (error) => {
-						console.log(error);
+						logger.debug(error);
 					}
 				}
 				uni.showActionSheet(options)

@@ -81,6 +81,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import  { MediaConfig, MediaPage, BaseComponent, VideoComponent, ImageComponent, TextComponent, WebComponent, WordComponent, allDays, Scheduler } from './shared/media-config/index.uts'
 	export default {
 		props: {
@@ -123,7 +124,7 @@
 					this.formData!.playCount = parseInt(proValue);
 				}
 				const data = this.formData!.toModel();
-				console.log(data);
+				logger.debug(data);
 				this.$emit("refresh", data);
 			},
 			handleIsHasValidityChange(){

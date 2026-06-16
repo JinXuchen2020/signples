@@ -111,6 +111,7 @@
 </template>
 
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { APIS } from '@/api/config.uts'
 	import { routeGoto } from '@/common/router.uts'
 	import { useState } from '@/store/index.uts'
@@ -142,32 +143,39 @@
 		},
 		computed: {
 			filteredDeviceList(): Array<UTSJSONObject> {
-				return this.deviceList.filter((item: UTSJSONObject) => {
-					if (this.searchKeyword) {
-						const keyword = this.searchKeyword.toLowerCase();
+				let list = this.deviceList;
+				if (this.searchKeyword) {
+					const keyword = this.searchKeyword.toLowerCase();
+					list = list.filter((item: UTSJSONObject) => {
 						const name = (item['name'] as string)?.toLowerCase() || '';
 						const sn = (item['snCode'] as string)?.toLowerCase() || '';
-						if (!name.includes(keyword) && !sn.includes(keyword)) return false;
-					}
-					if (this.groupFilter !== 'all') {
+						return name.includes(keyword) || sn.includes(keyword);
+					});
+				}
+				if (this.groupFilter !== 'all') {
+					list = list.filter((item: UTSJSONObject) => {
 						const type = (item['deviceType'] as string) || 'other';
 						if (this.groupFilter === 'display') {
-							if (!type.includes('display') && !type.includes('screen')) return false;
+							return type.includes('display') || type.includes('screen');
 						} else if (this.groupFilter === 'wall') {
-							if (!type.includes('wall') && !type.includes('拼接')) return false;
+							return type.includes('wall') || type.includes('拼接');
 						} else if (this.groupFilter === 'other') {
-							if (type.includes('display') || type.includes('screen') || type.includes('wall') || type.includes('拼接')) return false;
+							return !type.includes('display') && !type.includes('screen') && !type.includes('wall') && !type.includes('拼接');
 						}
-					}
-					if (this.statusFilter !== 'all') {
+						return true;
+					});
+				}
+				if (this.statusFilter !== 'all') {
+					list = list.filter((item: UTSJSONObject) => {
 						if (this.statusFilter === 'online') {
-							if (item['connectStatus'] != 1) return false;
+							return item['connectStatus'] == 1;
 						} else if (this.statusFilter === 'offline') {
-							if (item['connectStatus'] != 0) return false;
+							return item['connectStatus'] == 0;
 						}
-					}
-					return true;
-				});
+						return true;
+					});
+				}
+				return list;
 			}
 		},
 		onLoad(): void {
@@ -210,7 +218,7 @@
 				  	title: ''
 				});
 				const person: UTSJSONObject = {}
-				const param = '?userAccount=' + encodeURIComponent(this.userAccount);
+				const param = '?userAccount=' + this.userAccount;
 			    const result = await request('GET', APIS.deviceListPage as string + param, person)
 				const currentDate = new Date().getTime()
 				const d = result as Array<UTSJSONObject>;
@@ -230,12 +238,7 @@
 				uni.hideLoading();
 			  } catch (error) {
 				uni.hideLoading();
-			    console.error(error)
-				uni.showToast({
-					icon: 'none',
-					title: '获取设备列表失败',
-					duration: 2000,
-				})
+			    logger.error(error)
 			  }
 			},
 			async handleDelete(device: UTSJSONObject){
@@ -256,15 +259,13 @@
 								request('DELETE', APIS.deleteDevice as string + param, person).then(()=> {
 									uni.hideLoading();
 									that.getDeviceList();
+								}).catch((err: any) => {
+									logger.error('删除设备失败:', err);
+									uni.showToast({ icon: 'none', title: '删除失败' });
 								})
 							} catch (err){
 								uni.hideLoading();
-								console.log(err)
-								uni.showToast({
-									icon: 'none',
-									title: '删除设备失败',
-									duration: 2000,
-								})
+								logger.debug(err)
 							}
 						}
 					}
@@ -293,49 +294,19 @@
 								uni.showLoading({
 									title: ''
 								});
-								const CONCURRENT_LIMIT = 3;
-								const promises: Promise<any>[] = [];
-								const failures: string[] = [];
-								
-								for (let i = 0; i < that.selectedDevices.length; i++) {
-									const snCode = that.selectedDevices[i];
-									const p = request('DELETE', APIS.deleteDevice as string + snCode, {}).then(() => {
-										// success
-									}).catch(() => {
-										failures.push(snCode);
-									});
-									promises.push(p);
-									
-									if (promises.length >= CONCURRENT_LIMIT || i === that.selectedDevices.length - 1) {
-										await Promise.allSettled(promises);
-										promises.length = 0;
-									}
+								for (const snCode of that.selectedDevices) {
+									await request('DELETE', APIS.deleteDevice as string + snCode, {});
 								}
-								
 								uni.hideLoading();
 								that.selectedDevices = [];
-								await that.getDeviceList();
-								
-								if (failures.length > 0) {
-									uni.showToast({
-										icon: 'none',
-										title: '部分删除失败(' + failures.length + ')',
-										duration: 2000,
-									});
-								} else {
-									uni.showToast({
-										icon: 'success',
-										title: that.$t('common.OperationSuccess')
-									});
-								}
+								that.getDeviceList();
+								uni.showToast({
+									icon: 'success',
+									title: that.$t('common.OperationSuccess')
+								});
 							} catch (err){
 								uni.hideLoading();
-								console.log(err);
-								uni.showToast({
-									icon: 'none',
-									title: '批量删除失败',
-									duration: 2000,
-								});
+								logger.debug(err);
 							}
 						}
 					}

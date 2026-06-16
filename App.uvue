@@ -1,21 +1,22 @@
 <script lang="uts">
+	import logger from "@/utils/logger/index.uts"
 	import { useState } from '@/store/index.uts'
 	let firstBackTime = 0
 	export default {
 		onLaunch: function () {
-			console.log('App Launch')
+			logger.info('App launched')
 			const { loadStateFromStorage } = useState();
 			loadStateFromStorage();
 		},
 		onShow: function () {
-			console.log('App Show')
+			logger.info('App resumed')
 		},
 		onHide: function () {
-			console.log('App Hide')
+			logger.info('App hidden')
 		},
 		// #ifdef APP-ANDROID
 		onLastPageBackPress: function () {
-			console.log('App LastPageBackPress')
+			logger.info('App last page back pressed')
 			if (firstBackTime == 0) {
 				uni.showToast({
 					title: '再按一次退出应用',
@@ -32,7 +33,7 @@
 		},
 		// #endif
 		onExit: function () {
-			console.log('App Exit')
+			logger.info('App exiting')
 		},
 	}
 </script>

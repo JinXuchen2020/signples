@@ -6,7 +6,7 @@ function getProgramFolder(): string {
     return uni.getStorageSync(STORAGE_KEYS.PROGRAM_FOLDER) as string;
 }
 
-function createComponentByType(data: UTSJSONObject): BaseComponent | null {
+export function createComponentByType(data: UTSJSONObject): BaseComponent | null {
     const type = data['Type'] as string;
     if (type == 'Video') return new VideoComponent(data);
     if (type == 'Text') return new TextComponent(data);
